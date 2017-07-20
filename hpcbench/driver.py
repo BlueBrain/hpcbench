@@ -1,11 +1,11 @@
 import copy
 import datetime
 from functools import wraps
-import logging
 import os
 import os.path as osp
 import socket
 import subprocess
+import types
 import uuid
 
 from cached_property import cached_property
@@ -27,7 +27,15 @@ YAML_REPORT_FILE = 'hpcbench.yaml'
 def write_yaml_report(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        report =  f(*args, **kwargs)
+        with Timer() as timer:
+            data = f(*args, **kwargs)
+            if isinstance(data, (list, types.GeneratorType)):
+                report = dict(children=list(data))
+            elif isinstance(data, dict):
+                report = data
+            else:
+                raise Exception('Unexpected data type: %s', type(data))
+        report['elapsed'] = timer.elapsed
         if report is not None:
             with open(YAML_REPORT_FILE, 'w') as ostr:
                 yaml.dump(report, ostr, default_flow_style=False)
@@ -42,7 +50,10 @@ class CampaignDriver(object):
 
     @cached_property
     def output_dir(self):
-        return datetime.datetime.now().strftime(self.campaign.output_dir)
+        return osp.join(
+            datetime.datetime.now().strftime(self.campaign.output_dir),
+            socket.gethostname()
+        )
 
     @cached_property
     def benchmarks(self):
@@ -68,23 +79,17 @@ class CampaignDriver(object):
                     break
         return benchmarks
 
-    def benchmark_dir(self, benchmark):
-        """benchmark root output directory"""
-        return osp.join(self.output_dir, socket.gethostname(), benchmark)
+    def __call__(self, **kwargs):
+        """execute benchmarks"""
+        with pushd(self.output_dir, mkdir=True):
+            self.run(**kwargs)
 
     @write_yaml_report
-    def __call__(self):
-        """execute benchmarks"""
-        report = dict(benchmarks=[])
-        with Timer() as timer:
-            for benchmark in self.benchmarks:
-                report['benchmarks'].append(benchmark)
-                out_dir = self.benchmark_dir(benchmark)
-                with pushd(out_dir, mkdir=True):
-                    BenchmarkTagDriver(self.campaign, benchmark)()
-        report['elapsed'] = timer.elapsed
-        return report
-
+    def run(self, **kwargs):
+        for benchmark in self.benchmarks:
+            with pushd(benchmark, mkdir=True):
+                BenchmarkTagDriver(self.campaign, benchmark)(**kwargs)
+                yield benchmark
 
 
 class BenchmarkTagDriver(object):
@@ -108,15 +113,12 @@ class BenchmarkTagDriver(object):
         return benchmark
 
     @write_yaml_report
-    def __call__(self):
-        report = dict(benchmarks=[])
-        with Timer() as timer:
-            for benchmark in self.benchmarks:
-                with pushd(benchmark.name, mkdir=True):
-                    report['benchmarks'].append(benchmark.name)
-                    BenchmarkDriver(self.campaign, benchmark)()
-        report['elapsed'] = timer.elapsed
-        return report
+    def __call__(self, **kwargs):
+        for benchmark in self.benchmarks:
+            with pushd(benchmark.name, mkdir=True):
+                BenchmarkDriver(self.campaign, benchmark)(**kwargs)
+                yield benchmark.name
+
 
 class BenchmarkDriver(object):
     def __init__(self, campaign, benchmark):
@@ -124,21 +126,17 @@ class BenchmarkDriver(object):
         self.benchmark = benchmark
 
     @write_yaml_report
-    def __call__(self):
-        report = dict(benchmarks=[])
-        with Timer() as timer:
-            for execution in self.benchmark.execution_matrix():
-                run_dir = osp.join(
-                    execution.get('category'),
-                    execution.get('name') or '',
-                    str(uuid.uuid4())
-                )
-                with pushd(run_dir, mkdir=True):
-                    report['benchmarks'].append(run_dir)
-                    ExecutionDriver(self.campaign, self.benchmark, execution)()
-                    MetricsDriver(self.campaign, self.benchmark)()
-        report['elapsed'] = timer.elapsed
-        return report
+    def __call__(self, **kwargs):
+        for execution in self.benchmark.execution_matrix():
+            run_dir = osp.join(
+                execution.get('category'),
+                execution.get('name') or '',
+                str(uuid.uuid4())
+            )
+            with pushd(run_dir, mkdir=True):
+                ExecutionDriver(self.campaign, self.benchmark, execution)(**kwargs)
+                MetricsDriver(self.campaign, self.benchmark)(**kwargs)
+                yield run_dir
 
 
 class MetricsDriver(object):
@@ -149,7 +147,7 @@ class MetricsDriver(object):
             self.report = yaml.load(istr)
 
     @write_yaml_report
-    def __call__(self):
+    def __call__(self, **kwargs):
         cat = self.report.get('category')
         all_extractors = self.benchmark.metrics_extractors()
         if cat not in all_extractors:
@@ -173,10 +171,9 @@ class ExecutionDriver(object):
         self.execution = execution
 
     @write_yaml_report
-    def __call__(self):
+    def __call__(self, **kwargs):
         with open('stdout.txt', 'w') as stdout, \
-             open('stderr.txt', 'w') as stderr, \
-             Timer() as timer:
+             open('stderr.txt', 'w') as stderr:
             kwargs = dict(stdout=stdout, stderr=stderr)
             custom_env = self.execution.get('environment')
             if custom_env:
@@ -190,7 +187,6 @@ class ExecutionDriver(object):
             exit_status = process.wait()
         report = dict(
             exit_status=exit_status,
-            elapsed=timer.elapsed,
         )
         report.update(self.execution)
         return report
