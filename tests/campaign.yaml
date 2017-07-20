@@ -1,0 +1,20 @@
+output_dir: hpcbench-%Y%m%d-%H:%M:%S
+network:
+  nodes:
+    - localhost
+  tags:
+    uc1:
+      match: .*
+    uc2:
+      nodes:
+        - localhost
+benchmarks:
+  uc1:
+    - sysbench_cpu:
+        type: sysbench
+        attributes:
+          features:
+            - cpu
+  uc2:
+    - sysbench_cpu:
+        type: sysbench

@@ -1,8 +1,10 @@
 init:
-	pip install -r requirements.txt
+	pip install tox
 
 doc-update:
 	sphinx-apidoc -o docs hpcbench
 
 test:
-	nosetests tests
+	tox
+	flake8 hpcbench
+	pylint hpcbench
