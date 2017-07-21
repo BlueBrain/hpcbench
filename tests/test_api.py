@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import context
-from hpcbench.api import benchmark
+from hpcbench.api import Benchmark
 
 import unittest
 

@@ -1,10 +1,10 @@
 from hpcbench.api import (
-    benchmark,
-    metrics_extractor,
+    Benchmark,
+    MetricsExtractor,
 )
 
 
-class cpu_extractor(metrics_extractor):
+class cpu_extractor(MetricsExtractor):
     """Ignore stdout until this line"""
     STDOUT_IGNORE_PRIOR = 'Test execution summary:'
 
@@ -49,12 +49,12 @@ class cpu_extractor(metrics_extractor):
         return metrics
 
 
-class sysbench(benchmark):
+class Sysbench(Benchmark):
     FEATURE_CPU = 'cpu'
 
     def __init__(self):
-        super(sysbench, self).__init__(
-            attributes=dict(features=[sysbench.FEATURE_CPU])
+        super(Sysbench, self).__init__(
+            attributes=dict(features=[Sysbench.FEATURE_CPU])
         )
 
     name = 'sysbench'
@@ -66,7 +66,7 @@ class sysbench(benchmark):
         """
 
     def execution_matrix(self):
-        if sysbench.FEATURE_CPU in self.attributes['features']:
+        if Sysbench.FEATURE_CPU in self.attributes['features']:
             for thread in [1, 2, 4]:
                 yield dict(
                     category='cpu',
@@ -79,5 +79,5 @@ class sysbench(benchmark):
 
     def metrics_extractors(self):
         return {
-            sysbench.FEATURE_CPU: cpu_extractor(),
+            Sysbench.FEATURE_CPU: cpu_extractor(),
         }

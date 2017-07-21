@@ -4,14 +4,15 @@
 
 import os.path as osp
 
+from hpcbench.toolbox.class_lib import ClassRegistrar
 
 __all__ = [
-    'metrics_extractor',
-    'benchmark',
+    'MetricsExtractor',
+    'Benchmark',
 ]
 
 
-class metrics_extractor(object):
+class MetricsExtractor(object):
     """Extract data from a benchmark command outputs
     """
     def metrics(self):
@@ -62,35 +63,11 @@ class metrics_extractor(object):
         return osp.join(outdir, 'sterrr.txt')
 
 
-class BenchmarkLibrary(object):
-    BENCHMARKS = dict()
-
-    @classmethod
-    def get(cls, name):
-        clazz = cls.BENCHMARKS.get(name)
-        if clazz is None:
-            raise Exception('Unregistered Benchmark "%s"' % name)
-        return clazz
-
-    @classmethod
-    def register_class(cls, clazz):
-        if clazz.name in cls.BENCHMARKS:
-            raise Exception('Benchmark %s is already registered' % clazz.name)
-        cls.BENCHMARKS[clazz.name] = clazz
-
-
-class LibraryRegistrar(type):
-    def __new__(meta, name, bases, class_dict):
-        cls = type.__new__(meta, name, bases, class_dict)
-        BenchmarkLibrary.register_class(cls)
-        return cls
-
-
-class benchmark(object):
+class Benchmark(object):
     """Declare benchmark utility
     """
 
-    __metaclass__ = LibraryRegistrar
+    __metaclass__ = ClassRegistrar
 
     name = None
     """Get benchmark name
@@ -164,7 +141,7 @@ class benchmark(object):
         in the execution_matrix member method.
 
         :return: metrics_extractors instances for each category
-        :rtype: ``dict of list of hpcbench.api.metrics_extractor``.
+        :rtype: ``dict of list of hpcbench.api.MetricsExtractor``.
         For instance:
 
         >>> def metrics_extractors(self):

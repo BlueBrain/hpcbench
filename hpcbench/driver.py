@@ -12,12 +12,11 @@ import uuid
 from cached_property import cached_property
 import yaml
 
-from . toolbox.collections_ext import nameddict
 from . toolbox.contextlib_ext import (
     pushd,
     Timer,
 )
-from . api import BenchmarkLibrary
+from . api import Benchmark
 from . campaign import from_file
 
 
@@ -153,7 +152,7 @@ class BenchmarkTagDriver(Enumerator):
 
     def child_builder(self, child):
         conf = self.campaign.benchmarks[self.name][child]
-        benchmark = BenchmarkLibrary.get(conf['type'])()
+        benchmark = Benchmark.get_subclass(conf['type'])()
         if 'attributes' in conf:
             benchmark.attributes = copy.deepcopy(conf['attributes'])
         return BenchmarkDriver(self.campaign, benchmark)
