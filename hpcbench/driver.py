@@ -1,6 +1,7 @@
 import copy
 import datetime
 from functools import wraps
+import json
 import os
 import os.path as osp
 import shutil
@@ -18,10 +19,12 @@ from . toolbox.contextlib_ext import (
 )
 from . api import Benchmark
 from . campaign import from_file
+from . plot import Plotter
 
 
 YAML_REPORT_FILE = 'hpcbench.yaml'
 YAML_CAMPAIGN_FILE = 'campaign.yaml'
+JSON_METRICS_FILE = 'metrics.json'
 
 
 def write_yaml_report(f):
@@ -166,12 +169,16 @@ class BenchmarkDriver(Enumerator):
     @write_yaml_report
     def __call__(self, **kwargs):
         if "no_exec" not in kwargs:
+            runs = dict()
             for execution in self.benchmark.execution_matrix():
+                category = execution.get('category')
+                name = execution.get('name') or ''
                 run_dir = osp.join(
-                    execution.get('category'),
-                    execution.get('name') or '',
+                    category,
+                    name,
                     str(uuid.uuid4())
                 )
+                runs.setdefault(category, []).append(run_dir)
                 with pushd(run_dir, mkdir=True):
                     driver = ExecutionDriver(
                         self.campaign,
@@ -181,16 +188,52 @@ class BenchmarkDriver(Enumerator):
                     driver(**kwargs)
                     MetricsDriver(self.campaign, self.benchmark)(**kwargs)
                     yield run_dir
+            self.gather_metrics(runs)
+        elif 'plot' in kwargs:
+            for category, plots in self.benchmark.plots().items():
+                with pushd(category):
+                    for plot in plots:
+                        self.generate_plot(plot)
         else:
+            runs = dict()
             for child in self.report['children']:
                 child_yaml = osp.join(child, YAML_REPORT_FILE)
                 with open(child_yaml) as istr:
                     child_config = yaml.load(istr)
                 child_config.pop('children', None)
+                category, _ = child.split(os.sep, 1)
+                runs.setdefault(category, []).append(child)
                 with pushd(child):
                     MetricsDriver(self.campaign, self.benchmark)(**kwargs)
                     yield child
+            self.gather_metrics(runs)
 
+    def gather_metrics(self, runs):
+        for category, run_dirs in runs.items():
+            with open(osp.join(category, JSON_METRICS_FILE), 'w') as ostr:
+                ostr.write('[\n')
+                for i in range(len(run_dirs)):
+                    with open(osp.join(run_dirs[i], YAML_REPORT_FILE)) as istr:
+                        data = yaml.load(istr)
+                        data.pop('category', None)
+                        data.pop('command', None)
+                        gathered_metrics = dict()
+                        for cat, metricss in data.get('metrics', {}).items():
+                            gathered = dict()
+                            for metrics in metricss:
+                                gathered.update(metrics)
+                            gathered_metrics[cat] = gathered
+                        data['metrics'] = gathered_metrics
+                        json.dump(data, ostr, indent=2)
+                    if i != len(run_dirs) - 1:
+                        ostr.write(',')
+                    ostr.write('\n')
+                ostr.write(']\n')
+
+    def generate_plot(self, desc):
+        with open(JSON_METRICS_FILE) as istr:
+            metrics = json.load(istr)
+        Plotter(metrics)(desc)
 
 class MetricsDriver(object):
     def __init__(self, campaign, benchmark):
@@ -240,6 +283,7 @@ class ExecutionDriver(object):
             exit_status = process.wait()
         report = dict(
             exit_status=exit_status,
+            benchmark=self.benchmark.name,
         )
         report.update(self.execution)
         return report

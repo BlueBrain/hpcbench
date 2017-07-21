@@ -67,17 +67,50 @@ class Sysbench(Benchmark):
 
     def execution_matrix(self):
         if Sysbench.FEATURE_CPU in self.attributes['features']:
-            for thread in [1, 2, 4]:
-                yield dict(
-                    category='cpu',
-                    command=['sysbench', '--test=cpu',
-                             '--num-threads=%s' % thread, 'run'],
-                    metas=dict(
-                        thread=thread,
+            for thread in [1, 4, 16]:
+                for max_prime in [10000, 20000]:
+                    yield dict(
+                        category='cpu',
+                        command=[
+                            'sysbench',
+                            '--test=cpu',
+                            '--num-threads=%s' % thread,
+                            '--cpu-max-prime=%s' % max_prime,
+                            'run'
+                        ],
+                        metas=dict(
+                            thread=thread,
+                            max_prime=max_prime
+                        )
                     )
-                )
 
     def metrics_extractors(self):
         return {
             Sysbench.FEATURE_CPU: cpu_extractor(),
         }
+
+    def plots(self):
+        return {
+            Sysbench.FEATURE_CPU: [
+                dict(
+                    name="{category} timing",
+                    #for_each=['max_prime'],  TODO
+                    select=dict(
+                        metas__max_prime=10000
+                    ),
+                    series=dict(
+                        metas=['-thread'],
+                        metrics=['cpu__minimum', 'cpu__average',
+                                 'cpu__maximum', 'cpu__percentile95'],
+                    ),
+                    plotter=self.plot_timing
+                ),
+            ]
+        }
+
+    def plot_timing(self, plt, description, metas, metrics):
+        plt.plot(
+            metas['thread'], metrics['cpu__minimum'], 'r--',
+            metas['thread'], metrics['cpu__maximum'], 'bs',
+            metas['thread'], metrics['cpu__average'], 'g^',
+        )

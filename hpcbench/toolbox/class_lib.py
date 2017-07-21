@@ -19,7 +19,7 @@ class ClassLibrary(object):
 
         :param name: Name of the class to retrieve
         """
-        return cls.SUB_CLASSES['name']
+        return cls.SUB_CLASSES[name]
 
     @classmethod
     def get_subclasses(cls):

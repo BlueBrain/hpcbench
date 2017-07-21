@@ -44,12 +44,14 @@ setup(
     install_requires=[
         'cached-property==1.3.0',
         'docopt==0.6.2',
+        'matplotlib==2.0.2',
         'PyYAML>=3.12',
     ],
     entry_points="""
         [console_scripts]
         ben-sh = hpcbench.cli.bensh:main
         ben-umb = hpcbench.cli.benumb:main
+        ben-plot = hpcbench.cli.benplot:main
         [hpcbench.benchmarks]
         sysbench = hpcbench.benchmarks.sysbench
     """
