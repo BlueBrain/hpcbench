@@ -1,9 +1,9 @@
-"""ben-sh
+"""ben-umb - Rebuild metrics of an existing campaign
 
 Usage:
-  ben-sh [-v | -vv ] CAMPAIGN_FILE
-  ben-sh (-h | --help)
-  ben-sh --version
+  ben-umb [-v | -vv] CAMPAIGN-DIR
+  ben-umb (-h | --help)
+  ben-umb --version
 
 Options:
   -h --help   Show this screen
@@ -23,9 +23,9 @@ def main():
     arguments = docopt(__doc__, version='hpcbench ' + __version__)
     setup_logger(arguments['-v'])
     load_components()
-    campaign_file = arguments['CAMPAIGN_FILE']
-    driver = CampaignDriver(campaign_file=campaign_file)
-    driver()
+    campaign_path = arguments['CAMPAIGN-DIR']
+    driver = CampaignDriver(campaign_path=campaign_path)
+    driver(no_exec=True)
 
 
 if __name__ == '__main__':

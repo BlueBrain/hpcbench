@@ -67,7 +67,7 @@ class sysbench(benchmark):
 
     def execution_matrix(self):
         if sysbench.FEATURE_CPU in self.attributes['features']:
-            for thread in [1, 2, 4, 8, 16, 32]:
+            for thread in [1, 2, 4]:
                 yield dict(
                     category='cpu',
                     command=['sysbench', '--test=cpu',

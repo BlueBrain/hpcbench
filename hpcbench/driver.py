@@ -3,6 +3,7 @@ import datetime
 from functools import wraps
 import os
 import os.path as osp
+import shutil
 import socket
 import subprocess
 import types
@@ -11,17 +12,17 @@ import uuid
 from cached_property import cached_property
 import yaml
 
-from . toolbox.collections_ext import (
-    nameddict,
-)
+from . toolbox.collections_ext import nameddict
 from . toolbox.contextlib_ext import (
     pushd,
     Timer,
 )
 from . api import BenchmarkLibrary
+from . campaign import from_file
 
 
 YAML_REPORT_FILE = 'hpcbench.yaml'
+YAML_CAMPAIGN_FILE = 'campaign.yaml'
 
 
 def write_yaml_report(f):
@@ -30,35 +31,93 @@ def write_yaml_report(f):
         with Timer() as timer:
             data = f(*args, **kwargs)
             if isinstance(data, (list, types.GeneratorType)):
-                report = dict(children=list(data))
+                report = dict(children=list(map(str, data)))
             elif isinstance(data, dict):
                 report = data
             else:
                 raise Exception('Unexpected data type: %s', type(data))
         report['elapsed'] = timer.elapsed
-        if report is not None:
+        if "no_exec" not in kwargs and report is not None:
             with open(YAML_REPORT_FILE, 'w') as ostr:
                 yaml.dump(report, ostr, default_flow_style=False)
         return report
     return wrapper
 
 
-class CampaignDriver(object):
-    """Perform benchmarks execution"""
+class Enumerator(object):
     def __init__(self, campaign):
         self.campaign = campaign
 
     @cached_property
-    def output_dir(self):
-        return osp.join(
-            datetime.datetime.now().strftime(self.campaign.output_dir),
-            socket.gethostname()
-        )
+    def report(self):
+        with open(YAML_REPORT_FILE) as istr:
+            return yaml.load(istr)
+
+    @write_yaml_report
+    def __call__(self, **kwargs):
+        for child in self._children:
+            with pushd(str(child), mkdir=True):
+                child_obj = self.child_builder(child)
+                child_obj(**kwargs)
+                yield child
+
+    def child_builder(self, child):
+        raise NotImplementedError
 
     @cached_property
-    def benchmarks(self):
+    def _children(self):
+        if osp.isfile(YAML_REPORT_FILE):
+            return self.report['children']
+        return self.children
+
+    @cached_property
+    def children(self):
+        """Property to be overriden be subclass to provide child objects"""
+        raise NotImplementedError
+
+
+class CampaignDriver(Enumerator):
+    def __init__(self, campaign_file=None, campaign_path=None):
+        if campaign_file and campaign_path:
+            raise Exception('Either campaign_file xor path can be specified')
+        if campaign_path:
+            campaign_file = osp.join(campaign_path, YAML_CAMPAIGN_FILE)
+        self.campaign_file = osp.abspath(campaign_file)
+        super(CampaignDriver, self).__init__(
+            campaign=from_file(campaign_file)
+        )
+        if campaign_path:
+            self.existing_campaign = True
+            self.campaign_path = campaign_path
+        else:
+            self.existing_campaign = False
+            now = datetime.datetime.now()
+            self.campaign_path = now.strftime(self.campaign.output_dir)
+
+    def child_builder(self, child):
+        return HostDriver(self.campaign, child)
+
+    @cached_property
+    def children(self):
+        return [socket.gethostname()]
+
+    def __call__(self, **kwargs):
+        """execute benchmarks"""
+        with pushd(self.campaign_path, mkdir=True):
+            if not self.existing_campaign:
+                shutil.copy(self.campaign_file, YAML_CAMPAIGN_FILE)
+            super(CampaignDriver, self).__call__(**kwargs)
+
+
+class HostDriver(Enumerator):
+    def __init__(self, campaign, name):
+        super(HostDriver, self).__init__(campaign)
+        self.name = name
+
+    @cached_property
+    def children(self):
         """Retrieve tags associated to the current node"""
-        hostnames = {'localhost', socket.gethostname()}
+        hostnames = {'localhost', self.name}
         benchmarks = set()
         for tag, configs in self.campaign.network.tags.items():
             for config in configs:
@@ -79,64 +138,59 @@ class CampaignDriver(object):
                     break
         return benchmarks
 
-    def __call__(self, **kwargs):
-        """execute benchmarks"""
-        with pushd(self.output_dir, mkdir=True):
-            self.run(**kwargs)
-
-    @write_yaml_report
-    def run(self, **kwargs):
-        for benchmark in self.benchmarks:
-            with pushd(benchmark, mkdir=True):
-                BenchmarkTagDriver(self.campaign, benchmark)(**kwargs)
-                yield benchmark
+    def child_builder(self, child):
+        return BenchmarkTagDriver(self.campaign, child)
 
 
-class BenchmarkTagDriver(object):
+class BenchmarkTagDriver(Enumerator):
     def __init__(self, campaign, name):
-        self.campaign = campaign
+        super(BenchmarkTagDriver, self).__init__(campaign)
         self.name = name
 
     @cached_property
-    def benchmarks(self):
-        benchmarks = []
-        for benchmark in self.campaign.benchmarks[self.name]:
-            for name, config in benchmark.items():
-                config = nameddict(config)
-                benchmarks.append(self.instantiate_benchmark(config))
-        return benchmarks
+    def children(self):
+        return list(self.campaign.benchmarks[self.name])
 
-    def instantiate_benchmark(self, config):
-        benchmark = BenchmarkLibrary.get(config.type)()
-        if 'attributes' in config:
-            benchmark.attributes = copy.deepcopy(config.attributes)
-        return benchmark
-
-    @write_yaml_report
-    def __call__(self, **kwargs):
-        for benchmark in self.benchmarks:
-            with pushd(benchmark.name, mkdir=True):
-                BenchmarkDriver(self.campaign, benchmark)(**kwargs)
-                yield benchmark.name
+    def child_builder(self, child):
+        conf = self.campaign.benchmarks[self.name][child]
+        benchmark = BenchmarkLibrary.get(conf['type'])()
+        if 'attributes' in conf:
+            benchmark.attributes = copy.deepcopy(conf['attributes'])
+        return BenchmarkDriver(self.campaign, benchmark)
 
 
-class BenchmarkDriver(object):
+class BenchmarkDriver(Enumerator):
     def __init__(self, campaign, benchmark):
-        self.campaign = campaign
+        super(BenchmarkDriver, self).__init__(campaign)
         self.benchmark = benchmark
 
     @write_yaml_report
     def __call__(self, **kwargs):
-        for execution in self.benchmark.execution_matrix():
-            run_dir = osp.join(
-                execution.get('category'),
-                execution.get('name') or '',
-                str(uuid.uuid4())
-            )
-            with pushd(run_dir, mkdir=True):
-                ExecutionDriver(self.campaign, self.benchmark, execution)(**kwargs)
-                MetricsDriver(self.campaign, self.benchmark)(**kwargs)
-                yield run_dir
+        if "no_exec" not in kwargs:
+            for execution in self.benchmark.execution_matrix():
+                run_dir = osp.join(
+                    execution.get('category'),
+                    execution.get('name') or '',
+                    str(uuid.uuid4())
+                )
+                with pushd(run_dir, mkdir=True):
+                    driver = ExecutionDriver(
+                        self.campaign,
+                        self.benchmark,
+                        execution
+                    )
+                    driver(**kwargs)
+                    MetricsDriver(self.campaign, self.benchmark)(**kwargs)
+                    yield run_dir
+        else:
+            for child in self.report['children']:
+                child_yaml = osp.join(child, YAML_REPORT_FILE)
+                with open(child_yaml) as istr:
+                    child_config = yaml.load(istr)
+                child_config.pop('children', None)
+                with pushd(child):
+                    MetricsDriver(self.campaign, self.benchmark)(**kwargs)
+                    yield child
 
 
 class MetricsDriver(object):

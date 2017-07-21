@@ -10,11 +10,11 @@ network:
         - localhost
 benchmarks:
   uc1:
-    - sysbench_cpu:
-        type: sysbench
-        attributes:
-          features:
-            - cpu
+    sysbench_cpu:
+      type: sysbench
+      attributes:
+        features:
+          - cpu
   uc2:
-    - sysbench_cpu:
-        type: sysbench
+    sysbench_cpu:
+      type: sysbench

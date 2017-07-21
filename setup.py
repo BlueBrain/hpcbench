@@ -49,6 +49,7 @@ setup(
     entry_points="""
         [console_scripts]
         ben-sh = hpcbench.cli.bensh:main
+        ben-umb = hpcbench.cli.benumb:main
         [hpcbench.benchmarks]
         sysbench = hpcbench.benchmarks.sysbench
     """

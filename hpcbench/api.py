@@ -105,6 +105,9 @@ class benchmark(object):
     def __init__(self, attributes=None):
         self.attributes = attributes or {}
 
+    def __str__(self):
+        return self.name
+
     def execution_matrix(self):
         """Describe benchmark commands
 
