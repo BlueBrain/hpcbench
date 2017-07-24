@@ -1,3 +1,5 @@
+"""Campaign execution and post-processing
+"""
 import copy
 import datetime
 from functools import wraps
@@ -27,11 +29,13 @@ YAML_CAMPAIGN_FILE = 'campaign.yaml'
 JSON_METRICS_FILE = 'metrics.json'
 
 
-def write_yaml_report(f):
-    @wraps(f)
+def write_yaml_report(func):
+    """Decorator used to campaign node post-processing
+    """
+    @wraps(func)
     def wrapper(*args, **kwargs):
         with Timer() as timer:
-            data = f(*args, **kwargs)
+            data = func(*args, **kwargs)
             if isinstance(data, (list, types.GeneratorType)):
                 report = dict(children=list(map(str, data)))
             elif isinstance(data, dict):
@@ -47,6 +51,7 @@ def write_yaml_report(f):
 
 
 class Enumerator(object):
+    """Common class for every campaign node"""
     def __init__(self, campaign):
         self.campaign = campaign
 
@@ -79,6 +84,7 @@ class Enumerator(object):
 
 
 class CampaignDriver(Enumerator):
+    """Abstract representation of an entire campaign"""
     def __init__(self, campaign_file=None, campaign_path=None):
         if campaign_file and campaign_path:
             raise Exception('Either campaign_file xor path can be specified')
@@ -112,6 +118,7 @@ class CampaignDriver(Enumerator):
 
 
 class HostDriver(Enumerator):
+    """Abstract representation of the campaign for the current host"""
     def __init__(self, campaign, name):
         super(HostDriver, self).__init__(campaign)
         self.name = name
@@ -145,6 +152,8 @@ class HostDriver(Enumerator):
 
 
 class BenchmarkTagDriver(Enumerator):
+    """Abstract representation of a campaign tag
+    (keys of "benchmark" YAML tag)"""
     def __init__(self, campaign, name):
         super(BenchmarkTagDriver, self).__init__(campaign)
         self.name = name
@@ -162,6 +171,8 @@ class BenchmarkTagDriver(Enumerator):
 
 
 class BenchmarkDriver(Enumerator):
+    """Abstract representation of one benchmark to execute
+    (one of "benchmarks" YAML tag values")"""
     def __init__(self, campaign, benchmark):
         super(BenchmarkDriver, self).__init__(campaign)
         self.benchmark = benchmark
@@ -193,7 +204,7 @@ class BenchmarkDriver(Enumerator):
             for category, plots in self.benchmark.plots().items():
                 with pushd(category):
                     for plot in plots:
-                        self.generate_plot(plot)
+                        self.generate_plot(plot, category)
         else:
             runs = dict()
             for child in self.report['children']:
@@ -230,12 +241,20 @@ class BenchmarkDriver(Enumerator):
                     ostr.write('\n')
                 ostr.write(']\n')
 
-    def generate_plot(self, desc):
+    def generate_plot(self, desc, category):
         with open(JSON_METRICS_FILE) as istr:
             metrics = json.load(istr)
-        Plotter(metrics)(desc)
+        plotter = Plotter(
+            metrics,
+            category=category,
+            hostname=socket.gethostname()
+        )
+        plotter(desc)
+
 
 class MetricsDriver(object):
+    """Abstract representation of metrics already
+    built by a previous run"""
     def __init__(self, campaign, benchmark):
         self.campaign = campaign
         self.benchmark = benchmark
@@ -261,6 +280,9 @@ class MetricsDriver(object):
 
 
 class ExecutionDriver(object):
+    """Abstract representation of a benchmark command execution
+    (a benchmark is made of several commands)
+    """
     def __init__(self, campaign, benchmark, execution):
         self.campaign = campaign
         self.benchmark = benchmark

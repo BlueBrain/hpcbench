@@ -21,6 +21,7 @@ class MetricsExtractor(object):
         :return: exported metrics
         :rtype: dictionary of
         ``metric_name: dict('type'=python_type, 'unit'=string)``
+
         for instance:
 
         >>> def metrics(self):
@@ -28,15 +29,17 @@ class MetricsExtractor(object):
                 rmax=dict(type=float, unit='Gflops'),
                 parallel_efficiency=dict(type=float, unit='percent')
             )
+
         """
         raise NotImplementedError
 
     def extract(self, outdir, metas):
         """Extract metrics from benchmark output
 
-        :return: dictionary of ``metric_name: metric_value```
+        :return: dictionary of ``metric_name: metric_value``
         metric_value type should be the one specified in
         the ``metrics`` member funtion.
+
         """
         raise NotImplementedError
 
@@ -142,13 +145,35 @@ class Benchmark(object):
 
         :return: metrics_extractors instances for each category
         :rtype: ``dict of list of hpcbench.api.MetricsExtractor``.
-        For instance:
+        The list structure can be skiped when there is one
+        element. For instance:
 
         >>> def metrics_extractors(self):
                 return dict(
-                    foo=foo_stdout_extractor(metrics=['rmax',
-                                                      'parallel_efficiency']),
+                    foo=foo_stdout_extractor(metrics=['rmax', 'efficiency']),
                     bar=[bar_extractor(), foobar_extractor()]
                 )
         """
         raise NotImplementedError
+
+    def plots(self):
+        """Describe figures to generate
+
+        :return: figure descriptions of every category
+        :rtype: dictionary of string (category) -> list of dict (description)
+        A figure description is a dictionary made of the following keys:
+
+        name:
+            string providing figure's name
+        series:
+            dictionary describing data required to draw the figure,
+            made of 2 keys:
+            metas:
+                string list of meta to retrieve. Data series are sorted
+                by metas by default. If meta's name starts with '-',
+                then series are sorted in descending order.
+            metrics:
+               list of metrics to use.
+        plotter:
+            callable object that will be given metrics to plot
+        """

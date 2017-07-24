@@ -10,7 +10,7 @@ class cpu_extractor(MetricsExtractor):
 
     def metrics(self):
         return dict(
-            mininum=dict(type=float, unit='ms'),
+            minimum=dict(type=float, unit='ms'),
             average=dict(type=float, unit='ms'),
             maximum=dict(type=float, unit='ms'),
             percentile95=dict(type=float, unit='ms'),
@@ -68,7 +68,7 @@ class Sysbench(Benchmark):
     def execution_matrix(self):
         if Sysbench.FEATURE_CPU in self.attributes['features']:
             for thread in [1, 4, 16]:
-                for max_prime in [10000, 20000]:
+                for max_prime in [30]:
                     yield dict(
                         category='cpu',
                         command=[
@@ -93,10 +93,10 @@ class Sysbench(Benchmark):
         return {
             Sysbench.FEATURE_CPU: [
                 dict(
-                    name="{category} timing",
-                    #for_each=['max_prime'],  TODO
+                    name="{hostname} {category} timing",
+                    #  for_each=['max_prime'],  TODO
                     select=dict(
-                        metas__max_prime=10000
+                        metas__max_prime=30
                     ),
                     series=dict(
                         metas=['-thread'],
@@ -109,8 +109,12 @@ class Sysbench(Benchmark):
         }
 
     def plot_timing(self, plt, description, metas, metrics):
-        plt.plot(
-            metas['thread'], metrics['cpu__minimum'], 'r--',
-            metas['thread'], metrics['cpu__maximum'], 'bs',
-            metas['thread'], metrics['cpu__average'], 'g^',
-        )
+        plt.plot(metas['thread'], metrics['cpu__minimum'],
+                 'r--', label='minimum')
+        plt.plot(metas['thread'], metrics['cpu__maximum'],
+                 'bs-', label='maximum')
+        plt.plot(metas['thread'], metrics['cpu__average'],
+                 'g^', label='average')
+        plt.legend(loc='upper right', frameon=False)
+        plt.xlabel('thread')
+        plt.ylabel("t (sec)")
