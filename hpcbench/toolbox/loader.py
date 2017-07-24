@@ -7,9 +7,6 @@ from pkg_resources import (
     UnknownExtra,
 )
 
-from hpcbench.toolbox.text import exception_to_unicode
-
-
 LOGGER = logging.getLogger()
 
 
@@ -25,17 +22,15 @@ def load_eggs(entry_point_name):
                 working_set.add(dist)
 
         def _log_error(item, e):
-            ue = exception_to_unicode(e)
             if isinstance(e, DistributionNotFound):
-                LOGGER.debug('Skipping "%s": ("%s" not found)', item, ue)
+                LOGGER.debug('Skipping "%s": ("%s" not found)', item, e)
             elif isinstance(e, VersionConflict):
                 LOGGER.error('Skipping "%s": (version conflict "%s")',
-                             item, ue)
+                             item, e)
             elif isinstance(e, UnknownExtra):
-                LOGGER.error('Skipping "%s": (unknown extra "%s")', item, ue)
+                LOGGER.error('Skipping "%s": (unknown extra "%s")', item, e)
             else:
-                LOGGER.error('Skipping "%s": %s', item,
-                             exception_to_unicode(e, traceback=True))
+                LOGGER.error('Skipping "%s": %s', item, e)
 
         for dist, e in errors.iteritems():
             _log_error(dist, e)

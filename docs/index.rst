@@ -73,11 +73,11 @@ Development Guide
 How to integrate a new benchmark utility?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-1. Create a dedicated module in ``hpcbench/benchmarks`` directory
+1. Create a dedicated module in ``hpcbench/benchmark`` directory
 2. Implement ``hpcbench.api.Benchmark`` and ``hpcbench.MetricsExtractor`` classes
-3. Add dedicated tests in `tests/benchmarks` directory. Your test should not expect
-   the wrapped benchmark utility to be installed.
-4. Register the new module in ``setup.py`` ``[hpcbench.benchmarks]`` entrypoint
+3. Add dedicated tests in `tests/benchmark` directory. You can reuse tests of
+   sysbench benchmark utility. Your test should not expect the wrapped benchmark utility to be installed.
+4. Register the new module in ``setup.py`` ``[hpcbench.benchmarks]`` entrypoint.
 
 LICENSE
 =======

@@ -77,8 +77,8 @@ class TestKwargSQL(unittest.TestCase):
         self.assertTrue(kwargsql.OPERATIONS['istartswith']('abcd', 'aBc'))
         self.assertTrue(kwargsql.OPERATIONS['endswith']('abcd', 'bcd'))
         self.assertTrue(kwargsql.OPERATIONS['iendswith']('abcd', 'BcD'))
-        self.assertTrue(kwargsql.OPERATIONS['isinstance']('abcd', basestring))
-        self.assertTrue(kwargsql.OPERATIONS['issubclass'](str, basestring))
+        self.assertTrue(kwargsql.OPERATIONS['isinstance']('abcd', str))
+        self.assertTrue(kwargsql.OPERATIONS['issubclass'](str, str))
 
     def test_seqexp(self):
         d = self.d
@@ -105,7 +105,7 @@ class TestKwargSQL(unittest.TestCase):
     def test_nested(self):
         d = self.d
         self.assertTrue(and_(d, nested__val='nested-value'))
-        self.assertTrue(and_(d, exc__message__istartswith='error: '))
+        self.assertTrue(and_(d, exc__istartswith='error: '))
 
     def test_arrays(self):
         self.assertTrue(and_(self.d, array__1=5))

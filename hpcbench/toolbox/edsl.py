@@ -3,6 +3,7 @@
 Provides Python Embedded Domain Specific Languages.
 """
 from collections import Mapping, Sequence
+from functools import reduce
 import operator
 
 __all__ = ['kwargsql']
@@ -108,13 +109,13 @@ class kwargsql(object):
         'nin': lambda e, c: e not in c,
         'size': lambda c, e: len(c) == e,
         'exists': lambda e, cond: e is not None if cond else e is None,
-        'iexact': lambda s, e: s.lower() == e.lower(),
+        'iexact': lambda s, e: str(s).lower() == e.lower(),
         'contains': lambda s, e: e in s,
-        'icontains': lambda s, e: e.lower() in s.lower(),
-        'startswith': lambda s, e: s.startswith(e),
-        'istartswith': lambda s, e: s.lower().startswith(e.lower()),
-        'endswith': lambda s, e: s.endswith(e),
-        'iendswith': lambda s, e: s.lower().endswith(e.lower()),
+        'icontains': lambda s, e: str(e).lower() in s.lower(),
+        'startswith': lambda s, e: str(s).startswith(e),
+        'istartswith': lambda s, e: str(s).lower().startswith(e.lower()),
+        'endswith': lambda s, e: str(s).endswith(e),
+        'iendswith': lambda s, e: str(s).lower().endswith(e.lower()),
         'isinstance': isinstance,
         'issubclass': issubclass,
     }
@@ -221,7 +222,7 @@ class kwargsql(object):
         >>> 42
 
         """
-        path = filter(lambda s: s, path)
+        path = list(filter(lambda s: s, path))
         if any(path):
             pathes = len(path)
             i = 0

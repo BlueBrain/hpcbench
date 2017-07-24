@@ -4,7 +4,10 @@ import os.path as osp
 import shutil
 import yaml
 
-from hpcbench.api import Benchmark
+from hpcbench.api import (
+    Benchmark,
+    MetricsExtractor,
+)
 from hpcbench.driver import YAML_REPORT_FILE, MetricsDriver
 from hpcbench.toolbox.contextlib_ext import (
     mkdtemp,
@@ -38,7 +41,6 @@ class AbstractBenchmark(object):
         pyfile = inspect.getfile(self.__class__)
         for output in ['stdout', 'stderr']:
             out = osp.splitext(pyfile)[0] + '.' + category + '.' + output
-            print out
             if osp.isfile(out):
                 shutil.copy(out, output + '.txt')
 
@@ -83,9 +85,42 @@ class AbstractBenchmark(object):
                             self.get_expected_metrics(category)
                         ]
                 }
-                print parsed_metrics
-                print expected_metrics
                 self.assertEqual(
                     parsed_metrics,
                     expected_metrics
                 )
+
+    def test_has_description(self):
+        clazz = self.get_benchmark_clazz()
+        self.assertIsInstance(clazz.description, str)
+
+    def test_execution_matrix(self):
+        clazz = self.get_benchmark_clazz()
+        benchmark = clazz()
+        exec_matrix = benchmark.execution_matrix()
+        exec_matrix = list(exec_matrix)
+        self.assertIsInstance(exec_matrix, list)
+        run_keys = set(['category', 'command', 'metas'])
+        for runs in exec_matrix:
+            self.assertIsInstance(runs, dict)
+            self.assertTrue('category' in runs)
+            self.assertIsInstance(runs['category'], str)
+            self.assertTrue(runs['category'])
+            self.assertTrue('command' in runs)
+            self.assertIsInstance(runs['command'], list)
+            self.assertTrue(runs['command'])
+            keys = set(runs.keys())
+            self.assertTrue(keys.issubset(run_keys))
+
+    def test_metrics_extractors(self):
+        clazz = self.get_benchmark_clazz()
+        benchmark = clazz()
+        all_extractors = benchmark.metrics_extractors()
+        self.assertIsInstance(all_extractors, dict)
+        for name, extractors in all_extractors.items():
+            self.assertIsInstance(name, str)
+            self.assertTrue(name)
+            if not isinstance(extractors, list):
+                extractors = [extractors]
+            for extractor in extractors:
+                self.assertIsInstance(extractor, MetricsExtractor)

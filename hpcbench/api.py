@@ -4,6 +4,8 @@
 
 import os.path as osp
 
+from six import with_metaclass
+
 from hpcbench.toolbox.class_lib import ClassRegistrar
 
 __all__ = [
@@ -66,11 +68,9 @@ class MetricsExtractor(object):
         return osp.join(outdir, 'sterrr.txt')
 
 
-class Benchmark(object):
+class Benchmark(with_metaclass(ClassRegistrar, object)):
     """Declare benchmark utility
     """
-
-    __metaclass__ = ClassRegistrar
 
     name = None
     """Get benchmark name

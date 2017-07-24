@@ -61,14 +61,13 @@ class Plotter(object):
                     ))
                 else:
                     key_builder.append(operator.itemgetter(meta))
-            metrics.sort(
-                key=lambda m: tuple(
-                    map(
-                        lambda g: g(m['metas']),
-                        key_builder
-                    )
+
+            def key_builder_func(metric):
+                return map(
+                    lambda g: g(metric['metas']),
+                    key_builder
                 )
-            )
+            metrics.sort(key=key_builder_func)
         return metrics
 
     def select_metrics(self, desc):

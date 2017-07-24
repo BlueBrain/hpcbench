@@ -273,10 +273,23 @@ class MetricsDriver(object):
             extractors = [extractors]
         metrics = self.report.setdefault('metrics', {})
         for extractor in extractors:
-            metrics.setdefault(cat, []).append(
-                extractor.extract(os.getcwd(), self.report.get('metas'))
-            )
+            run_metrics = extractor.extract(os.getcwd(),
+                                            self.report.get('metas'))
+            self.check_metrics(extractor, run_metrics)
+            metrics.setdefault(cat, []).append(run_metrics)
         return self.report
+
+    def check_metrics(self, extractor, metrics):
+        """Ensure that returned metrics are properly exposed"""
+        exposed_metrics = extractor.metrics()
+        for name, value in metrics.items():
+            metric = exposed_metrics.get(name)
+            if not metric:
+                message = "Unexpected metric '{}' returned".format(name)
+                raise Exception(message)
+            elif not isinstance(value, metric['type']):
+                message = "Unexpected type for metrics {}".format(name)
+                raise Exception(message)
 
 
 class ExecutionDriver(object):

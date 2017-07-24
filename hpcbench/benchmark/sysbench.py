@@ -1,7 +1,12 @@
+import re
+
 from hpcbench.api import (
     Benchmark,
     MetricsExtractor,
 )
+
+
+KEEP_NUMBERS = re.compile('[^0-9.]')
 
 
 class cpu_extractor(MetricsExtractor):
@@ -39,7 +44,7 @@ class cpu_extractor(MetricsExtractor):
                     for attr, metric in mapping.items():
                         if line.startswith(attr + ':'):
                             value = line[len(attr + ':'):].lstrip()
-                            value = filter(lambda e: not e.isalpha(), value)
+                            value = KEEP_NUMBERS.sub('', value)
                             metrics[metric] = float(value)
         # ensure all metrics have been extracted
         unset_attributes = set(mapping.values()) - set(metrics)
