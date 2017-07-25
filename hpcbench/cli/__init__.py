@@ -12,12 +12,12 @@ def setup_logger(verbose):
     if verbose == 1:
         level = logging.INFO
     elif verbose > 1:
-        verbose == logging.DEBUG
+        verbose = logging.DEBUG
     logging.basicConfig(level=level)
 
 
-def cli_common(__doc__, **kwargs):
-    arguments = docopt(__doc__, version='hpcbench ' + __version__, **kwargs)
+def cli_common(doc, **kwargs):
+    arguments = docopt(doc, version='hpcbench ' + __version__, **kwargs)
     setup_logger(arguments['-v'])
     load_components()
     matplotlib.use('PS')

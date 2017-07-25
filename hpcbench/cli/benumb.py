@@ -16,6 +16,7 @@ from . import cli_common
 
 
 def main(argv=None):
+    """ben-umb entry point"""
     arguments = cli_common(__doc__, argv=argv)
     driver = CampaignDriver(campaign_path=arguments['CAMPAIGN-DIR'])
     driver(no_exec=True)

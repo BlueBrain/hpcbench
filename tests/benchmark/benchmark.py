@@ -62,6 +62,7 @@ class AbstractBenchmark(object):
             self.check_category_metrics(category)
 
     def check_category_metrics(self, category):
+        self.maxDiff = None
         with mkdtemp() as top_dir, pushd(top_dir):
             with open(YAML_REPORT_FILE, 'w') as ostr:
                 yaml.dump(

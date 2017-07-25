@@ -1,3 +1,7 @@
+"""HPCBench benchmark driver for sysbench
+
+    https://github.com/akopytov/sysbench
+"""
 import re
 
 from hpcbench.api import (
@@ -114,6 +118,7 @@ class Sysbench(Benchmark):
         }
 
     def plot_timing(self, plt, description, metas, metrics):
+        del description  # unused
         plt.plot(metas['thread'], metrics['cpu__minimum'],
                  'r--', label='minimum')
         plt.plot(metas['thread'], metrics['cpu__maximum'],
