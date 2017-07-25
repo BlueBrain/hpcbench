@@ -5,6 +5,10 @@ HPC Benchmarks
     :target: https://travis-ci.org/tristan0x/hpcbench
     :alt: Travis CI
 
+.. image:: https://readthedocs.org/projects/hpcbench/badge/?version=latest
+   :target: http://hpcbench.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
 .. image:: https://coveralls.io/repos/github/tristan0x/hpcbench/badge.svg?branch=master
    :target: https://coveralls.io/github/tristan0x/hpcbench?branch=master
    :alt: Code coverage
@@ -26,7 +30,8 @@ HPC Benchmarks
    :alt: Issue Count
 
 
-This project provides a Python module that helps defining benchmarks and executing them on your grid.
+This project provides a Python package that helps defining benchmarks and executing them on your grid. More information available in the
+`online documentation <http://hpcbench.readthedocs.io/en/latest/>`_
 
 License
 =======
