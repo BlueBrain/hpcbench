@@ -4,9 +4,8 @@ from hpcbench.benchmark.stream import Stream
 from . benchmark import AbstractBenchmarkTest
 
 
-
 class TestStream(AbstractBenchmarkTest, unittest.TestCase):
-    _expected_metrics = dict(
+    EXPECTED_METRICS = dict(
       copy_bandwidth  = 65965.0610,
       copy_avg_time   = 0.0340,
       copy_min_time   = 0.0326,
@@ -32,7 +31,7 @@ class TestStream(AbstractBenchmarkTest, unittest.TestCase):
         return Stream
 
     def get_expected_metrics(self, category):
-        return self._expected_metrics
+        return TestStream.EXPECTED_METRICS
 
     def get_benchmark_categories(self):
-        return ['cpu']
+        return [self.get_benchmark_clazz().FEATURE_CPU]
