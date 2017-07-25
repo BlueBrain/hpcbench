@@ -136,6 +136,12 @@ class Benchmark(with_metaclass(ClassRegistrar, object)):
         """
         raise NotImplementedError
 
+    def pre_execution(self):
+        """Method called before executing one of the command.
+        Current working directory is the execution directory.
+        """
+        pass
+
     def metrics_extractors(self):
         """Describe how to extract metrics from files written by
         benchmark commands.

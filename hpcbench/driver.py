@@ -127,7 +127,7 @@ class HostDriver(Enumerator):
     def children(self):
         """Retrieve tags associated to the current node"""
         hostnames = {'localhost', self.name}
-        benchmarks = set()
+        benchmarks = set(['*'])
         for tag, configs in self.campaign.network.tags.items():
             for config in configs:
                 for mode, kconfig in config.items():
@@ -303,8 +303,9 @@ class ExecutionDriver(object):
 
     @write_yaml_report
     def __call__(self, **kwargs):
+        self.benchmark.pre_execution()
         with open('stdout.txt', 'w') as stdout, \
-             open('stderr.txt', 'w') as stderr:
+                open('stderr.txt', 'w') as stderr:
             kwargs = dict(stdout=stdout, stderr=stderr)
             custom_env = self.execution.get('environment')
             if custom_env:

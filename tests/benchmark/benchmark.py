@@ -109,6 +109,8 @@ class AbstractBenchmark(object):
             self.assertTrue('command' in runs)
             self.assertIsInstance(runs['command'], list)
             self.assertTrue(runs['command'])
+            for arg in runs['command']:
+                self.assertIsInstance(arg, str)
             keys = set(runs.keys())
             self.assertTrue(keys.issubset(run_keys))
 

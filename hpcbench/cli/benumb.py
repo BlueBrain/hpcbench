@@ -11,21 +11,15 @@ Options:
   -v -vv -vvv Increase program verbosity
 """
 
-from docopt import docopt
-
-from hpcbench import __version__
 from hpcbench.driver import CampaignDriver
-from hpcbench.toolbox.loader import load_components
-from . import setup_logger
+from . import cli_common
 
 
-def main():
-    arguments = docopt(__doc__, version='hpcbench ' + __version__)
-    setup_logger(arguments['-v'])
-    load_components()
-    campaign_path = arguments['CAMPAIGN-DIR']
-    driver = CampaignDriver(campaign_path=campaign_path)
+def main(argv=None):
+    arguments = cli_common(__doc__, argv=argv)
+    driver = CampaignDriver(campaign_path=arguments['CAMPAIGN-DIR'])
     driver(no_exec=True)
+    return driver
 
 
 if __name__ == '__main__':

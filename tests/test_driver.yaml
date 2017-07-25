@@ -1,0 +1,8 @@
+output_dir: hpcbench-%Y%m%d-%H:%M:%S
+network:
+  nodes:
+    - localhost
+benchmarks:
+  '*':
+    test01:
+      type: fake

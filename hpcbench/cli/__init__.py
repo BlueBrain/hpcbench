@@ -1,5 +1,11 @@
 import logging
 
+from docopt import docopt
+import matplotlib
+
+from hpcbench import __version__
+from hpcbench.toolbox.loader import load_components
+
 
 def setup_logger(verbose):
     level = logging.WARNING
@@ -8,3 +14,11 @@ def setup_logger(verbose):
     elif verbose > 1:
         verbose == logging.DEBUG
     logging.basicConfig(level=level)
+
+
+def cli_common(__doc__, **kwargs):
+    arguments = docopt(__doc__, version='hpcbench ' + __version__, **kwargs)
+    setup_logger(arguments['-v'])
+    load_components()
+    matplotlib.use('PS')
+    return arguments
