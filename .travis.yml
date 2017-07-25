@@ -14,6 +14,11 @@ install:
     - sudo rm -rf /dev/shm && sudo ln -s /run/shm /dev/shm
     # Work around https://github.com/travis-ci/travis-ci/issues/5485
     - travis_retry pip install setuptools==29.0.1
-    - pip install tox-travis
+    - pip install tox-travis coveralls
 
 script: tox
+after_success: coveralls --verbose
+branches:
+  only:
+  - master
+  - /^v.*$/
