@@ -36,7 +36,7 @@ def load_eggs(entry_point_name):
             else:
                 LOGGER.error('Skipping "%s": %s', item, err)
 
-        for dist, err in errors.iteritems():
+        for dist, err in errors.items():
             _log_error(dist, err)
 
         for entry in sorted(working_set.iter_entry_points(entry_point_name),
