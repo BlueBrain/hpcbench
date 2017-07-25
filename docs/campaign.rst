@@ -1,7 +1,9 @@
 HPCBench Campaign file reference
 ================================
 
-HPCBench uses a YAML file to describe a tests campaign.
+HPCBench uses a YAML file
+(see `YAML cookbook <http://yaml.org/YAML_for_ruby.html>_`)
+to describe a tests campaign.
 Topics of this reference page are organized by top-level key
 to reflect the structure of the Campaign file itself.
 

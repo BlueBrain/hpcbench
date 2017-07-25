@@ -35,6 +35,7 @@ source_suffix = '.rst'
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
+source_encoding = 'utf-8'
 
 # The master toctree document.
 master_doc = 'index'
@@ -98,8 +99,8 @@ html_theme = 'alabaster'
 # documentation.
 html_theme_options = {
     "extra_nav_links": {
-        "🚀 Github": "https://github.com/tristan0x/hpcbench",
-        "💾 Download Releases": "https://pypi.python.org/pypi/hpcbench",
+        u"🚀 Github": "https://github.com/tristan0x/hpcbench",
+        u"💾 Download Releases": "https://pypi.python.org/pypi/hpcbench",
         }
     }
 
