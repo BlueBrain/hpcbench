@@ -19,7 +19,7 @@ class ClassLibrary(object):
 
         :param name: Name of the class to retrieve
         """
-        return cls.SUB_CLASSES[name]
+        return cls.SUB_CLASSES[name]  # pylint: disable=no-member
 
     @classmethod
     def get_subclasses(cls):
@@ -27,7 +27,7 @@ class ClassLibrary(object):
         :return: list of class names
         :rtype: list of string
         """
-        for clazz in cls.SUB_CLASSES:
+        for clazz in cls.SUB_CLASSES:  # pylint: disable=no-member
             yield clazz
 
     @classmethod
@@ -37,9 +37,10 @@ class ClassLibrary(object):
         :param clazz: Class to register
         """
         name = getattr(clazz, 'name', clazz.__name__)
-        if name in cls.SUB_CLASSES:
+        classes = cls.SUB_CLASSES  # pylint: disable=no-member
+        if name in classes:
             raise Exception('class %s is already registered' % name)
-        cls.SUB_CLASSES[name] = clazz
+        classes[name] = clazz
 
 
 class ClassRegistrar(type):
@@ -61,10 +62,10 @@ class ClassRegistrar(type):
     >>> Foo.get_subclass('awesome-class')
     <class '__main__.EmbarassingClassName'>
     """
-    def __new__(mcs, name, bases, dict):
+    def __new__(mcs, name, bases, attrs):
         if not bases or bases == (object,):
-            dict['SUB_CLASSES'] = {}
+            attrs['SUB_CLASSES'] = {}
             bases = (ClassLibrary,) + bases
-        cls = type.__new__(mcs, name, bases, dict)
+        cls = type.__new__(mcs, name, bases, attrs)
         cls.register_subclass(cls)
         return cls

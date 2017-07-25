@@ -1,3 +1,6 @@
+"""Load symbols referenced in setuptools entry points
+"""
+
 import logging
 import pkg_resources
 from pkg_resources import (
@@ -17,23 +20,24 @@ def load_eggs(entry_point_name):
             pkg_resources.Environment()
         )
         for dist in distributions:
+            # pylint: disable=unsupported-membership-test
             if dist not in working_set:
                 LOGGER.debug('Adding plugin %s from %s', dist, dist.location)
                 working_set.add(dist)
 
-        def _log_error(item, e):
-            if isinstance(e, DistributionNotFound):
-                LOGGER.debug('Skipping "%s": ("%s" not found)', item, e)
-            elif isinstance(e, VersionConflict):
+        def _log_error(item, err):
+            if isinstance(err, DistributionNotFound):
+                LOGGER.debug('Skipping "%s": ("%s" not found)', item, err)
+            elif isinstance(err, VersionConflict):
                 LOGGER.error('Skipping "%s": (version conflict "%s")',
-                             item, e)
-            elif isinstance(e, UnknownExtra):
-                LOGGER.error('Skipping "%s": (unknown extra "%s")', item, e)
+                             item, err)
+            elif isinstance(err, UnknownExtra):
+                LOGGER.error('Skipping "%s": (unknown extra "%s")', item, err)
             else:
-                LOGGER.error('Skipping "%s": %s', item, e)
+                LOGGER.error('Skipping "%s": %s', item, err)
 
-        for dist, e in errors.iteritems():
-            _log_error(dist, e)
+        for dist, err in errors.iteritems():
+            _log_error(dist, err)
 
         for entry in sorted(working_set.iter_entry_points(entry_point_name),
                             key=lambda entry: entry.name):
@@ -44,7 +48,7 @@ def load_eggs(entry_point_name):
             )
             try:
                 entry.load(require=True)
-            except Exception as exc:
+            except Exception as exc:  # pylint: disable=broad-except
                 _log_error(entry, exc)
     return _load_eggs
 

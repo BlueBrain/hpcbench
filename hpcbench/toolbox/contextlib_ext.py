@@ -23,12 +23,12 @@ def pushd(path, mkdir=True):
         os.chdir(cwd)
 
 
-class Timer(object):
+class Timer(object):  # pylint: disable=too-few-public-methods
     """Object usable in with-context to time it.
     """
     def __init__(self):
         self.start = None
-        self.stop = None
+        self.end = None
         self.timer = timeit.Timer()
 
     def __call__(self):
@@ -43,6 +43,10 @@ class Timer(object):
 
     @property
     def elapsed(self):
+        """
+        :return: duration in seconds spent in the context.
+        :rtype: float
+        """
         if self.end is None:
             return self() - self.end
         return self.end - self.start
