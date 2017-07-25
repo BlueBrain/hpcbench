@@ -14,9 +14,10 @@ HPCBench is a Python package that allows you to specify and execute benchmarks. 
 * A way to describe tests campaigns in a YAML format.
 * command line executable to execute your campaigns, and use generated metrics for
   various usage:
-  * Plotting with matplotlib
-  * PDF report generation
-  * Elasticsearch / Kibana integration
+
+   * Plotting with matplotlib
+   * PDF report generation
+   * Elasticsearch / Kibana integration
 
 HPCBench does not support benchmark softwares installation.
 
@@ -42,7 +43,7 @@ To upgrade using pip::
 Dependencies
 ------------
 
-HPCBench support 2.7, and 3.3+.
+HPCBench support 2.7, and 3.4+.
 
 
 Overview

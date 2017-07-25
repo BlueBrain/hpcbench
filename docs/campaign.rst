@@ -2,7 +2,7 @@ HPCBench Campaign file reference
 ================================
 
 HPCBench uses a YAML file
-(see `YAML cookbook <http://yaml.org/YAML_for_ruby.html>_`)
+(see `YAML cookbook <http://yaml.org/YAML_for_ruby.html>`_)
 to describe a tests campaign.
 Topics of this reference page are organized by top-level key
 to reflect the structure of the Campaign file itself.
@@ -33,7 +33,7 @@ tags
 ~~~~
 Specify groups of nodes.
 
-A tag can be defined with either an exaustive list of a regular expression.
+A tag can be defined with either an exhaustive list of a regular expression.
 
 For instance, given the set of nodes defined above, we can define the
 *cpu* and *gpu* tags as follow:
