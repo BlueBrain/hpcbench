@@ -71,6 +71,29 @@ HPCBench API purpose is to provide an unified layer:
 Development Guide
 -----------------
 
+Build instructions
+~~~~~~~~~~~~~~~~~~
+.. highlight:: bash
+
+Grab the source code::
+
+  $ git clone https://github.com/tristan0x/hpcbench.git
+  $ cd hpcbench
+
+It is then suggested to use a dedicated virtual environment. For that you can use
+`virtualenv` package or `pyenv`, which is even better::
+
+  $ pyenv virtualenv hpcbench
+  $ pyenv local hpcbench
+
+Then::
+
+  $ pip install tox
+  $ tox -e py27
+
+``tox`` is configured to test HPCBench against different Python versions. Option
+``-e py27`` tells tox to only test against Python 2.7.
+
 How to integrate a new benchmark utility?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
