@@ -34,6 +34,7 @@ def write_yaml_report(func):
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
+        now = datetime.datetime.now()
         with Timer() as timer:
             data = func(*args, **kwargs)
             if isinstance(data, (list, types.GeneratorType)):
@@ -43,6 +44,7 @@ def write_yaml_report(func):
             else:
                 raise Exception('Unexpected data type: %s', type(data))
         report['elapsed'] = timer.elapsed
+        report['date'] = now.isoformat()
         if "no_exec" not in kwargs and report is not None:
             with open(YAML_REPORT_FILE, 'w') as ostr:
                 yaml.dump(report, ostr, default_flow_style=False)

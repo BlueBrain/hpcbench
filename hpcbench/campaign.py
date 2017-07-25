@@ -31,6 +31,7 @@ def fill_default_campaign_values(campaign):
         campaign.setdefault(key, value)
     campaign.setdefault('network', {})
     campaign.network.setdefault('tags', {})
+    campaign.benchmarks.setdefault('*', {})
     for tag in list(campaign.network.tags):
         config = campaign.network.tags[tag]
         if isinstance(config, dict):
