@@ -3,6 +3,8 @@ import os
 import os.path as osp
 import shutil
 import yaml
+from six import with_metaclass
+from abc import ABCMeta, abstractmethod
 
 from hpcbench.api import (
     Benchmark,
@@ -15,7 +17,8 @@ from hpcbench.toolbox.contextlib_ext import (
 )
 
 
-class AbstractBenchmark(object):
+class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
+    @abstractmethod
     def get_benchmark_clazz(self):
         """
         :return: Benchmark class to test
@@ -23,6 +26,7 @@ class AbstractBenchmark(object):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def get_benchmark_categories(self):
         """
         :return: List of categories to tests
@@ -30,6 +34,7 @@ class AbstractBenchmark(object):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def get_expected_metrics(self, category):
         """
         :return: extract metrics from sample output for the given category
@@ -45,17 +50,15 @@ class AbstractBenchmark(object):
                 shutil.copy(out, output + '.txt')
 
     def test_class_has_name(self):
-        clazz = self.get_benchmark_clazz()
-        name = clazz.name
-        self.assertIsInstance(name, str)
-        self.assertTrue(len(name))
+        clazz_name = self.get_benchmark_clazz().name
+        assert isinstance(clazz_name, str)
+        assert clazz_name  # Not None or empty
 
     def test_class_is_registered(self):
         clazz = self.get_benchmark_clazz()
-        self.assertEqual(
-            Benchmark.get_subclass(clazz.name),
-            clazz
-        )
+        assert issubclass(clazz, Benchmark)
+        # We could access the list of subclasses, but bit horrible
+        # clazz in Benchmark.__subclasses__
 
     def test_metrics_extraction(self):
         for category in self.get_benchmark_categories():
@@ -86,44 +89,42 @@ class AbstractBenchmark(object):
                             self.get_expected_metrics(category)
                         ]
                 }
-                self.assertEqual(
-                    parsed_metrics,
-                    expected_metrics
-                )
+                assert parsed_metrics == expected_metrics
 
     def test_has_description(self):
         clazz = self.get_benchmark_clazz()
-        self.assertIsInstance(clazz.description, str)
+        assert isinstance(clazz.description, str)
 
     def test_execution_matrix(self):
         clazz = self.get_benchmark_clazz()
         benchmark = clazz()
-        exec_matrix = benchmark.execution_matrix()
+        exec_matrix = benchmark.execution_matrix
         exec_matrix = list(exec_matrix)
-        self.assertIsInstance(exec_matrix, list)
-        run_keys = set(['category', 'command', 'metas'])
+        assert isinstance(exec_matrix, list)
+
+        run_keys = {'category', 'command', 'metas'}
         for runs in exec_matrix:
-            self.assertIsInstance(runs, dict)
-            self.assertTrue('category' in runs)
-            self.assertIsInstance(runs['category'], str)
-            self.assertTrue(runs['category'])
-            self.assertTrue('command' in runs)
-            self.assertIsInstance(runs['command'], list)
-            self.assertTrue(runs['command'])
+            assert isinstance(runs, dict)
+            assert 'category' in runs
+            assert isinstance(runs['category'], str)
+            assert runs['category']
+            assert 'command' in runs
+            assert isinstance(runs['command'], list)
+            assert runs['command']
             for arg in runs['command']:
-                self.assertIsInstance(arg, str)
+                assert isinstance(arg, str)
             keys = set(runs.keys())
-            self.assertTrue(keys.issubset(run_keys))
+            assert keys.issubset(run_keys)
 
     def test_metrics_extractors(self):
         clazz = self.get_benchmark_clazz()
         benchmark = clazz()
-        all_extractors = benchmark.metrics_extractors()
-        self.assertIsInstance(all_extractors, dict)
+        all_extractors = benchmark.metrics_extractors
+        assert isinstance(all_extractors, dict)
         for name, extractors in all_extractors.items():
-            self.assertIsInstance(name, str)
-            self.assertTrue(name)
+            assert isinstance(name, str)
+            assert name
             if not isinstance(extractors, list):
                 extractors = [extractors]
             for extractor in extractors:
-                self.assertIsInstance(extractor, MetricsExtractor)
+                assert isinstance(extractor, MetricsExtractor)
