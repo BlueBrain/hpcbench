@@ -2,7 +2,10 @@
 """
 import re
 
-from . toolbox.collections_ext import Configuration
+from . toolbox.collections_ext import (
+    Configuration,
+    nameddict,
+)
 
 
 def from_file(campaign_file):
@@ -50,4 +53,41 @@ def fill_default_campaign_values(campaign):
                 else:
                     raise Exception('Unknown tag association pattern: %s',
                                     mode)
+    set_export_campaign_section(campaign)
     return campaign
+
+
+def set_export_campaign_section(campaign):
+    """Add default values for the ``export`` section
+    """
+    campaign.setdefault('export', nameddict())
+    campaign.export.setdefault('elasticsearch', nameddict())
+    campaign.export.elasticsearch.setdefault('host', 'localhost')
+    campaign.export.elasticsearch.setdefault('connection_params', {})
+    campaign.export.elasticsearch.setdefault('index_name',
+                                             'hpcbench-{date}')
+    return campaign
+
+
+def get_benchmark_types(campaign):
+    """Get of benchmarks referenced in the configuration
+
+    :return: benchmarks
+    :rtype: string generator
+    """
+    for benchmarks in campaign.benchmarks.values():
+        for benchmark in benchmarks.values():
+            yield benchmark.type
+
+
+def get_metrics(campaign):
+    """Get all metrics of a campaign
+
+    :return: metrics
+    :rtype: dictionary generator
+    """
+    for _, host_driver in campaign.traverse():
+        for _, tag_driver in host_driver.traverse():
+            for _, bench_obj in tag_driver.traverse():
+                for _, cat_obj in bench_obj.traverse():
+                    yield cat_obj.metrics

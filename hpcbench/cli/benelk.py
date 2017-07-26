@@ -1,0 +1,39 @@
+"""ben-elk - Export campaign in Elasticsearch
+
+Usage:
+  ben-elk [-v | -vv] [--es=<host>] CAMPAIGN-DIR
+  ben-elk (-h | --help)
+  ben-elk --version
+
+Options:
+  --es=<host> Elasticsearch host [default: localhost]
+  -h, --help  Show this screen
+  --version   Show version
+  -v -vv -vvv Increase program verbosity
+"""
+
+from hpcbench.driver import CampaignDriver
+from hpcbench.export import ESExporter
+from hpcbench.toolbox.contextlib_ext import pushd
+from . import cli_common
+
+
+def main(argv=None):
+    """ben-elk entry point"""
+    arguments = cli_common(__doc__, argv=argv)
+    campaign_path = arguments['CAMPAIGN-DIR']
+    driver = CampaignDriver(campaign_path=campaign_path)
+    es_host = arguments['--es']
+    if es_host:
+        es_conf = driver.campaign.campaign.export.elasticsearch
+        es_conf.host = es_host
+    driver.campaign.export.elasticsearch.hosts = es_host
+    es_export = ESExporter(driver)
+    with pushd(campaign_path):
+        es_export.export()
+    if __name__ != '__main__':
+        return es_export
+
+
+if __name__ == '__main__':
+    main()

@@ -20,6 +20,7 @@ from . toolbox.contextlib_ext import (
     pushd,
     Timer,
 )
+from . toolbox.collections_ext import nameddict
 from . api import Benchmark
 from . campaign import from_file
 from . plot import Plotter
@@ -63,7 +64,7 @@ class Enumerator(object):
         """Get object report. Content of ``YAML_REPORT_FILE``
         """
         with open(YAML_REPORT_FILE) as istr:
-            return yaml.load(istr)
+            return nameddict(yaml.load(istr))
 
     @write_yaml_report
     def __call__(self, **kwargs):
@@ -87,10 +88,19 @@ class Enumerator(object):
         """Property to be overriden be subclass to provide child objects"""
         raise NotImplementedError
 
-    def traverse(self):
+    def traverse(self, leaf=False):
+        if leaf:
+            builder = Leaf
+        else:
+            builder = self.child_builder
         for child in self._children:
             with pushd(str(child)):
-                yield child, self.child_builder(child)
+                yield child, builder(child)
+
+
+class Leaf(Enumerator):
+    def __init__(self, name):
+        self.name = name
 
 
 class CampaignDriver(Enumerator):
@@ -278,6 +288,7 @@ class BenchmarkCategoryDriver(Enumerator):
                         data = yaml.load(istr)
                         data.pop('category', None)
                         data.pop('command', None)
+                        data['id'] = run_dirs[i]
                         gathered_metrics = dict()
                         for cat, metricss in data.get('metrics', {}).items():
                             gathered = dict()
@@ -290,6 +301,11 @@ class BenchmarkCategoryDriver(Enumerator):
                         ostr.write(',')
                     ostr.write('\n')
                 ostr.write(']\n')
+
+    @cached_property
+    def metrics(self):
+        with open(JSON_METRICS_FILE) as istr:
+            return yaml.load(istr)
 
     def generate_plot(self, desc, category):
         with open(JSON_METRICS_FILE) as istr:

@@ -25,8 +25,8 @@ HPC Benchmarks
    :target: https://codeclimate.com/github/codeclimate/codeclimate
    :alt: Code Climate
 
-.. image:: https://codeclimate.com/github/codeclimate/codeclimate/badges/issue_count.svg
-   :target: https://codeclimate.com/github/codeclimate/codeclimate
+.. image:: https://codeclimate.com/github/tristan0x/hpcbench/badges/issue_count.svg
+   :target: https://codeclimate.com/github/tristan0x/hpcbench
    :alt: Issue Count
 
 

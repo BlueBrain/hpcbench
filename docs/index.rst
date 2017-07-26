@@ -57,6 +57,7 @@ CLI
 * ben-sh: Execute a tests campaign
 * ben-umb: Extract metrics of an existing campaign
 * ben-plop: Draw figures of an existing campaign
+* ben-elk: Push campaign data to Elasticsearch
 
 **ben-sh** expects a :doc:`YAML file <campaign>` describing the campaign to execute.
 
@@ -93,6 +94,23 @@ Then::
 
 ``tox`` is configured to test HPCBench against different Python versions. Option
 ``-e py27`` tells tox to only test against Python 2.7.
+
+How to start Elasticsearch cluster?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Elasticsearch is required to pass unit-tests.
+You can use ``misc/docker-elk.yaml`` docker-compose file::
+
+   $ docker-compose -f misc/docker-elk.yaml up -d
+
+
+It will start an Elasticsearch container listening on port 9200 and a Kibana
+instance listening on port 5612.
+
+Unit-tests assume that Elasticsearch is running on localhost. 
+You can define ``ELASTICSEARCH_HOST`` environment variable to specify
+another location::
+
+   $ ELASTICSEARCH_HOST=server01:9200 tox
 
 How to integrate a new benchmark utility?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

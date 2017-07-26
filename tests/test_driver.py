@@ -20,6 +20,7 @@ from hpcbench.toolbox.contextlib_ext import (
 )
 from hpcbench.cli import (
     bendoc,
+    benelk,
     benplot,
     bensh,
     benumb,
@@ -174,6 +175,20 @@ class TestDriver(unittest.TestCase):
             bendoc.main(TestDriver.CAMPAIGN_PATH)
         content = stdout.getvalue()
         self.assertTrue(content)
+
+    def test_05_es_dump(self):
+        # Push documents to Elasticsearch
+        argv = [TestDriver.CAMPAIGN_PATH]
+        if 'ELASTICSEARCH_HOST' in os.environ:
+            argv += ['--es', os.environ['ELASTICSEARCH_HOST']]
+        exporter = benelk.main(TestDriver.CAMPAIGN_PATH)
+        # Ensure they are searchable
+        exporter.index_client.refresh(exporter.index_name)
+        # Expect 3 documents in the index dedicated to the campaign
+        resp = exporter.es_client.count(exporter.index_name)
+        self.assertEqual(resp['count'], 3)
+        # Cleanup
+        exporter.remove_index()
 
     @classmethod
     def tearDownClass(cls):

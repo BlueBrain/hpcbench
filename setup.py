@@ -43,16 +43,18 @@ setup(
     install_requires=[
         'cached-property==1.3.0',
         'docopt==0.6.2',
+        'elasticsearch==5.4.0',
         'matplotlib==2.0.2',
         'PyYAML>=3.12',
         'six==1.10',
     ],
     entry_points="""
         [console_scripts]
+        ben-doc = hpcbench.cli.bendoc:main
+        ben-elk = hpcbench.cli.benelk:main
+        ben-plot = hpcbench.cli.benplot:main
         ben-sh = hpcbench.cli.bensh:main
         ben-umb = hpcbench.cli.benumb:main
-        ben-plot = hpcbench.cli.benplot:main
-        ben-doc = hpcbench.cli.bendoc:main
         [hpcbench.benchmarks]
         sysbench = hpcbench.benchmark.sysbench
     """
