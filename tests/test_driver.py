@@ -154,7 +154,6 @@ class TestDriver(unittest.TestCase):
         # FIXME add checks
 
     def test_03_plot(self):
-        print(TestDriver.CAMPAIGN_PATH, os.getcwd())
         self.test_02_number()
         self.assertIsNotNone(TestDriver.CAMPAIGN_PATH)
         benplot.main(TestDriver.CAMPAIGN_PATH)
@@ -176,7 +175,6 @@ class TestDriver(unittest.TestCase):
         content = stdout.getvalue()
         self.assertTrue(content)
 
-
-        # @classmethod
-        # def tearDownClass(cls):
-        #     shutil.rmtree(cls.TEST_DIR)
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.TEST_DIR)

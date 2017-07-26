@@ -234,7 +234,6 @@ class BenchmarkCategoryDriver(Enumerator):
     def __call__(self, **kwargs):
         if "no_exec" not in kwargs:
             runs = dict()
-            print(self.benchmark.execution_matrix)
             for execution in self.benchmark.execution_matrix:
                 category = execution.get('category')
                 if self.category != category:
