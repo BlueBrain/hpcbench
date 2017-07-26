@@ -11,8 +11,16 @@ from hpcbench.api import (
     Benchmark,
     MetricsExtractor,
 )
-from hpcbench.toolbox.contextlib_ext import pushd
-from hpcbench.cli import bensh
+from hpcbench.toolbox.contextlib_ext import (
+    capture_stdout,
+    pushd,
+)
+from hpcbench.cli import (
+    bendoc,
+    benplot,
+    bensh,
+    benumb,
+)
 
 from . benchmark.benchmark import AbstractBenchmark
 
@@ -64,6 +72,29 @@ class FakeBenchmark(Benchmark):
     def metrics_extractors(self):
         return dict(main=FakeExtractor())
 
+    def plots(self):
+        return dict(
+            main=[
+                dict(
+                    name="{hostname} {category} Performance",
+                    series=dict(
+                        metas=['field'],
+                        metrics=[
+                            'main__performance',
+                            'main__standard_error'
+                        ],
+                    ),
+                    plotter=self.plot_performance
+                )
+            ]
+        )
+
+    def plot_performance(self, plt, description, metas, metrics):
+        plt.errorbar(metas['field'],
+                     metrics['main__performance'],
+                     yerr=metrics['main__standard_error'],
+                     fmt='o', ecolor='g', capthick=2)
+
 
 class TestFakeBenchmark(AbstractBenchmark, unittest.TestCase):
     def get_benchmark_clazz(self):
@@ -86,12 +117,12 @@ class TestDriver(unittest.TestCase):
     def test_01_run(self):
         with pushd(TestDriver.TEST_DIR):
             self.driver = bensh.main(self.get_campaign_file())
-        campaign_path = osp.join(TestDriver.TEST_DIR,
+        TestDriver.CAMPAIGN_PATH = osp.join(TestDriver.TEST_DIR,
                                  self.driver.campaign_path)
-        self.assertTrue(osp.isdir(campaign_path))
+        self.assertTrue(osp.isdir(TestDriver.CAMPAIGN_PATH))
         # simply ensure metrics have been generated
         aggregated_metrics_f = osp.join(
-            campaign_path,
+            TestDriver.CAMPAIGN_PATH,
             socket.gethostname(),
             '*',
             'test01',
@@ -103,9 +134,37 @@ class TestDriver(unittest.TestCase):
             aggregated_metrics = json.load(istr)
         self.assertTrue(len(aggregated_metrics), 3)
 
+    def test_02_number(self):
+        self.assertIsNotNone(TestDriver.CAMPAIGN_PATH)
+        benumb.main(TestDriver.CAMPAIGN_PATH)
+        # FIXME add checks
+
+    def test_03_plot(self):
+        self.assertIsNotNone(TestDriver.CAMPAIGN_PATH)
+        benplot.main(TestDriver.CAMPAIGN_PATH)
+        plot_file_f = osp.join(
+            TestDriver.CAMPAIGN_PATH,
+            socket.gethostname(),
+            '*',
+            'test01',
+            'main',
+            '91859462124ccb92b82125a312b1ff3d10'
+            '86fe44b668f96eddc073e3e4e37204.png'
+        )
+        self.assertTrue(osp.isfile(plot_file_f))
+
+    def test_04_report(self):
+        self.assertIsNotNone(TestDriver.CAMPAIGN_PATH)
+        with capture_stdout() as stdout:
+            bendoc.main(TestDriver.CAMPAIGN_PATH)
+        content = stdout.getvalue()
+        self.assertTrue(content)
+
+
     @classmethod
     def setUpClass(cls):
         cls.TEST_DIR = tempfile.mkdtemp()
+        cls.CAMPAIGN_PATH = None
 
     @classmethod
     def tearDownClass(cls):

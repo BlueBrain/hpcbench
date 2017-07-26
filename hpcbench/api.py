@@ -183,3 +183,4 @@ class Benchmark(with_metaclass(ClassRegistrar, object)):
         plotter:
             callable object that will be given metrics to plot
         """
+        raise NotImplementedError

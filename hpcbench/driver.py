@@ -264,8 +264,7 @@ class BenchmarkCategoryDriver(Enumerator):
                 with open(child_yaml) as istr:
                     child_config = yaml.load(istr)
                 child_config.pop('children', None)
-                category, _ = child.split(os.sep, 1)
-                runs.setdefault(category, []).append(child)
+                runs.setdefault(self.category, []).append(child)
                 with pushd(child):
                     MetricsDriver(self.campaign, self.benchmark)(**kwargs)
             self.gather_metrics(runs)
