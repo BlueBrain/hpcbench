@@ -4,6 +4,8 @@ import re
 import sys
 
 from jinja2 import Environment, PackageLoader
+import six
+
 
 ENV = Environment(
     loader=PackageLoader('hpcbench', 'templates'),
@@ -32,7 +34,7 @@ def tex_escape(text):
     }
     regex = re.compile(
         '|'.join(
-            re.escape(unicode(key))
+            re.escape(six.text_type(key))
             for key in sorted(
                 conv.keys(),
                 key=lambda item: - len(item)

@@ -58,7 +58,7 @@ class FakeBenchmark(Benchmark):
             """))
 
     def execution_matrix(self):
-        for value in (10, 50, 100):
+        for value in [10, 50, 100]:
             yield dict(
                 category='main',
                 command=[
