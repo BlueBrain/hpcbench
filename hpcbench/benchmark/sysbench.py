@@ -2,8 +2,6 @@
 
     https://github.com/akopytov/sysbench
 """
-from collections import namedtuple
-
 from cached_property import cached_property
 import re
 
@@ -21,11 +19,11 @@ class CpuExtractor(MetricsExtractor):
 
     def __init__(self):
         self._metrics = dict(
-            minimum     =Metrics.Milisecond,
-            average     =Metrics.Milisecond,
-            maximum     =Metrics.Milisecond,
+            minimum=Metrics.Milisecond,
+            average=Metrics.Milisecond,
+            maximum=Metrics.Milisecond,
             percentile95=Metrics.Milisecond,
-            total_time  =Metrics.Second
+            total_time=Metrics.Second
         )
 
     @property

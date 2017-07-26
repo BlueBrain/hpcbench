@@ -25,7 +25,7 @@ from hpcbench.cli import (
     benumb,
 )
 
-from . benchmark.benchmark import AbstractBenchmarkTest
+from .benchmark.benchmark import AbstractBenchmarkTest
 
 
 class FakeExtractor(MetricsExtractor):
@@ -65,14 +65,14 @@ class FakeBenchmark(Benchmark):
     @cached_property
     def execution_matrix(self):
         return [dict(
-                category='main',
-                command=[
-                    sys.executable, 'test.py', str(value)
-                ],
-                metas=dict(
-                    field=value / 10
-                )
+            category='main',
+            command=[
+                sys.executable, 'test.py', str(value)
+            ],
+            metas=dict(
+                field=value / 10
             )
+        )
             for value in (10, 50, 100)
         ]
 
@@ -132,7 +132,6 @@ class TestDriver(unittest.TestCase):
         cls.CAMPAIGN_PATH = osp.join(TestDriver.TEST_DIR,
                                      cls.driver.campaign_path)
 
-
     def test_run_01(self):
         self.assertTrue(osp.isdir(self.CAMPAIGN_PATH))
         # simply ensure metrics have been generated
@@ -178,6 +177,6 @@ class TestDriver(unittest.TestCase):
         self.assertTrue(content)
 
 
-    # @classmethod
-    # def tearDownClass(cls):
-    #     shutil.rmtree(cls.TEST_DIR)
+        # @classmethod
+        # def tearDownClass(cls):
+        #     shutil.rmtree(cls.TEST_DIR)
