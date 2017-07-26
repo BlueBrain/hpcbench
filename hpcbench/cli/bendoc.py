@@ -23,7 +23,7 @@ from . import cli_common
 def main(argv=None):
     """ben-doc entry point"""
     arguments = cli_common(__doc__, argv=argv)
-    campaign_path =arguments['CAMPAIGN-DIR']
+    campaign_path = arguments['CAMPAIGN-DIR']
     driver = CampaignDriver(campaign_path=campaign_path)
     with pushd(campaign_path):
         render(driver,

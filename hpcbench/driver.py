@@ -34,7 +34,7 @@ def write_yaml_report(func):
     """Decorator used to campaign node post-processing
     """
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def _wrapper(*args, **kwargs):
         now = datetime.datetime.now()
         with Timer() as timer:
             data = func(*args, **kwargs)
@@ -50,7 +50,7 @@ def write_yaml_report(func):
             with open(YAML_REPORT_FILE, 'w') as ostr:
                 yaml.dump(report, ostr, default_flow_style=False)
         return report
-    return wrapper
+    return _wrapper
 
 
 class Enumerator(object):
@@ -60,6 +60,8 @@ class Enumerator(object):
 
     @cached_property
     def report(self):
+        """Get object report. Content of ``YAML_REPORT_FILE``
+        """
         with open(YAML_REPORT_FILE) as istr:
             return yaml.load(istr)
 
