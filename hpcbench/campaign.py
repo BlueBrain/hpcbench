@@ -25,11 +25,12 @@ def fill_default_campaign_values(campaign):
     :rtype: dictionary
     """
     default_campaign = dict(
-        output_dir="benchmark-%Y%m%d-%H:%M:%S"
+        output_dir="hpcbench-%Y%m%d-%H:%M:%S"
     )
     for key, value in default_campaign.items():
         campaign.setdefault(key, value)
     campaign.setdefault('network', {})
+    campaign['network'].setdefault('nodes', ['localhost'])
     campaign.network.setdefault('tags', {})
     campaign.benchmarks.setdefault('*', {})
     for tag in list(campaign.network.tags):
