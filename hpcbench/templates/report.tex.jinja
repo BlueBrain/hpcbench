@@ -1,0 +1,55 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+
+\newcommand{\myparagraph}[1]{\paragraph{{ '{#1}' }}\mbox{}\\}
+
+\title{HPCBenchmark report}
+\author{
+  Tristan Carel \\ Blue Brain Project \\ EPFL, \underline{Switzerland}
+}
+\date{\today}
+
+\begin{document}
+  \maketitle
+
+  \begin{abstract}
+  HPCBench report generated on {{ campaign.report['date'] }} on the following
+  nodes:
+
+  \begin{itemize}
+  {%- for node in campaign.campaign.network.nodes %}
+    \item {{ node }}
+  {%- endfor %}
+  \end{itemize}
+  \end{abstract}
+  {% for node_name, node in campaign.traverse() %}
+  \section{Host {{ node_name }}}
+
+    {%- for tag_name, tag in node.traverse() %}
+    \subsection{Tag {{ tag_name }}}
+      {%- for bench_name, bench in tag.traverse() %}
+      \subsubsection{Use case {{bench_name | texscape}}}
+        \begin{itemize}
+          \item benchmark type: {{ bench.benchmark.name | texscape }}
+          \item benchmark description: {{ bench.benchmark.description | texscape }}
+        \end{itemize}
+        {%- for cat, category in bench.traverse() %}
+        \myparagraph{Category {{ cat | texscape }}}
+
+          \par List of executed commands executed:
+          \begin{itemize}
+          {%- for command in category.commands %}
+            \item {{ command | texscape }}
+          {%- endfor %}
+          \end{itemize}
+          {%- for plot_file in category.plot_files %}
+          \begin{figure}
+            \includegraphics{{ '{' ~ plot_file ~ '}' }}
+          \end{figure}
+          {%- endfor %}
+        {%- endfor %}
+      {%- endfor %}
+    {%- endfor %}
+  {%- endfor %}
+\end{document}
+

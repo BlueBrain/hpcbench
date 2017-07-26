@@ -1,3 +1,5 @@
+"""Provide all package executables
+"""
 import logging
 
 from docopt import docopt
@@ -8,6 +10,9 @@ from hpcbench.toolbox.loader import load_components
 
 
 def setup_logger(verbose):
+    """Prepare root logger
+    :param verbose: integer greater than 0 to indicate verbosity level
+    """
     level = logging.WARNING
     if verbose == 1:
         level = logging.INFO
@@ -17,6 +22,8 @@ def setup_logger(verbose):
 
 
 def cli_common(doc, **kwargs):
+    """Program initialization for all provided executables
+    """
     arguments = docopt(doc, version='hpcbench ' + __version__, **kwargs)
     setup_logger(arguments['-v'])
     load_components()

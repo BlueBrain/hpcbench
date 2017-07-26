@@ -52,6 +52,7 @@ setup(
         ben-sh = hpcbench.cli.bensh:main
         ben-umb = hpcbench.cli.benumb:main
         ben-plot = hpcbench.cli.benplot:main
+        ben-doc = hpcbench.cli.bendoc:main
         [hpcbench.benchmarks]
         sysbench = hpcbench.benchmark.sysbench
     """

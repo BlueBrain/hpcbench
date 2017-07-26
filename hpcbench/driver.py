@@ -13,6 +13,7 @@ import types
 import uuid
 
 from cached_property import cached_property
+import six
 import yaml
 
 from . toolbox.contextlib_ext import (
@@ -33,7 +34,7 @@ def write_yaml_report(func):
     """Decorator used to campaign node post-processing
     """
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def _wrapper(*args, **kwargs):
         now = datetime.datetime.now()
         with Timer() as timer:
             data = func(*args, **kwargs)
@@ -49,7 +50,7 @@ def write_yaml_report(func):
             with open(YAML_REPORT_FILE, 'w') as ostr:
                 yaml.dump(report, ostr, default_flow_style=False)
         return report
-    return wrapper
+    return _wrapper
 
 
 class Enumerator(object):
@@ -59,6 +60,8 @@ class Enumerator(object):
 
     @cached_property
     def report(self):
+        """Get object report. Content of ``YAML_REPORT_FILE``
+        """
         with open(YAML_REPORT_FILE) as istr:
             return yaml.load(istr)
 
@@ -83,6 +86,11 @@ class Enumerator(object):
     def children(self):
         """Property to be overriden be subclass to provide child objects"""
         raise NotImplementedError
+
+    def traverse(self):
+        for child in self._children:
+            with pushd(str(child)):
+                yield child, self.child_builder(child)
 
 
 class CampaignDriver(Enumerator):
@@ -173,21 +181,66 @@ class BenchmarkTagDriver(Enumerator):
 
 
 class BenchmarkDriver(Enumerator):
-    """Abstract representation of one benchmark to execute
-    (one of "benchmarks" YAML tag values")"""
     def __init__(self, campaign, benchmark):
         super(BenchmarkDriver, self).__init__(campaign)
         self.benchmark = benchmark
+
+    @cached_property
+    def children(self):
+        categories = set()
+        for execution in self.benchmark.execution_matrix:
+            categories.add(execution['category'])
+        return categories
+
+    def child_builder(self, child):
+        return BenchmarkCategoryDriver(self.campaign, child, self.benchmark)
+
+
+class BenchmarkCategoryDriver(Enumerator):
+    """Abstract representation of one benchmark to execute
+    (one of "benchmarks" YAML tag values")"""
+    def __init__(self, campaign, category, benchmark):
+        super(BenchmarkCategoryDriver, self).__init__(campaign)
+        self.category = category
+        self.benchmark = benchmark
+
+    @cached_property
+    def plot_files(self):
+        for plot in self.benchmark.plots[self.category]:
+            yield osp.join(os.getcwd(), Plotter.get_filename(plot))
+
+    @cached_property
+    def commands(self):
+        for child in self._children:
+            with open(osp.join(child, YAML_REPORT_FILE)) as istr:
+                command = yaml.load(istr)['command']
+                yield ' '.join(map(six.moves.shlex_quote, command))
+
+    @cached_property
+    def children(self):
+        children = []
+        for execution in self.benchmark.execution_matrix:
+            category = execution.get('category')
+            if category != self.category:
+                continue
+            name = execution.get('name') or ''
+            children.append(osp.join(
+                name,
+                str(uuid.uuid4())
+            ))
+        return children
 
     @write_yaml_report
     def __call__(self, **kwargs):
         if "no_exec" not in kwargs:
             runs = dict()
+            print(self.benchmark.execution_matrix)
             for execution in self.benchmark.execution_matrix:
                 category = execution.get('category')
+                if self.category != category:
+                    continue
                 name = execution.get('name') or ''
                 run_dir = osp.join(
-                    category,
                     name,
                     str(uuid.uuid4())
                 )
@@ -203,10 +256,8 @@ class BenchmarkDriver(Enumerator):
                     yield run_dir
             self.gather_metrics(runs)
         elif 'plot' in kwargs:
-            for category, plots in self.benchmark.plots().items():
-                with pushd(category):
-                    for plot in plots:
-                        self.generate_plot(plot, category)
+            for plot in self.benchmark.plots.get(self.category):
+                self.generate_plot(plot, self.category)
         else:
             runs = dict()
             for child in self.report['children']:
@@ -214,16 +265,14 @@ class BenchmarkDriver(Enumerator):
                 with open(child_yaml) as istr:
                     child_config = yaml.load(istr)
                 child_config.pop('children', None)
-                category, _ = child.split(os.sep, 1)
-                runs.setdefault(category, []).append(child)
+                runs.setdefault(self.category, []).append(child)
                 with pushd(child):
                     MetricsDriver(self.campaign, self.benchmark)(**kwargs)
-                    yield child
             self.gather_metrics(runs)
 
     def gather_metrics(self, runs):
         for category, run_dirs in runs.items():
-            with open(osp.join(category, JSON_METRICS_FILE), 'w') as ostr:
+            with open(JSON_METRICS_FILE, 'w') as ostr:
                 ostr.write('[\n')
                 for i in range(len(run_dirs)):
                     with open(osp.join(run_dirs[i], YAML_REPORT_FILE)) as istr:

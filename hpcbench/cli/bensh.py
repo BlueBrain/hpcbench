@@ -20,7 +20,8 @@ def main(argv=None):
     arguments = cli_common(__doc__, argv=argv)
     driver = CampaignDriver(campaign_file=arguments['CAMPAIGN_FILE'])
     driver()
-    return driver
+    if argv is not None:
+        return driver
 
 
 if __name__ == '__main__':

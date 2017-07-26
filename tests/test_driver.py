@@ -1,4 +1,5 @@
 import json
+import os
 import os.path as osp
 import shutil
 import socket
@@ -13,8 +14,16 @@ from hpcbench.api import (
     Metric,
     MetricsExtractor,
 )
-from hpcbench.toolbox.contextlib_ext import pushd
-from hpcbench.cli import bensh
+from hpcbench.toolbox.contextlib_ext import (
+    capture_stdout,
+    pushd,
+)
+from hpcbench.cli import (
+    bendoc,
+    benplot,
+    bensh,
+    benumb,
+)
 
 from . benchmark.benchmark import AbstractBenchmarkTest
 
@@ -55,8 +64,7 @@ class FakeBenchmark(Benchmark):
 
     @cached_property
     def execution_matrix(self):
-        for value in (10, 50, 100):
-            yield dict(
+        return [dict(
                 category='main',
                 command=[
                     sys.executable, 'test.py', str(value)
@@ -65,6 +73,8 @@ class FakeBenchmark(Benchmark):
                     field=value / 10
                 )
             )
+            for value in (10, 50, 100)
+        ]
 
     @property
     def metrics_extractors(self):
@@ -72,7 +82,27 @@ class FakeBenchmark(Benchmark):
 
     @property
     def plots(self):
-        return None
+        return dict(
+            main=[
+                dict(
+                    name="{hostname} {category} Performance",
+                    series=dict(
+                        metas=['field'],
+                        metrics=[
+                            'main__performance',
+                            'main__standard_error'
+                        ],
+                    ),
+                    plotter=self.plot_performance
+                )
+            ]
+        )
+
+    def plot_performance(self, plt, description, metas, metrics):
+        plt.errorbar(metas['field'],
+                     metrics['main__performance'],
+                     yerr=metrics['main__standard_error'],
+                     fmt='o', ecolor='g', capthick=2)
 
 
 class TestFakeBenchmark(AbstractBenchmarkTest, unittest.TestCase):
@@ -90,33 +120,64 @@ class TestFakeBenchmark(AbstractBenchmarkTest, unittest.TestCase):
 
 
 class TestDriver(unittest.TestCase):
-    def get_campaign_file(self):
+    @staticmethod
+    def get_campaign_file():
         return osp.splitext(__file__)[0] + '.yaml'
 
-    def test_01_run(self):
+    @classmethod
+    def setUpClass(cls):
+        cls.TEST_DIR = tempfile.mkdtemp()
         with pushd(TestDriver.TEST_DIR):
-            self.driver = bensh.main(self.get_campaign_file())
-        campaign_path = osp.join(TestDriver.TEST_DIR,
-                                 self.driver.campaign_path)
-        self.assertTrue(osp.isdir(campaign_path))
+            cls.driver = bensh.main(cls.get_campaign_file())
+        cls.CAMPAIGN_PATH = osp.join(TestDriver.TEST_DIR,
+                                     cls.driver.campaign_path)
+
+
+    def test_run_01(self):
+        self.assertTrue(osp.isdir(self.CAMPAIGN_PATH))
         # simply ensure metrics have been generated
         aggregated_metrics_f = osp.join(
-            campaign_path,
+            TestDriver.CAMPAIGN_PATH,
             socket.gethostname(),
             '*',
             'test01',
             'main',
             'metrics.json'
         )
-        self.assertTrue(osp.isfile(aggregated_metrics_f))
+        self.assertTrue(osp.isfile(aggregated_metrics_f), "Not file: " + aggregated_metrics_f)
         with open(aggregated_metrics_f) as istr:
             aggregated_metrics = json.load(istr)
         self.assertTrue(len(aggregated_metrics), 3)
 
-    @classmethod
-    def setUpClass(cls):
-        cls.TEST_DIR = tempfile.mkdtemp()
+    def test_02_number(self):
+        self.assertIsNotNone(TestDriver.CAMPAIGN_PATH)
+        benumb.main(TestDriver.CAMPAIGN_PATH)
+        # FIXME add checks
 
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.TEST_DIR)
+    def test_03_plot(self):
+        print(TestDriver.CAMPAIGN_PATH, os.getcwd())
+        self.test_02_number()
+        self.assertIsNotNone(TestDriver.CAMPAIGN_PATH)
+        benplot.main(TestDriver.CAMPAIGN_PATH)
+        plot_file_f = osp.join(
+            TestDriver.CAMPAIGN_PATH,
+            socket.gethostname(),
+            '*',
+            'test01',
+            'main',
+            '91859462124ccb92b82125a312b1ff3d10'
+            '86fe44b668f96eddc073e3e4e37204.png'
+        )
+        self.assertTrue(osp.isfile(plot_file_f))
+
+    def test_04_report(self):
+        self.assertIsNotNone(TestDriver.CAMPAIGN_PATH)
+        with capture_stdout() as stdout:
+            bendoc.main(TestDriver.CAMPAIGN_PATH)
+        content = stdout.getvalue()
+        self.assertTrue(content)
+
+
+    # @classmethod
+    # def tearDownClass(cls):
+    #     shutil.rmtree(cls.TEST_DIR)

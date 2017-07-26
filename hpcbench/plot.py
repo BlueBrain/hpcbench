@@ -45,7 +45,7 @@ class Plotter(object):
         desc = dict((k, v) for k, v in desc.items() if k != 'plotter')
         flatdict = flatten_dict(desc)
         sha256 = hashlib.sha256()
-        sha256.update(repr(tuple(sorted(flatdict.items()))))
+        sha256.update(repr(tuple(sorted(flatdict.items()))).encode('utf-8'))
         return sha256.hexdigest() + '.png'
 
     def sort_metrics(self, desc, metrics):
@@ -63,9 +63,11 @@ class Plotter(object):
                     key_builder.append(operator.itemgetter(meta))
 
             def key_builder_func(metric):
-                return map(
-                    lambda g: g(metric['metas']),
-                    key_builder
+                return list(
+                    map(
+                        lambda g: g(metric['metas']),
+                        key_builder
+                    )
                 )
             metrics.sort(key=key_builder_func)
         return metrics
@@ -86,9 +88,11 @@ class Plotter(object):
     def build_series(self, desc, metrics):
         """Transform JSON metrics to data series used by matplotlib
         """
-        meta_names = map(
-            lambda m: m[1:] if m.startswith('-') else m,
-            desc['series'].get('metas') or []
+        meta_names = list(
+            map(
+                lambda m: m[1:] if m.startswith('-') else m,
+                desc['series'].get('metas') or []
+            )
         )
         metric_names = desc['series']['metrics']
         meta_series = dict()

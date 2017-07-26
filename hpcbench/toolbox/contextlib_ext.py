@@ -4,8 +4,28 @@ import contextlib
 import os
 import os.path as osp
 import shutil
+import sys
 import tempfile
 import timeit
+
+import six
+
+
+@contextlib.contextmanager
+def capture_stdout():
+    """Intercept standard output in a with-context
+    :return: cStringIO instance
+
+    >>> with capture_stdout() as stdout:
+            ...
+        print stdout.getvalue()
+    """
+    stdout = sys.stdout
+    sys.stdout = six.moves.cStringIO()
+    try:
+        yield sys.stdout
+    finally:
+        sys.stdout = stdout
 
 
 @contextlib.contextmanager

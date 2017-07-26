@@ -203,6 +203,7 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         plotter:
             callable object that will be given metrics to plot
         """
+        raise NotImplementedError
 
     @classmethod
     def get_subclass(cls, name):
