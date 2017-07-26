@@ -3,20 +3,32 @@
 """
 
 import os.path as osp
-
 from six import with_metaclass
-
-from hpcbench.toolbox.class_lib import ClassRegistrar
+from abc import ABCMeta, abstractmethod, abstractproperty
+from collections import namedtuple
 
 __all__ = [
     'MetricsExtractor',
     'Benchmark',
 ]
 
+# Metrics have simply a unit and a type
+# namedtuples are compact and have a nice str representation
+Metric = namedtuple("Metric", "unit type")
 
-class MetricsExtractor(object):
+
+class Metrics:
+    """List of common metrics
+    """
+    Milisecond = Metric('ms', float)
+    Second = Metric('s', float)
+
+
+class MetricsExtractor(with_metaclass(ABCMeta, object)):
     """Extract data from a benchmark command outputs
     """
+
+    @abstractproperty
     def metrics(self):
         """List of exported metrics
 
@@ -35,6 +47,7 @@ class MetricsExtractor(object):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def extract(self, outdir, metas):
         """Extract metrics from benchmark output
 
@@ -68,19 +81,23 @@ class MetricsExtractor(object):
         return osp.join(outdir, 'sterrr.txt')
 
 
-class Benchmark(with_metaclass(ClassRegistrar, object)):
+class Benchmark(with_metaclass(ABCMeta, object)):
     """Declare benchmark utility
     """
 
-    name = None
+    # --- Class "static" properties ---
+    @abstractproperty
+    def name(self): pass
     """Get benchmark name
     :rtype: string
     """
 
-    description = None
+    @abstractproperty
+    def description(self): pass
     """Get benchmark long description
     :rtype: string
     """
+    # ---
 
     def __init__(self, attributes=None):
         self.attributes = attributes or {}
@@ -88,6 +105,7 @@ class Benchmark(with_metaclass(ClassRegistrar, object)):
     def __str__(self):
         return self.name
 
+    @abstractproperty
     def execution_matrix(self):
         """Describe benchmark commands
 
@@ -136,12 +154,13 @@ class Benchmark(with_metaclass(ClassRegistrar, object)):
         """
         raise NotImplementedError
 
-    def pre_execution(self):
+    def pre_execute(self):
         """Method called before executing one of the command.
         Current working directory is the execution directory.
         """
         pass
 
+    @abstractproperty
     def metrics_extractors(self):
         """Describe how to extract metrics from files written by
         benchmark commands.
@@ -162,6 +181,7 @@ class Benchmark(with_metaclass(ClassRegistrar, object)):
         """
         raise NotImplementedError
 
+    @abstractproperty
     def plots(self):
         """Describe figures to generate
 
@@ -183,3 +203,10 @@ class Benchmark(with_metaclass(ClassRegistrar, object)):
         plotter:
             callable object that will be given metrics to plot
         """
+
+    @classmethod
+    def get_subclass(cls, name):
+        for subclass in cls.__subclasses__():
+            if subclass.name == name:
+                return subclass
+        raise NameError("Not a valid Benchmark class: " + name)

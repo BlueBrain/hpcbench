@@ -6,21 +6,25 @@ import sys
 import tempfile
 from textwrap import dedent
 import unittest
+from cached_property import cached_property
 
 from hpcbench.api import (
     Benchmark,
+    Metric,
     MetricsExtractor,
 )
 from hpcbench.toolbox.contextlib_ext import pushd
 from hpcbench.cli import bensh
 
-from . benchmark.benchmark import AbstractBenchmark
+from . benchmark.benchmark import AbstractBenchmarkTest
+
 
 class FakeExtractor(MetricsExtractor):
+    @property
     def metrics(self):
         return dict(
-            performance=dict(type=float, unit='m'),
-            standard_error=dict(type=float, unit='m')
+            performance=Metric('m', float),
+            standard_error=Metric('m', float)
         )
 
     def extract(self, outdir, metas):
@@ -39,7 +43,7 @@ class FakeBenchmark(Benchmark):
         fake benchmark for HPCBench testing purpose
     '''
 
-    def pre_execution(self):
+    def pre_execute(self):
         with open('test.py', 'w') as ostr:
             ostr.write(dedent("""\
             from __future__ import print_function
@@ -49,6 +53,7 @@ class FakeBenchmark(Benchmark):
             print(float(sys.argv[1]) / 10)
             """))
 
+    @cached_property
     def execution_matrix(self):
         for value in (10, 50, 100):
             yield dict(
@@ -61,11 +66,16 @@ class FakeBenchmark(Benchmark):
                 )
             )
 
+    @property
     def metrics_extractors(self):
         return dict(main=FakeExtractor())
 
+    @property
+    def plots(self):
+        return None
 
-class TestFakeBenchmark(AbstractBenchmark, unittest.TestCase):
+
+class TestFakeBenchmark(AbstractBenchmarkTest, unittest.TestCase):
     def get_benchmark_clazz(self):
         return FakeBenchmark
 

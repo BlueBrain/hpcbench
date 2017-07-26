@@ -129,7 +129,7 @@ class HostDriver(Enumerator):
     def children(self):
         """Retrieve tags associated to the current node"""
         hostnames = {'localhost', self.name}
-        benchmarks = set(['*'])
+        benchmarks = {'*'}
         for tag, configs in self.campaign.network.tags.items():
             for config in configs:
                 for mode, kconfig in config.items():
@@ -183,7 +183,7 @@ class BenchmarkDriver(Enumerator):
     def __call__(self, **kwargs):
         if "no_exec" not in kwargs:
             runs = dict()
-            for execution in self.benchmark.execution_matrix():
+            for execution in self.benchmark.execution_matrix:
                 category = execution.get('category')
                 name = execution.get('name') or ''
                 run_dir = osp.join(
@@ -256,7 +256,8 @@ class BenchmarkDriver(Enumerator):
 
 class MetricsDriver(object):
     """Abstract representation of metrics already
-    built by a previous run"""
+    built by a previous run
+    """
     def __init__(self, campaign, benchmark):
         self.campaign = campaign
         self.benchmark = benchmark
@@ -266,7 +267,7 @@ class MetricsDriver(object):
     @write_yaml_report
     def __call__(self, **kwargs):
         cat = self.report.get('category')
-        all_extractors = self.benchmark.metrics_extractors()
+        all_extractors = self.benchmark.metrics_extractors
         if cat not in all_extractors:
             raise Exception('No extractor for benchmark category %s' %
                             cat)
@@ -282,14 +283,15 @@ class MetricsDriver(object):
         return self.report
 
     def check_metrics(self, extractor, metrics):
-        """Ensure that returned metrics are properly exposed"""
-        exposed_metrics = extractor.metrics()
+        """Ensure that returned metrics are properly exposed
+        """
+        exposed_metrics = extractor.metrics
         for name, value in metrics.items():
             metric = exposed_metrics.get(name)
             if not metric:
                 message = "Unexpected metric '{}' returned".format(name)
                 raise Exception(message)
-            elif not isinstance(value, metric['type']):
+            elif not isinstance(value, metric.type):
                 message = "Unexpected type for metrics {}".format(name)
                 raise Exception(message)
 
@@ -305,7 +307,7 @@ class ExecutionDriver(object):
 
     @write_yaml_report
     def __call__(self, **kwargs):
-        self.benchmark.pre_execution()
+        self.benchmark.pre_execute()
         with open('stdout.txt', 'w') as stdout, \
                 open('stderr.txt', 'w') as stderr:
             kwargs = dict(stdout=stdout, stderr=stderr)

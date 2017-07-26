@@ -2,29 +2,38 @@
 
     https://github.com/akopytov/sysbench
 """
+from collections import namedtuple
+
+from cached_property import cached_property
 import re
 
 from hpcbench.api import (
     Benchmark,
+    Metrics,
     MetricsExtractor,
 )
 
 
-KEEP_NUMBERS = re.compile('[^0-9.]')
-
-
-class cpu_extractor(MetricsExtractor):
+class CpuExtractor(MetricsExtractor):
     """Ignore stdout until this line"""
     STDOUT_IGNORE_PRIOR = 'Test execution summary:'
+    KEEP_NUMBERS = re.compile('[^0-9.]')
 
-    def metrics(self):
-        return dict(
-            minimum=dict(type=float, unit='ms'),
-            average=dict(type=float, unit='ms'),
-            maximum=dict(type=float, unit='ms'),
-            percentile95=dict(type=float, unit='ms'),
-            total_time=dict(type=float, unit='s'),
+    def __init__(self):
+        self._metrics = dict(
+            minimum     =Metrics.Milisecond,
+            average     =Metrics.Milisecond,
+            maximum     =Metrics.Milisecond,
+            percentile95=Metrics.Milisecond,
+            total_time  =Metrics.Second
         )
+
+    @property
+    def metrics(self):
+        """ The metrics to be extracted.
+            This property can not be replaced, but can be mutated as required
+        """
+        return self._metrics
 
     def extract(self, outdir, metas):
         mapping = {
@@ -37,19 +46,16 @@ class cpu_extractor(MetricsExtractor):
         metrics = {}
         # parse stdout and extract desired metrics
         with open(self.stdout(outdir)) as istr:
-            look_after_data = False
+            for line in istr:
+                if line.strip() == self.STDOUT_IGNORE_PRIOR:
+                    break
             for line in istr:
                 line = line.strip()
-                if not look_after_data:
-                    if line == self.STDOUT_IGNORE_PRIOR:
-                        look_after_data = True
-                        continue
-                else:
-                    for attr, metric in mapping.items():
-                        if line.startswith(attr + ':'):
-                            value = line[len(attr + ':'):].lstrip()
-                            value = KEEP_NUMBERS.sub('', value)
-                            metrics[metric] = float(value)
+                for attr, metric in mapping.items():
+                    if line.startswith(attr + ':'):
+                        value = line[len(attr + ':'):].lstrip()
+                        value = self.KEEP_NUMBERS.sub('', value)
+                        metrics[metric] = float(value)
         # ensure all metrics have been extracted
         unset_attributes = set(mapping.values()) - set(metrics)
         if any(unset_attributes):
@@ -74,6 +80,7 @@ class Sysbench(Benchmark):
         performance, and even MySQL benchmarking.
         """
 
+    @property
     def execution_matrix(self):
         if Sysbench.FEATURE_CPU in self.attributes['features']:
             for thread in [1, 4, 16]:
@@ -93,11 +100,13 @@ class Sysbench(Benchmark):
                         )
                     )
 
+    @cached_property
     def metrics_extractors(self):
         return {
-            Sysbench.FEATURE_CPU: cpu_extractor(),
+            Sysbench.FEATURE_CPU: CpuExtractor(),
         }
 
+    @property
     def plots(self):
         return {
             Sysbench.FEATURE_CPU: [
