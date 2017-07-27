@@ -107,7 +107,7 @@ It will start an Elasticsearch container listening on port 9200 and a Kibana
 instance listening on port 5612.
 
 Unit-tests assume that Elasticsearch is running on localhost. 
-You can define ``ELASTICSEARCH_HOST`` environment variable to specify
+You can define ``UT_ELASTICSEARCH_HOST`` environment variable to specify
 another location::
 
    $ ELASTICSEARCH_HOST=server01:9200 tox
