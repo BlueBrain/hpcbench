@@ -2,10 +2,11 @@
 """API to declare benchmarks
 """
 
-import os.path as osp
-from six import with_metaclass
 from abc import ABCMeta, abstractmethod, abstractproperty
 from collections import namedtuple
+import os.path as osp
+
+from six import with_metaclass
 
 __all__ = [
     'MetricsExtractor',

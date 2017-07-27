@@ -1,5 +1,10 @@
 """Campaign execution and post-processing
 """
+from abc import (
+    ABCMeta,
+    abstractmethod,
+    abstractproperty,
+)
 import copy
 import datetime
 from functools import wraps
@@ -54,10 +59,19 @@ def write_yaml_report(func):
     return _wrapper
 
 
-class Enumerator(object):
+class Enumerator(six.with_metaclass(ABCMeta, object)):
     """Common class for every campaign node"""
     def __init__(self, campaign):
         self.campaign = campaign
+
+    @abstractmethod
+    def child_builder(self, child):
+        raise NotImplementedError
+
+    @abstractproperty
+    def children(self):
+        """Property to be overriden be subclass to provide child objects"""
+        raise NotImplementedError
 
     @cached_property
     def report(self):
@@ -74,19 +88,11 @@ class Enumerator(object):
                 child_obj(**kwargs)
                 yield child
 
-    def child_builder(self, child):
-        raise NotImplementedError
-
     @cached_property
     def _children(self):
         if osp.isfile(YAML_REPORT_FILE):
             return self.report['children']
         return self.children
-
-    @cached_property
-    def children(self):
-        """Property to be overriden be subclass to provide child objects"""
-        raise NotImplementedError
 
     def traverse(self, leaf=False):
         if leaf:
@@ -239,6 +245,9 @@ class BenchmarkCategoryDriver(Enumerator):
                 str(uuid.uuid4())
             ))
         return children
+
+    def child_builder(self, child):
+        del child  # unused
 
     @write_yaml_report
     def __call__(self, **kwargs):
