@@ -59,7 +59,8 @@ CLI
 * ben-plop: Draw figures of an existing campaign
 * ben-elk: Push campaign data to Elasticsearch
 
-**ben-sh** expects a :doc:`YAML file <campaign>` describing the campaign to execute.
+**ben-sh** expects a YAML file describing the campaign to execute.
+Structure of this YAML file is detailled in the :doc:`campaign file reference <campaign>`.
 
 API
 ---
@@ -70,9 +71,12 @@ HPCBench API purpose is to provide an unified layer:
 * to use extracted metrics to build figures
 
 Development Guide
------------------
+=================
 
 Prerequisites
+-------------
+
+Elasticsearch
 ~~~~~~~~~~~~~
 
 `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ is required to execute unit-tests. The easiest way to proceed is
@@ -90,13 +94,15 @@ Post-installation instructions to use Docker without root privileges (logout/log
    $ sudo groupadd docker
    $ sudo usermod -aG docker $USER
 
-
 To start an Elasticsearch container, you can use the
 ``misc/docker-elk.yaml`` file::
 
-   $ docker-compose -f misc/docker-elk.yaml up -d elasticsearch
+   $ docker-compose -f misc/docker-elk.yaml up -d
 
-Let's try to ping Elasticsearch::
+It will start an Elasticsearch container listening on port 9200 and a Kibana
+instance listening on port 5612.
+
+Let's now try to ping Elasticsearch::
 
    $ curl localhost:9200
    {
@@ -113,8 +119,11 @@ Let's try to ping Elasticsearch::
      "tagline" : "You Know, for Search"
    }
 
+You can also access Kibana at http://localhost:5601
+The ``Dev Tools`` is one of the most handy Elasticsearch client for humans.
+
 Build instructions
-~~~~~~~~~~~~~~~~~~
+------------------
 .. highlight:: bash
 
 Grab the source code::
@@ -144,16 +153,6 @@ Then::
 ``tox`` is configured to test HPCBench against different Python versions. Option
 ``-e py27`` tells tox to only test against Python 2.7.
 
-How to start Elasticsearch cluster?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Elasticsearch is required to pass unit-tests.
-You can use ``misc/docker-elk.yaml`` docker-compose file::
-
-   $ docker-compose -f misc/docker-elk.yaml up -d
-
-
-It will start an Elasticsearch container listening on port 9200 and a Kibana
-instance listening on port 5612.
 
 Unit-tests assume that Elasticsearch is running on localhost. 
 You can define ``UT_ELASTICSEARCH_HOST`` environment variable to specify
@@ -206,4 +205,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
