@@ -123,10 +123,18 @@ Grab the source code::
   $ cd hpcbench
 
 It is then suggested to use a dedicated virtual environment. For that you can use
-`virtualenv` package or `pyenv`, which is even better::
+either `virtualenv <https://virtualenv.pypa.io/en/stable/>`_ package or
+`pyenv <https://github.com/pyenv/pyenv>`_, which is even better.
+
+With ``pyenv``::
 
   $ pyenv virtualenv hpcbench
   $ pyenv local hpcbench
+
+With ``virtualenv``::
+
+   $ virtualenv .env
+   $ . .env/bin/activate
 
 Then::
 
