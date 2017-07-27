@@ -72,6 +72,47 @@ HPCBench API purpose is to provide an unified layer:
 Development Guide
 -----------------
 
+Prerequisites
+~~~~~~~~~~~~~
+
+`Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ is required to execute unit-tests. The easiest way to proceed is
+to use Docker containers.
+
+Quick'n dirty Docker installation::
+
+   $ curl -fsSL get.docker.com -o get-docker.sh
+   $ sh get-docker.sh
+   $ curl -L https://github.com/docker/compose/releases/download/1.15.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+   $ chmod +x /usr/local/bin/docker-compose
+
+Post-installation instructions to use Docker without root privileges (logout/login) required::
+
+   $ sudo groupadd docker
+   $ sudo usermod -aG docker $USER
+
+
+To start an Elasticsearch container, you can use the
+``misc/docker-elk.yaml`` file::
+
+   $ docker-compose -f misc/docker-elk.yaml up -d elasticsearch
+
+Let's try to ping Elasticsearch::
+
+   $ curl localhost:9200
+   {
+     "name" : "jQ-BcoF",
+     "cluster_name" : "elasticsearch",
+     "cluster_uuid" : "yGP7_Q2gSU2HmHpnQB-jzg",
+     "version" : {
+       "number" : "5.5.1",
+       "build_hash" : "19c13d0",
+       "build_date" : "2017-07-18T20:44:24.823Z",
+       "build_snapshot" : false,
+       "lucene_version" : "6.6.0"
+     },
+     "tagline" : "You Know, for Search"
+   }
+
 Build instructions
 ~~~~~~~~~~~~~~~~~~
 .. highlight:: bash
