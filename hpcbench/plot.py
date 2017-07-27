@@ -48,7 +48,8 @@ class Plotter(object):
         sha256.update(repr(tuple(sorted(flatdict.items()))).encode('utf-8'))
         return sha256.hexdigest() + '.png'
 
-    def sort_metrics(self, desc, metrics):
+    @classmethod
+    def sort_metrics(cls, desc, metrics):
         """Order data series"""
         metas = desc['series'].get('metas') or []
         if metas:
@@ -62,14 +63,12 @@ class Plotter(object):
                 else:
                     key_builder.append(operator.itemgetter(meta))
 
-            def key_builder_func(metric):
-                return list(
-                    map(
-                        lambda g: g(metric['metas']),
-                        key_builder
-                    )
-                )
-            metrics.sort(key=key_builder_func)
+            def _key_builder_func(metric):
+                return [
+                    getter(metric['metas'])
+                    for getter in key_builder
+                ]
+            metrics.sort(key=_key_builder_func)
         return metrics
 
     def select_metrics(self, desc):
@@ -80,34 +79,33 @@ class Plotter(object):
         selectables = desc.get('select') or []
         if not selectables:
             return self.metrics
-        return filter(
-            lambda m: kwargsql.and_(m, **selectables),
-            self.metrics
-        )
+        return [
+            m for m in self.metrics
+            if kwargsql.and_(m, **selectables)
+        ]
 
-    def build_series(self, desc, metrics):
+    @classmethod
+    def build_series(cls, desc, metrics):
         """Transform JSON metrics to data series used by matplotlib
         """
-        meta_names = list(
-            map(
-                lambda m: m[1:] if m.startswith('-') else m,
-                desc['series'].get('metas') or []
-            )
-        )
+        meta_names = [
+            m[1:] if m.startswith('-') else m
+            for m in desc['series'].get('metas') or []
+        ]
         metric_names = desc['series']['metrics']
         meta_series = dict()
         metric_series = dict()
         for run in metrics:
-            def search_in_dict(keys, d, serie, with_kwargsql=False):
+            def _search_in_dict(keys, dico, serie, with_kwargsql=False):
                 for name in keys:
                     if not with_kwargsql:
-                        value = d.get(name)
+                        value = dico.get(name)
                     else:
-                        value = kwargsql.get(d, name)
+                        value = kwargsql.get(dico, name)
                     if value is not None:
                         serie.setdefault(name, []).append(value)
-            search_in_dict(meta_names, run.get('metas') or {}, meta_series)
-            search_in_dict(metric_names,
-                           run.get('metrics') or {},
-                           metric_series, with_kwargsql=True)
+            _search_in_dict(meta_names, run.get('metas') or {}, meta_series)
+            _search_in_dict(metric_names,
+                            run.get('metrics') or {},
+                            metric_series, with_kwargsql=True)
         return meta_series, metric_series

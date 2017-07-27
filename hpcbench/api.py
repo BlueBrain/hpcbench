@@ -18,7 +18,7 @@ __all__ = [
 Metric = namedtuple("Metric", "unit type")
 
 
-class Metrics:
+class Metrics(object):  # pragma pylint: disable=too-few-public-methods
     """List of common metrics
     """
     Milisecond = Metric('ms', float)
@@ -88,16 +88,18 @@ class Benchmark(with_metaclass(ABCMeta, object)):
 
     # --- Class "static" properties ---
     @abstractproperty
-    def name(self): pass
-    """Get benchmark name
-    :rtype: string
-    """
+    def name(self):
+        """Get benchmark name
+        :rtype: string
+        """
+        pass
 
     @abstractproperty
-    def description(self): pass
-    """Get benchmark long description
-    :rtype: string
-    """
+    def description(self):
+        """Get benchmark long description
+        :rtype: string
+        """
+        pass
     # ---
 
     def __init__(self, attributes=None):
@@ -208,6 +210,10 @@ class Benchmark(with_metaclass(ABCMeta, object)):
 
     @classmethod
     def get_subclass(cls, name):
+        """Get Benchmark subclass by name
+        :param name: name returned by ``Benchmark.name`` property
+        :return: instance of ``Benchmark`` class
+        """
         for subclass in cls.__subclasses__():
             if subclass.name == name:
                 return subclass

@@ -64,6 +64,8 @@ class CpuExtractor(MetricsExtractor):
 
 
 class Sysbench(Benchmark):
+    """Benchmark wrapper for the sysbench utility
+    """
     FEATURE_CPU = 'cpu'
 
     def __init__(self):
@@ -120,12 +122,15 @@ class Sysbench(Benchmark):
                         metrics=['cpu__minimum', 'cpu__average',
                                  'cpu__maximum', 'cpu__percentile95'],
                     ),
-                    plotter=self.plot_timing
+                    plotter=Sysbench.plot_timing
                 ),
             ]
         }
 
-    def plot_timing(self, plt, description, metas, metrics):
+    @classmethod
+    def plot_timing(cls, plt, description, metas, metrics):
+        """Generate timings plot
+        """
         del description  # unused
         plt.plot(metas['thread'], metrics['cpu__minimum'],
                  'r--', label='minimum')

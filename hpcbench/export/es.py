@@ -144,7 +144,7 @@ class ESExporter(object):
         return fields
 
     @classmethod
-    def _get_dict_mapping(cls, property, data):
+    def _get_dict_mapping(cls, prop, data):
         mapping = {}
         for name, value in data.items():
             if isinstance(value, (dict, collections.Mapping)):
@@ -152,7 +152,7 @@ class ESExporter(object):
             else:
                 dict_merge(mapping, cls._get_field_mapping(name, value))
         return {
-            property: {
+            prop: {
                 'properties': mapping
             }
         }
@@ -167,10 +167,6 @@ class ESExporter(object):
                 'type': field_type
             }
         }
-
-    @classmethod
-    def _get_field_from_metric(cls, name, value):
-        return cls._get_field_from_meta(name, value, prefix='metric_')
 
     @classmethod
     def _get_runs(cls, campaign):

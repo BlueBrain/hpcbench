@@ -3,7 +3,7 @@
 Provides Python Embedded Domain Specific Languages.
 """
 from collections import Mapping, Sequence
-from functools import reduce
+import functools
 import operator
 
 __all__ = ['kwargsql']
@@ -15,7 +15,6 @@ class AnySequenceResult(Sequence):
     builtin.
     """
     def __init__(self, data, join_operation):
-        super(AnySequenceResult, self).__init__()
         self.__data = data
         self.join_operation = join_operation
 
@@ -26,7 +25,7 @@ class AnySequenceResult(Sequence):
         return self.__data[key]
 
 
-class kwargsql(object):
+class kwargsql(object):  # pragma pylint: disable=invalid-name
     """Query your Python objects with a `kwargs` syntax.
 
     Syntax looks like the Mongoengine syntax to query documents.
@@ -222,7 +221,7 @@ class kwargsql(object):
         >>> 42
 
         """
-        path = list(filter(lambda s: s, path))
+        path = [p for p in path if p]
         if any(path):
             pathes = len(path)
             i = 0
@@ -236,9 +235,9 @@ class kwargsql(object):
         return obj
 
     @classmethod
-    def __eval_seqexp(cls, obj, op, **kwargs):
-        return reduce(
-            op,
+    def __eval_seqexp(cls, obj, operation, **kwargs):
+        return functools.reduce(
+            operation,
             [cls._eval_exp(obj, exp, value)
              for (exp, value) in kwargs.items()]
         )
@@ -291,35 +290,35 @@ class kwargsql(object):
         return result
 
     @classmethod
-    def _not(cls, op):
+    def _not(cls, operation):
         """not operation"""
-        def wrap(*args, **kwargs):
-            return not op(*args, **kwargs)
-        return wrap
+        def _wrap(*args, **kwargs):
+            return not operation(*args, **kwargs)
+        return _wrap
 
     @classmethod
     def _eval_exp(cls, obj, exp, value):
-        op = operator.eq
+        operation = operator.eq
         tokens = exp.split('__')[::-1]
         _op = cls._get_operation(tokens[0])
         if _op is not None:
             # this is the operator
-            op = _op
+            operation = _op
             tokens = tokens[1:]
         if tokens[0] == 'not':
-            op = cls._not(op)
+            operation = cls._not(operation)
             tokens = tokens[1:]
         try:
             computed = cls.__resolve_path(obj, reversed(tokens))
         except (KeyError, IndexError):
             computed = None
         if isinstance(computed, AnySequenceResult):
-            data = [op(item, value) for item in computed]
-            if len(data):
-                return reduce(
+            data = [operation(item, value) for item in computed]
+            if any(data):
+                return functools.reduce(
                     computed.join_operation,
                     data,
                 )
             return False
         else:
-            return op(computed, value)
+            return operation(computed, value)

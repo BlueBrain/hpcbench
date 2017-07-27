@@ -1,3 +1,5 @@
+"""Extra collections utilities
+"""
 import collections
 import copy
 import errno
@@ -9,7 +11,7 @@ import yaml
 from yaml import Loader
 
 
-class nameddict(dict):
+class nameddict(dict):  # pragma pylint: disable=invalid-name
     """ Provides dictionary whose keys are accessible via the property
     syntax: `obj.key`
     """
@@ -18,34 +20,43 @@ class nameddict(dict):
         self.__dict__ = self
         self.__namify(self.__dict__)
 
-    def __namify(self, a_dict):
+    @classmethod
+    def __namify(cls, a_dict):
         for key in a_dict.keys():
-            if type(a_dict[key]) == dict:
+            if isinstance(a_dict[key], dict):
                 a_dict[key] = nameddict(a_dict[key])
 
     def __setitem__(self, key, value):
-        if type(value) == dict:
+        if isinstance(value, dict):
             value = nameddict(value)
         super(nameddict, self).__setitem__(key, value)
 
     def __setattr__(self, key, value):
-        if key != '__dict__' and type(value) == dict:
+        if key != '__dict__' and isinstance(value, dict):
             value = nameddict(value)
         super(nameddict, self).__setattr__(key, value)
 
     def __deepcopy__(self, memo):
         cls = self.__class__
         content = dict()
-        for k, v in self.iteritems():
-            content[k] = copy.deepcopy(v, memo)
+        for key, value in self.items():
+            content[key] = copy.deepcopy(value, memo)
         result = cls.__new__(cls)
         result.__init__(content)
         return result
 
 
 class Configuration(nameddict):
+    """nameddict reflecting a YAML file
+    """
     @classmethod
     def from_file(cls, path):
+        """Create a ``Configuration`` from a file
+
+        :param path: path to YAML file
+        :return: new configuration
+        :rtype: ``Configuration``
+        """
         if not osp.exists(path) and not osp.isabs(path):
             path = osp.join(osp.dirname(osp.abspath(__file__)), path)
         with open(path, 'r') as istr:
@@ -53,6 +64,16 @@ class Configuration(nameddict):
 
     @classmethod
     def from_env(cls, envvars, default, default_config):
+        """Create a ``Configuration``
+
+        :param envvars: list of environment variable name where to look
+        for a YAML filename
+        :param default: default path to YAML file if not found in ``envvars``
+        :param default_config: Default ``Configuration`` if not found
+        in above methods.
+        :return: new configuration
+        :rtype: ``Configuration``
+        """
         try:
             if isinstance(envvars, six.string_types):
                 envvars = [envvars]
@@ -63,22 +84,24 @@ class Configuration(nameddict):
                     config_file = envvalue
                     break
             config = Configuration.from_file(config_file)
-        except IOError as e:
-            if e.errno in [errno.ENOENT, errno.ENOTDIR]:
+        except IOError as exc:
+            if exc.errno in [errno.ENOENT, errno.ENOTDIR]:
                 config = default_config
             else:
                 raise
         return config
 
 
-def flatten_dict(d, parent_key='', sep='.'):
+def flatten_dict(dic, parent_key='', sep='.'):
+    """Flatten sub-keys of a dictionary
+    """
     items = []
-    for k, v in d.items():
-        new_key = parent_key + sep + k if parent_key else k
-        if isinstance(v, collections.MutableMapping):
-            items.extend(flatten_dict(v, new_key, sep=sep).items())
+    for key, value in dic.items():
+        new_key = parent_key + sep + key if parent_key else key
+        if isinstance(value, collections.MutableMapping):
+            items.extend(flatten_dict(value, new_key, sep=sep).items())
         else:
-            items.append((new_key, v))
+            items.append((new_key, value))
     return dict(items)
 
 
@@ -91,9 +114,9 @@ def dict_merge(dct, merge_dct):
     :param merge_dct: dct merged into dct
     :return: None
     """
-    for k, v in merge_dct.items():
-        if (k in dct and isinstance(dct[k], dict)
-                and isinstance(merge_dct[k], collections.Mapping)):
-            dict_merge(dct[k], merge_dct[k])
+    for key in merge_dct.keys():
+        if (key in dct and isinstance(dct[key], dict)
+                and isinstance(merge_dct[key], collections.Mapping)):
+            dict_merge(dct[key], merge_dct[key])
         else:
-            dct[k] = merge_dct[k]
+            dct[key] = merge_dct[key]
