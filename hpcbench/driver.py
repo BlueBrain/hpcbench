@@ -139,7 +139,11 @@ class CampaignDriver(Enumerator):
         """execute benchmarks"""
         with pushd(self.campaign_path, mkdir=True):
             if not self.existing_campaign:
-                shutil.copy(self.campaign_file, YAML_CAMPAIGN_FILE)
+                if osp.isfile(self.campaign_file):
+                    shutil.copy(self.campaign_file, YAML_CAMPAIGN_FILE)
+                else:
+                    with open(YAML_CAMPAIGN_FILE, 'w') as ostr:
+                        yaml.dump(self.campaign, ostr, default_flow_style=False)
             super(CampaignDriver, self).__call__(**kwargs)
 
 

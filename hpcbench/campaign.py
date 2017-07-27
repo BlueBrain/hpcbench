@@ -1,6 +1,7 @@
 """HPCBench campaign helper functions
 """
 import re
+import uuid
 
 from . toolbox.collections_ext import (
     Configuration,
@@ -32,8 +33,9 @@ def fill_default_campaign_values(campaign):
     )
     for key, value in default_campaign.items():
         campaign.setdefault(key, value)
-    campaign.setdefault('network', {})
+    campaign.setdefault('network', nameddict())
     campaign['network'].setdefault('nodes', ['localhost'])
+    campaign.setdefault('campaign_id', str(uuid.uuid4()))
     campaign.network.setdefault('tags', {})
     campaign.benchmarks.setdefault('*', {})
     for tag in list(campaign.network.tags):
@@ -96,6 +98,7 @@ def get_metrics(campaign):
                             tag=tag,
                             category=category,
                             suite=suite,
+                            campaign_id=campaign.campaign.campaign_id,
                         ),
                         cat_obj.metrics
                     )

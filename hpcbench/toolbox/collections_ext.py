@@ -5,6 +5,7 @@ import copy
 import errno
 import os
 import os.path as osp
+import sys
 
 import six
 import yaml
@@ -57,6 +58,8 @@ class Configuration(nameddict):
         :return: new configuration
         :rtype: ``Configuration``
         """
+        if path == '-':
+            return Configuration(yaml.load(sys.stdin, Loader=Loader))
         if not osp.exists(path) and not osp.isabs(path):
             path = osp.join(osp.dirname(osp.abspath(__file__)), path)
         with open(path, 'r') as istr:
