@@ -37,7 +37,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
     @abstractmethod
     def get_expected_metrics(self, category):
         """
-        :return: extract metrics from sample output for the given category
+        :return: metrics extracted from the sample output
         :rtype: dictionary name -> value
         """
         raise NotImplementedError

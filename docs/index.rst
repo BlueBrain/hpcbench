@@ -115,11 +115,31 @@ another location::
 How to integrate a new benchmark utility?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-1. Create a dedicated module in ``hpcbench/benchmark`` directory
-2. Implement ``hpcbench.api.Benchmark`` and ``hpcbench.MetricsExtractor`` classes
-3. Add dedicated tests in `tests/benchmark` directory. You can reuse tests of
-   sysbench benchmark utility. Your test should not expect the wrapped benchmark utility to be installed.
-4. Register the new module in ``setup.py`` ``[hpcbench.benchmarks]`` entrypoint.
+1. First make sure you can properly build the project and tests pass successfully.
+   It may be tempting to skip this part, but please don't.
+2. Create a dedicated Git branch.
+3. Create a dedicated Python module in ``hpcbench/benchmark`` directory.
+4. Implement ``hpcbench.api.Benchmark`` and ``hpcbench.MetricsExtractor`` classes
+5. Register the new module in ``setup.py`` ``[hpcbench.benchmarks]`` entrypoint
+   so that it can be introspectable.
+6. Create a dedicate tests class in `tests/benchmark/` directory.
+   Purpose of this test is to make sure that:
+
+   * your Benchmark class is properly defined, and usable by HPCBench.
+   * your metric extractor is properly working, without having to launch the
+     utility itself.
+7. To properly test your metrics extractors, some outputs of the benchmark utility
+   will be added to the repository. For every category of your benchmark, create a 
+   file title ``tests/benchmark/<test_module_name>.<category>.stdout`` with the
+   benchmark utility output. These files will be automatically used.
+   Do not hesitate to take inspiration from ``tests/benchmark/test_sysbench.py``
+   test module.
+
+8. Run the test-suites until it passes::
+
+   $ tox
+
+9. Submit a `pull-request <https://github.com/tristan0x/hpcbench>`_
 
 LICENSE
 =======
