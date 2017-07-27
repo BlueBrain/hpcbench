@@ -143,7 +143,8 @@ class CampaignDriver(Enumerator):
                     shutil.copy(self.campaign_file, YAML_CAMPAIGN_FILE)
                 else:
                     with open(YAML_CAMPAIGN_FILE, 'w') as ostr:
-                        yaml.dump(self.campaign, ostr, default_flow_style=False)
+                        yaml.dump(self.campaign, ostr,
+                                  default_flow_style=False)
             super(CampaignDriver, self).__call__(**kwargs)
 
 
