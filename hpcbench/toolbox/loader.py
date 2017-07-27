@@ -2,13 +2,15 @@
 """
 
 import logging
-import pkg_resources
+
 from pkg_resources import (
-    working_set,
     DistributionNotFound,
-    VersionConflict,
+    Environment,
     UnknownExtra,
+    VersionConflict,
+    working_set,
 )
+
 
 LOGGER = logging.getLogger()
 
@@ -17,7 +19,7 @@ def load_eggs(entry_point_name):
     """Loader that loads any eggs in `sys.path`."""
     def _load_eggs():
         distributions, errors = working_set.find_plugins(
-            pkg_resources.Environment()
+            Environment()
         )
         for dist in distributions:
             # pylint: disable=unsupported-membership-test

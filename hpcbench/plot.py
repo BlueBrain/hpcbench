@@ -3,9 +3,9 @@
 import hashlib
 import operator
 
+from hpcbench.toolbox.collections_ext import flatten_dict
 from hpcbench.toolbox.edsl import kwargsql
 from hpcbench.toolbox.functools_ext import compose
-from hpcbench.toolbox.collections_ext import flatten_dict
 
 
 class Plotter(object):

@@ -5,3 +5,4 @@ pep8==1.7.0
 pylint==1.7.2
 rednose==1.2.2
 sphinx==1.5.3
+flake8-import-order==0.12

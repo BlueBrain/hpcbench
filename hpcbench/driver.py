@@ -21,14 +21,14 @@ from cached_property import cached_property
 import six
 import yaml
 
+from . api import Benchmark
+from . campaign import from_file
+from . plot import Plotter
+from . toolbox.collections_ext import nameddict
 from . toolbox.contextlib_ext import (
     pushd,
     Timer,
 )
-from . toolbox.collections_ext import nameddict
-from . api import Benchmark
-from . campaign import from_file
-from . plot import Plotter
 
 
 YAML_REPORT_FILE = 'hpcbench.yaml'

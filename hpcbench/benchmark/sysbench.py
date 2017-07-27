@@ -2,8 +2,9 @@
 
     https://github.com/akopytov/sysbench
 """
-from cached_property import cached_property
 import re
+
+from cached_property import cached_property
 
 from hpcbench.api import (
     Benchmark,

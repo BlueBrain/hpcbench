@@ -1,8 +1,8 @@
 # encoding: utf-8
 """Extra tools for working with functions and callable objects
 """
-from itertools import islice
 import functools
+from itertools import islice
 
 
 def compose(*functions):

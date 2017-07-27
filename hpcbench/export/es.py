@@ -7,12 +7,12 @@ from cached_property import cached_property
 from elasticsearch import Elasticsearch
 import six
 
-from hpcbench.toolbox.collections_ext import dict_merge
-from hpcbench.toolbox.functools_ext import chunks
 from hpcbench.campaign import (
     get_benchmark_types,
     get_metrics,
 )
+from hpcbench.toolbox.collections_ext import dict_merge
+from hpcbench.toolbox.functools_ext import chunks
 
 
 class ESExporter(object):

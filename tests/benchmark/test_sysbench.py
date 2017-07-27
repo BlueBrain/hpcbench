@@ -1,8 +1,8 @@
 import unittest
 
+from hpcbench.benchmark.sysbench import Sysbench
 from . benchmark import AbstractBenchmarkTest
 
-from hpcbench.benchmark.sysbench import Sysbench
 
 
 class TestSysbench(AbstractBenchmarkTest, unittest.TestCase):
