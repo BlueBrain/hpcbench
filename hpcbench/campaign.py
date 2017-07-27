@@ -86,8 +86,16 @@ def get_metrics(campaign):
     :return: metrics
     :rtype: dictionary generator
     """
-    for _, host_driver in campaign.traverse():
-        for _, tag_driver in host_driver.traverse():
-            for _, bench_obj in tag_driver.traverse():
-                for _, cat_obj in bench_obj.traverse():
-                    yield cat_obj.metrics
+    for hostname, host_driver in campaign.traverse():
+        for tag, tag_driver in host_driver.traverse():
+            for suite, bench_obj in tag_driver.traverse():
+                for category, cat_obj in bench_obj.traverse():
+                    yield (
+                        dict(
+                            hostname=hostname,
+                            tag=tag,
+                            category=category,
+                            suite=suite,
+                        ),
+                        cat_obj.metrics
+                    )

@@ -174,13 +174,19 @@ class ESExporter(object):
 
     @classmethod
     def _get_runs(cls, campaign):
-        for metrics in get_metrics(campaign):
+        for attrs, metrics in get_metrics(campaign):
             for run in metrics:
-                yield run
+                eax = dict()
+                eax.update(attrs)
+                eax.update(run)
+                yield eax
 
     @classmethod
     def _get_benchmark_runs(cls, campaign, benchmark):
-        for metrics in get_metrics(campaign):
+        for attrs, metrics in get_metrics(campaign):
             for run in metrics:
                 if run['benchmark'] == benchmark:
-                    yield run
+                    eax = dict()
+                    eax.update(attrs)
+                    eax.update(run)
+                    yield eax
