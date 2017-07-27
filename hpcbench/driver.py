@@ -66,12 +66,12 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def child_builder(self, child):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @abstractproperty
     def children(self):
         """Property to be overriden be subclass to provide child objects"""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @cached_property
     def report(self):
@@ -191,7 +191,7 @@ class BenchmarkTagDriver(Enumerator):
 
     @cached_property
     def children(self):
-        return list(self.campaign.benchmarks[self.name])
+        return list(self.campaign.benchmarks.get(self.name, []))
 
     def child_builder(self, child):
         conf = self.campaign.benchmarks[self.name][child]

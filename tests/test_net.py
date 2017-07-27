@@ -1,0 +1,37 @@
+import os.path as osp
+import unittest
+
+from hpcbench.net import CampaignHolder
+from hpcbench.cli import benet
+
+from . test_driver import FakeBenchmark
+
+
+def custom_ssh(self, *args):
+    # get rid of node
+    return list(args[1:])
+
+
+def custom_scp(self, *args):
+    src, dest = args
+    if ':' in src:
+        src = src.split(':', 1)[1]
+    elif ':' in dest:
+        dest = dest.split(':', 1)[1]
+    if src != dest:
+        return ['cp', src, dest]
+    else:
+        return ['true']
+
+
+CampaignHolder.ssh = custom_ssh
+CampaignHolder.scp = custom_scp
+
+
+class TestNet(unittest.TestCase):
+    @staticmethod
+    def get_campaign_file():
+        return osp.splitext(__file__)[0] + '.yaml'
+
+    def test_local(self):
+        benet.main(TestNet.get_campaign_file())

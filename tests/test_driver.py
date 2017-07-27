@@ -44,6 +44,7 @@ class FakeExtractor(MetricsExtractor):
                 performance=float(content[0].strip()),
                 standard_error=float(content[1].strip())
             )
+        assert not osp.isfile(self.stderr(outdir))
 
 
 class FakeBenchmark(Benchmark):
@@ -124,6 +125,14 @@ class TestDriver(unittest.TestCase):
     @staticmethod
     def get_campaign_file():
         return osp.splitext(__file__)[0] + '.yaml'
+
+    def test_get_unknown_benchmark_class(self):
+        with self.assertRaises(NameError) as exc:
+            Benchmark.get_subclass('unkn0wnb3nchm4rk')
+        self.assertEqual(
+            str(exc.exception),
+            "Not a valid Benchmark class: unkn0wnb3nchm4rk"
+        )
 
     @classmethod
     def setUpClass(cls):

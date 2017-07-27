@@ -33,7 +33,7 @@ tags
 ~~~~
 Specify groups of nodes.
 
-A tag can be defined with either an exhaustive list of a regular expression.
+A tag can be defined with either an exhaustive list or a regular expression.
 
 For instance, given the set of nodes defined above, we can define the
 *cpu* and *gpu* tags as follow:
@@ -59,6 +59,56 @@ Both methods are being used:
 
 * **nodes** expects an exaustive list of nodes.
 * **match** expects a valid regular expression
+
+ssh_config_file
+~~~~~~~~~~~~~~~
+
+Optional path to a custom SSH configuration file (see man ssh_config(5)).
+This can be used to provide HPCBench access to cluster nodes without passphrase
+by using a dedicated SSH key.
+
+For instance::
+
+   Host *.my-cluster.com
+   User hpc
+   IdentityFile ~/.ssh/hpcbench_rsa
+
+remote_work_dir
+~~~~~~~~~~~~~~~
+
+Working path on remote nodes. Default value is ``.hpcbench``
+Relative paths are relative from home directory.
+
+installer_template
+~~~~~~~~~~~~~~~~~~
+
+Jinja template to use to generate the shell-script installer
+deployed on cluster's nodes. Default value is ``ssh-installer.sh.jinja``
+
+installer_prelude_file
+~~~~~~~~~~~~~~~~~~~~~~
+
+Optional path to a text file that will be included at the beginning
+of the generated shell-script installer.
+This can be useful to prepare the working environment, for instance to make
+Python 2.7, or Python 3.3+ available in ``PATH`` environment variable if this
+is not the case by default.
+
+max_concurrent_runs
+~~~~~~~~~~~~~~~~~~~
+
+Number of concurrent benchmarks executed in parallel in the cluster.
+Default is 4.
+
+pip_installer_url
+~~~~~~~~~~~~~~~~~
+
+HPCBench version to install on nodes. By default it is the current ``ben-et``
+version managing the cluster. This is an argument given to ``pip`` installer, here are a some examples:
+
+* ``hpcbench==2.0`` to force a version available PyPi
+* ``git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench`` to install the bleeding edge version.
+* ``git+http://github.com/me/hpcbench@feat/awesome-feature#egg=hpcbench`` to deploy a fork's branch.
 
 Benchmarks configuration reference
 ----------------------------------
