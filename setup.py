@@ -61,5 +61,6 @@ setup(
         ben-umb = hpcbench.cli.benumb:main
         [hpcbench.benchmarks]
         sysbench = hpcbench.benchmark.sysbench
+        stream = hpcbench.benchmark.stream
     """
 )
