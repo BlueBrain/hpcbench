@@ -176,6 +176,8 @@ class TestDriver(unittest.TestCase):
         content = stdout.getvalue()
         self.assertTrue(content)
 
+    @unittest.skipIf('UT_SKIP_ELASTICSEARCH' in os.environ,
+                     'manually disabled from environment')
     def test_05_es_dump(self):
         # Push documents to Elasticsearch
         argv = [TestDriver.CAMPAIGN_PATH]
