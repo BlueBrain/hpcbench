@@ -21,8 +21,8 @@ HPC Benchmarks
    :target: https://landscape.io/github/tristan0x/hpcbench/master
    :alt: Lanscape.io Code Health
 
-.. image:: https://codeclimate.com/github/codeclimate/codeclimate/badges/gpa.svg
-   :target: https://codeclimate.com/github/codeclimate/codeclimate
+.. image:: https://codeclimate.com/github/tristan0x/hpcbench/badges/gpa.svg
+   :target: https://codeclimate.com/github/tristan0x/hpcbench
    :alt: Code Climate
 
 .. image:: https://codeclimate.com/github/tristan0x/hpcbench/badges/issue_count.svg
@@ -31,7 +31,7 @@ HPC Benchmarks
 
 
 This project provides a Python package that helps defining benchmarks and executing them on your grid. More information available in the
-`online documentation <http://hpcbench.readthedocs.io/en/latest/>`_
+`package documentation <http://hpcbench.readthedocs.io/en/latest/>`_
 
 License
 =======
