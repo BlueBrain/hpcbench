@@ -87,7 +87,7 @@ class Sysbench(Benchmark):
             for thread in [1, 4, 16]:
                 for max_prime in [30]:
                     yield dict(
-                        category='cpu',
+                        category=Sysbench.FEATURE_CPU,
                         command=[
                             'sysbench',
                             '--test=cpu',

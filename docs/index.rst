@@ -71,6 +71,69 @@ HPCBench API purpose is to provide an unified layer:
 * to execute, and parse results of existing benchmarks utilities (Linpack, IOR, ...)
 * to use extracted metrics to build figures
 
+Getting Started
+===============
+
+As of now, only a few benchmark utilities are supported. This section assumes that
+you installed ``sysbench`` utility on your workstation.
+
+Launch a campaign on your workstation
+-------------------------------------
+
+Create your first campaign YAML file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Create a ``local-campaign.yaml`` file with the following content::
+
+   benchmarks:
+     '*':
+       test:
+         type: sysbench
+
+Launch the benchmark on your workstation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Execute the following command::
+
+   $ ben-sh local-campaign.yaml
+
+
+This will create a ``hpc-bench-<date>`` in the directory with the benchmark's results.
+
+Build the plots
+~~~~~~~~~~~~~~~
+
+You can use the ``ben-plot`` utility to generate figures from a campaign's data::
+
+   $ ben-plot <path_to_created_directory>
+
+Some PNG will be generated in the given directory.
+
+Launch a campaign on a set of servers
+-------------------------------------
+
+The YAML config file is getting a little more complex. For instance create
+the following ``remote-campaign.yaml``::
+
+   network:
+     nodes:
+       - localhost
+   benchmarks:
+     '*':
+       test:
+         type: sysbench
+
+You can add servers to the ``nodes`` section.
+
+Launch the benchmark
+~~~~~~~~~~~~~~~~~~~~
+
+Use the ``ben-et`` utility to execute the campaign on every nodes.
+It uses SSH to submit jobs so you have to sure you can access those servers without passphrase. You can use the ``ssh_config_file`` key in YAML to specify a custom
+configuration (see) :doc:`campaign file reference <campaign>`)::
+
+   $ ben-et remote-campaign.yaml
+
 Development Guide
 =================
 
