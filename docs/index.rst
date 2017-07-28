@@ -54,12 +54,13 @@ CLI
 
 **HPCBench** provides a set of command line utilities:
 
-* ben-sh: Execute a tests campaign
+* ben-sh: Execute a tests campaign on your workstation
 * ben-umb: Extract metrics of an existing campaign
 * ben-plop: Draw figures of an existing campaign
 * ben-elk: Push campaign data to Elasticsearch
+* ben-et: Execute a tests campaign on a cluster
 
-**ben-sh** expects a YAML file describing the campaign to execute.
+**ben-sh** and **ben-et** expect a YAML file describing the campaign to execute.
 Structure of this YAML file is detailled in the :doc:`campaign file reference <campaign>`.
 
 API

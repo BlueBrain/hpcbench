@@ -1,0 +1,19 @@
+#!/bin/sh -e
+
+{{ prelude }}
+
+HPCBENCH_CAMPAIGN_FILE="$1"
+HPCBENCH_WORK_DIR={{ work_dir }}
+
+rm -rf "$HPCBENCH_WORK_DIR"
+mkdir -p "$HPCBENCH_WORK_DIR"
+cd "$HPCBENCH_WORK_DIR"
+
+virtualenv hpcbench
+. hpcbench/bin/activate
+pip install {{ hpcbench_pip_pkg }}
+
+echo running benchmarks
+hpcbench/bin/ben-sh "$HPCBENCH_CAMPAIGN_FILE"
+echo compressing archive "$PWD/{{ output_dir }}.tar.bz2"
+tar jcf "{{ output_dir }}.tar.bz2" "{{ output_dir }}"

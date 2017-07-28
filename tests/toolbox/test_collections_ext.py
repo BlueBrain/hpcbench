@@ -5,6 +5,7 @@ import unittest
 
 from hpcbench.toolbox.collections_ext import (
     Configuration,
+    dict_merge,
     flatten_dict,
     nameddict,
 )
@@ -134,6 +135,24 @@ class TestFlattenDict(unittest.TestCase):
                 'foo.2.bar': 43,
             }
         )
+
+
+class TestDictMerge(unittest.TestCase):
+    def test_dm_empty(self):
+        d1 = {}
+        dict_merge(d1, {})
+        self.assertEqual(d1, {})
+        dict_merge(d1, dict(foo=42))
+        self.assertEqual(d1, dict(foo=42))
+        dict_merge(d1, dict(foo=43))
+        self.assertEqual(d1, dict(foo=43))
+
+    def test_dm_rec(self):
+        d1 = dict(foo=dict(bar=42))
+        dict_merge(d1, dict(foo=dict(foo=44)))
+        self.assertEqual(d1, dict(foo=dict(bar=42, foo=44)))
+        dict_merge(d1, dict(foo=dict(foo=42)))
+        self.assertEqual(d1, dict(foo=dict(bar=42, foo=42)))
 
 
 if __name__ == '__main__':

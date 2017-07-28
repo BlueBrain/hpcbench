@@ -1,11 +1,54 @@
 """HPCBench campaign helper functions
 """
+import collections
 import re
 import uuid
 
-from . toolbox.collections_ext import (
-    Configuration,
-    nameddict,
+# pragma pylint: disable=no-name-in-module
+from pkg_resources.extern import packaging
+
+import hpcbench
+
+from . toolbox.collections_ext import Configuration
+
+
+def pip_installer_url(version=None):
+    """Get argument to give to ``pip`` to install HPCBench.
+    """
+    version = version or hpcbench.__version__
+    version = packaging.version.Version(version)
+    version = str(version)
+    if '.dev' in version:
+        return 'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench'
+    return 'hpcbench=={}'.format(version)
+
+
+DEFAULT_CAMPAIGN = dict(
+    output_dir="hpcbench-%Y%m%d-%H:%M:%S",
+    network=dict(
+        nodes=[
+            'localhost',
+        ],
+        tags=dict(),
+        ssh_config_file=None,
+        remote_work_dir='.hpcbench',
+        installer_template='ssh-installer.sh.jinja',
+        installer_prelude_file=None,
+        max_concurrent_runs=4,
+        pip_installer_url=pip_installer_url(),
+    ),
+    tag=dict(),
+    benchmarks={
+        '*': {}
+    },
+    export=dict(
+        elasticsearch=dict(
+            host='localhost',
+            connection_params=dict(),
+            index_name='hpcbench-{date}'
+        )
+    )
+
 )
 
 
@@ -28,16 +71,16 @@ def fill_default_campaign_values(campaign):
     :return: object provided in parameter
     :rtype: dictionary
     """
-    default_campaign = dict(
-        output_dir="hpcbench-%Y%m%d-%H:%M:%S"
-    )
-    for key, value in default_campaign.items():
-        campaign.setdefault(key, value)
-    campaign.setdefault('network', nameddict())
-    campaign['network'].setdefault('nodes', ['localhost'])
+    def _merger(_camp, _deft):
+        for key in _deft.keys():
+            if (key in _camp and isinstance(_camp[key], dict)
+                    and isinstance(_deft[key], collections.Mapping)):
+                _merger(_camp[key], _deft[key])
+            elif key not in _camp:
+                _camp[key] = _deft[key]
+    _merger(campaign, DEFAULT_CAMPAIGN)
     campaign.setdefault('campaign_id', str(uuid.uuid4()))
-    campaign.network.setdefault('tags', {})
-    campaign.benchmarks.setdefault('*', {})
+
     for tag in list(campaign.network.tags):
         config = campaign.network.tags[tag]
         if isinstance(config, dict):
@@ -55,19 +98,6 @@ def fill_default_campaign_values(campaign):
                 else:
                     raise Exception('Unknown tag association pattern: %s',
                                     mode)
-    set_export_campaign_section(campaign)
-    return campaign
-
-
-def set_export_campaign_section(campaign):
-    """Add default values for the ``export`` section
-    """
-    campaign.setdefault('export', nameddict())
-    campaign.export.setdefault('elasticsearch', nameddict())
-    campaign.export.elasticsearch.setdefault('host', 'localhost')
-    campaign.export.elasticsearch.setdefault('connection_params', {})
-    campaign.export.elasticsearch.setdefault('index_name',
-                                             'hpcbench-{date}')
     return campaign
 
 

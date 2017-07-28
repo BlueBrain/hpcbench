@@ -1,0 +1,5 @@
+network:
+    nodes:
+        - localhost
+    max_concurrent_runs: 1
+    remote_work_dir: /tmp/hpcbench-ut

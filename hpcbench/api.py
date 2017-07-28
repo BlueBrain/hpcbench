@@ -46,7 +46,7 @@ class MetricsExtractor(with_metaclass(ABCMeta, object)):
             )
 
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
     def extract(self, outdir, metas):
@@ -57,7 +57,7 @@ class MetricsExtractor(with_metaclass(ABCMeta, object)):
         the ``metrics`` member funtion.
 
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @classmethod
     def stdout(cls, outdir):
@@ -92,21 +92,18 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         """Get benchmark name
         :rtype: string
         """
-        pass
+        raise NotImplementedError  # pragma: no cover
 
     @abstractproperty
     def description(self):
         """Get benchmark long description
         :rtype: string
         """
-        pass
+        raise NotImplementedError  # pragma: no cover
     # ---
 
     def __init__(self, attributes=None):
         self.attributes = attributes or {}
-
-    def __str__(self):
-        return self.name
 
     @abstractproperty
     def execution_matrix(self):
@@ -155,13 +152,13 @@ class Benchmark(with_metaclass(ABCMeta, object)):
                     metas=dict(cores=cores),
                 )
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def pre_execute(self):
         """Method called before executing one of the command.
         Current working directory is the execution directory.
         """
-        pass
+        raise NotImplementedError  # pragma: no cover
 
     @abstractproperty
     def metrics_extractors(self):
@@ -182,7 +179,7 @@ class Benchmark(with_metaclass(ABCMeta, object)):
                     bar=[bar_extractor(), foobar_extractor()]
                 )
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @abstractproperty
     def plots(self):
@@ -206,7 +203,7 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         plotter:
             callable object that will be given metrics to plot
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @classmethod
     def get_subclass(cls, name):
