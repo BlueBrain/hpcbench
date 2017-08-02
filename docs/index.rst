@@ -253,6 +253,24 @@ How to integrate a new benchmark utility?
 
 9. Submit a `pull-request <https://github.com/tristan0x/hpcbench>`_
 
+How to add a new plots to an existing benchmark?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. Install `hpcbench` on a server where the benchmark utility is installed.
+2. Execute a campaign on this server with ``ben-sh``.
+3. Retrieve the campaign data on your workstation.
+4. Setup development environment on your workstation.
+5. Install the module in `editable` mode with the following command::
+
+   $ pip install -e .
+
+6. Now you can test your plotting methods with the following command::
+
+   $ .env/bin/ben-plot PATH_TO_CAMPAIGN
+
+   The command uses the current working-copy to render figures of the campaign.
+   So every change your make is taken into account immediately.
+
 LICENSE
 =======
 
