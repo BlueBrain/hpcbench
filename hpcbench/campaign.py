@@ -4,8 +4,7 @@ import collections
 import re
 import uuid
 
-# pragma pylint: disable=no-name-in-module
-from pkg_resources.extern import packaging
+from packaging.version import Version
 
 import hpcbench
 
@@ -16,7 +15,7 @@ def pip_installer_url(version=None):
     """Get argument to give to ``pip`` to install HPCBench.
     """
     version = version or hpcbench.__version__
-    version = packaging.version.Version(version)
+    version = Version(version)
     version = str(version)
     if '.dev' in version:
         return 'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench'
