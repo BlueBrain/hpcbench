@@ -102,7 +102,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
         exec_matrix = list(exec_matrix)
         assert isinstance(exec_matrix, list)
 
-        run_keys = {'category', 'command', 'metas'}
+        run_keys = {'category', 'command', 'metas', 'environment'}
         for runs in exec_matrix:
             assert isinstance(runs, dict)
             assert 'category' in runs

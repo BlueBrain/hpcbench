@@ -23,6 +23,7 @@ class Metrics(object):  # pragma pylint: disable=too-few-public-methods
     """
     Milisecond = Metric('ms', float)
     Second = Metric('s', float)
+    MegaBytesPerSecond = Metric('MB/s', float)
 
 
 class MetricsExtractor(with_metaclass(ABCMeta, object)):
@@ -158,7 +159,7 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         """Method called before executing one of the command.
         Current working directory is the execution directory.
         """
-        raise NotImplementedError  # pragma: no cover
+        pass
 
     @abstractproperty
     def metrics_extractors(self):
