@@ -45,6 +45,7 @@ setup(
         'docopt==0.6.2',
         'elasticsearch==5.4.0',
         'matplotlib==2.0.2',
+        'packaging==16.8',
         'PyYAML>=3.12',
         'six==1.10',
     ],
