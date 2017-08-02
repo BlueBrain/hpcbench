@@ -262,7 +262,7 @@ How to add a new plots to an existing benchmark?
 4. Setup development environment on your workstation.
 5. Install the module in `editable` mode with the following command::
 
-   $ pip install -e .
+   $ pip install -e '.[PLOTTING]'
 
 6. Now you can test your plotting methods with the following command::
 
