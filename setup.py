@@ -44,17 +44,19 @@ setup(
         'cached-property==1.3.0',
         'docopt==0.6.2',
         'elasticsearch==5.4.0',
-        'matplotlib==2.0.2',
         'packaging==16.8',
         'PyYAML>=3.12',
         'six==1.10',
     ],
+    extras_require=dict(
+      PLOTTING=['matplotlib==2.0.2'],
+    ),
     entry_points="""
         [console_scripts]
         ben-doc = hpcbench.cli.bendoc:main
         ben-elk = hpcbench.cli.benelk:main
         ben-et = hpcbench.cli.benet:main
-        ben-plot = hpcbench.cli.benplot:main
+        ben-plot = hpcbench.cli.benplot:main [PLOTTING]
         ben-sh = hpcbench.cli.bensh:main
         ben-umb = hpcbench.cli.benumb:main
         [hpcbench.benchmarks]
