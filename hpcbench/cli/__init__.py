@@ -3,7 +3,6 @@
 import logging
 
 from docopt import docopt
-import matplotlib
 
 from hpcbench import __version__
 from hpcbench.toolbox.loader import load_components
@@ -27,5 +26,10 @@ def cli_common(doc, **kwargs):
     arguments = docopt(doc, version='hpcbench ' + __version__, **kwargs)
     setup_logger(arguments['-v'])
     load_components()
-    matplotlib.use('PS')
+    try:
+        import matplotlib
+    except ImportError:
+        pass
+    else:
+        matplotlib.use('PS')
     return arguments
