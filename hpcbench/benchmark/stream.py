@@ -132,7 +132,7 @@ class Stream(Benchmark):
                                 'stream_c',
                             ],
                             metas=dict(
-                                thread=thread,
+                                threads=thread,
                                 numa_policy=numa_policy['name'],
                                 memory_type=feature,
                             ),
