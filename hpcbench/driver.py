@@ -65,6 +65,7 @@ def write_yaml_report(func):
 class Enumerator(six.with_metaclass(ABCMeta, object)):
     """Common class for every campaign node"""
     def __init__(self, parent, name=None, logger=None):
+        self.parent = parent
         self.campaign = parent.campaign
         self.node = parent.node
         self.name = name
