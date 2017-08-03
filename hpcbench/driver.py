@@ -280,6 +280,21 @@ class BenchmarkCategoryDriver(Enumerator):
     def child_builder(self, child):
         del child  # unused
 
+    @cached_property
+    def execution_layer_class(self):
+        """Get execution layer class
+        """
+        name = self.campaign.process.type
+        for clazz in [ExecutionDriver, SlurmExecutionDriver]:
+            if name == clazz.name:
+                return clazz
+        raise NameError("Unknown execution layer: '%s'" % name)
+
+    def execution_layer(self, execution):
+        """Build the proper execution layer
+        """
+        return self.execution_layer_class(self, self.benchmark, execution)
+
     @write_yaml_report
     def __call__(self, **kwargs):
         if "no_exec" not in kwargs:
@@ -287,11 +302,7 @@ class BenchmarkCategoryDriver(Enumerator):
             for execution, run_dir in self.children:
                 runs.setdefault(execution['category'], []).append(run_dir)
                 with pushd(run_dir, mkdir=True):
-                    driver = ExecutionDriver(
-                        self,
-                        self.benchmark,
-                        execution
-                    )
+                    driver = self.execution_layer(execution)
                     driver(**kwargs)
                     mdriver = MetricsDriver(self.campaign, self.benchmark)
                     mdriver(**kwargs)
@@ -379,11 +390,12 @@ class MetricsDriver(object):
         for extractor in extractors:
             run_metrics = extractor.extract(os.getcwd(),
                                             self.report.get('metas'))
-            self.check_metrics(extractor, run_metrics)
+            MetricsDriver._check_metrics(extractor, run_metrics)
             metrics.setdefault(cat, []).append(run_metrics)
         return self.report
 
-    def check_metrics(self, extractor, metrics):
+    @classmethod
+    def _check_metrics(cls, extractor, metrics):
         """Ensure that returned metrics are properly exposed
         """
         exposed_metrics = extractor.metrics
@@ -401,32 +413,59 @@ class ExecutionDriver(Leaf):
     """Abstract representation of a benchmark command execution
     (a benchmark is made of several commands)
     """
+
+    name = 'local'
+
     def __init__(self, parent, benchmark, execution):
         super(ExecutionDriver, self).__init__(parent)
         self.benchmark = benchmark
         self.execution = execution
+
+    @property
+    def command(self):
+        """get command to execute
+
+        :return: list of string
+        """
+        return self.execution['command']
+
+    @cached_property
+    def command_str(self):
+        """get command to execute as string properly escaped
+
+        :return: string
+        """
+        return ' '.join(map(
+            six.moves.shlex_quote,
+            self.command
+        ))
+
+    def _popen_env(self, kwargs):
+        custom_env = self.execution.get('environment')
+        if custom_env:
+            env = copy.deepcopy(os.environ)
+            env.update(custom_env)
+            kwargs.update(env=env)
+
+    def popen(self, stdout, stderr):
+        """Build popen object to run
+
+        :rtype: subprocess.Popen
+        """
+        kwargs = dict(stdout=stdout, stderr=stderr)
+        self._popen_env(kwargs)
+        self.logger.info('Executing command: %s', self.command_str)
+        return subprocess.Popen(
+            self.command,
+            **kwargs
+        )
 
     @write_yaml_report
     def __call__(self, **kwargs):
         self.benchmark.pre_execute()
         with open('stdout.txt', 'w') as stdout, \
                 open('stderr.txt', 'w') as stderr:
-            kwargs = dict(stdout=stdout, stderr=stderr)
-            custom_env = self.execution.get('environment')
-            if custom_env:
-                env = copy.deepcopy(os.environ)
-                env.update(custom_env)
-                kwargs.update(env=env)
-            command_str = ' '.join(map(
-                six.moves.shlex_quote,
-                self.execution['command']
-            ))
-            self.logger.info('Executing command: %s', command_str)
-            process = subprocess.Popen(
-                self.execution['command'],
-                **kwargs
-            )
-            exit_status = process.wait()
+            exit_status = self.popen(stdout, stderr).wait()
         report = dict(
             exit_status=exit_status,
             benchmark=self.benchmark.name,

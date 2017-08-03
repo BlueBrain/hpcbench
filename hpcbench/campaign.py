@@ -41,6 +41,10 @@ DEFAULT_CAMPAIGN = dict(
         max_concurrent_runs=4,
         pip_installer_url=pip_installer_url(),
     ),
+    process=dict(
+        type='local',
+        config=dict(),
+    ),
     tag=dict(),
     benchmarks={
         '*': {}

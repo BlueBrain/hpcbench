@@ -11,8 +11,8 @@ Network configuration reference
 -------------------------------
 
 A Campaign is made of a set of nodes to benchmarks. Those nodes
-can be tagged create groups, that can be later used to 
-filter nodes where benchmarks are executed.
+can be tagged to create groups, later used to
+filter nodes where certain benchmarks are executed on.
 
 nodes
 ~~~~~
@@ -181,3 +181,17 @@ they are not converted to True or False by YAML parse.
         environment:
           TEST_ALL: 'true'
           LD_LIBRARY_PATH: /usr/local/lib64
+
+Process configuration reference
+-------------------------------
+This section specifies how ``ben-sh`` execute the benchmark commands.
+
+type (optional)
+~~~~~~~~~~~~~~~
+A string indicating the execution layer. Possible values are:
+
+* ``local`` (default) to spawn processes where ``ben-sh`` is running.
+
+config (optional)
+~~~~~~~~~~~~~~~~~
+This dictionary provides the execution layer configuration.
