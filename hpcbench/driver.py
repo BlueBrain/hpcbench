@@ -26,7 +26,10 @@ import yaml
 from . api import Benchmark
 from . campaign import from_file
 from . plot import Plotter
-from . toolbox.collections_ext import nameddict
+from . toolbox.collections_ext import (
+    dict_merge,
+    nameddict,
+)
 from . toolbox.contextlib_ext import (
     pushd,
     Timer,
@@ -233,7 +236,10 @@ class BenchmarkTagDriver(Enumerator):
         conf = self.campaign.benchmarks[self.name][child]
         benchmark = Benchmark.get_subclass(conf['type'])()
         if 'attributes' in conf:
-            benchmark.attributes = copy.deepcopy(conf['attributes'])
+            dict_merge(
+                benchmark.attributes,
+                conf['attributes']
+            )
         return BenchmarkDriver(self, benchmark)
 
 
