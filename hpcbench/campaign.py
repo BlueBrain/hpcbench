@@ -16,10 +16,18 @@ def pip_installer_url(version=None):
     version = version or hpcbench.__version__
     version = str(version)
     if '.dev' in version:
-        git_rev = version.split('+', 1)[-1]
-        if '.' in git_rev:  # get rid of date suffix
-            git_rev = git_rev.split('.', 1)[0]
-        git_rev = git_rev[1:]  # get rid of scm letter
+        git_rev = None
+        # FIXME: comment git revision extraction because
+        # Jenkins use a merge commit that cannot be installed
+        # with pip to test pull-requests, for instance:
+        # pip install \
+        #    'git+http://github.com/tristan0x/hpcbench@820bf2b#egg=hpcbench'
+        # -> fatal: reference is not a tree: 820bf2b27d86d4fdd657a8e461f4183dc
+        #
+        # git_rev = version.split('+', 1)[-1]
+        # if '.' in git_rev:  # get rid of date suffix
+        #     git_rev = git_rev.split('.', 1)[0]
+        # git_rev = git_rev[1:]  # get rid of scm letter
         return 'git+{project_url}@{git_rev}#egg=hpcbench'.format(
             project_url='http://github.com/tristan0x/hpcbench',
             git_rev=git_rev or 'master'
