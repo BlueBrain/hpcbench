@@ -269,9 +269,12 @@ class BenchmarkCategoryDriver(Enumerator):
             if category != self.category:
                 continue
             name = execution.get('name') or ''
-            children.append(osp.join(
-                name,
-                str(uuid.uuid4())
+            children.append((
+                execution,
+                osp.join(
+                    name,
+                    str(uuid.uuid4())
+                )
             ))
         return children
 
@@ -282,16 +285,8 @@ class BenchmarkCategoryDriver(Enumerator):
     def __call__(self, **kwargs):
         if "no_exec" not in kwargs:
             runs = dict()
-            for execution in self.benchmark.execution_matrix:
-                category = execution.get('category')
-                if self.category != category:
-                    continue
-                name = execution.get('name') or ''
-                run_dir = osp.join(
-                    name,
-                    str(uuid.uuid4())
-                )
-                runs.setdefault(category, []).append(run_dir)
+            for execution, run_dir in self.children:
+                runs.setdefault(execution['category'], []).append(run_dir)
                 with pushd(run_dir, mkdir=True):
                     driver = ExecutionDriver(
                         self,
