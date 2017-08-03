@@ -14,8 +14,10 @@ from hpcbench.api import (
 
 class StreamExtractor(MetricsExtractor):
     """Ignore stdout until this line"""
-    STDOUT_IGNORE_PRIOR = \
-        'Function      Rate (MB/s)   Avg time     Min time     Max time'
+    STDOUT_IGNORE_PRIOR = set([
+        'Function      Rate (MB/s)   Avg time     Min time     Max time',
+        'Function    Best Rate MB/s  Avg time     Min time     Max time',
+    ])
     KEEP_NUMBERS = re.compile('[^0-9.]')
     SECTIONS = ['copy', 'scale', 'add', 'triad']
     regex = dict(
@@ -62,7 +64,7 @@ class StreamExtractor(MetricsExtractor):
         # parse stdout and extract desired metrics
         with open(self.stdout(outdir)) as istr:
             for line in istr:
-                if line.strip() == self.STDOUT_IGNORE_PRIOR:
+                if line.strip() in self.STDOUT_IGNORE_PRIOR:
                     break
             for line in istr:
                 line = line.strip()
