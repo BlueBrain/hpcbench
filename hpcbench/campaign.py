@@ -15,16 +15,13 @@ def pip_installer_url(version=None):
     version = version or hpcbench.__version__
     version = str(version)
     if '.dev' in version:
-        try:
-            git_rev = version.split('+', 1)[1]
-            if '.' in git_rev:  # get rid of date suffix
-                git_rev = git_rev.split('.', 1)[0]
-            git_rev = git_rev[1:]  # get rid of scm letter
-        except:
-            git_rev = 'master'
+        git_rev = version.split('+', 1)[-1]
+        if '.' in git_rev:  # get rid of date suffix
+            git_rev = git_rev.split('.', 1)[0]
+        git_rev = git_rev[1:]  # get rid of scm letter
         return 'git+{project_url}@{git_rev}#egg=hpcbench'.format(
             project_url='http://github.com/tristan0x/hpcbench',
-            git_rev=git_rev
+            git_rev=git_rev or 'master'
         )
     return 'hpcbench=={}'.format(version)
 
