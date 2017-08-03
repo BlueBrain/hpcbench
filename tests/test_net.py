@@ -5,6 +5,10 @@ from hpcbench.net import CampaignHolder
 from hpcbench.cli import benet
 
 from . test_driver import FakeBenchmark
+from hpcbench.toolbox.contextlib_ext import (
+    mkdtemp,
+    pushd,
+)
 
 
 def custom_ssh(self, *args):
@@ -34,4 +38,6 @@ class TestNet(unittest.TestCase):
         return osp.splitext(__file__)[0] + '.yaml'
 
     def test_local(self):
-        benet.main(TestNet.get_campaign_file())
+        with mkdtemp() as temp_dir:
+            with pushd(temp_dir):
+                benet.main(TestNet.get_campaign_file())
