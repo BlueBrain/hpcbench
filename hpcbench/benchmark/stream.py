@@ -91,6 +91,9 @@ class StreamExtractor(MetricsExtractor):
 class Stream(Benchmark):
     """Benchmark wrapper for the streambench utility
     """
+    DEFAULT_THREADS = [1, 4, 16, 26, 52, 104]
+    DEFAULT_FEATURES = ["cache", "mcdram", "cpu"]
+
     FEATURE_CPU = 'cpu'
     FEATURES = dict(
         cache=[dict(args=["--all"], name="all")],
@@ -114,7 +117,10 @@ class Stream(Benchmark):
 
     def __init__(self):
         super(Stream, self).__init__(
-            attributes=dict(features=["cache", "mcdram", "cpu"])
+            attributes=dict(
+                features=Stream.DEFAULT_FEATURES,
+                threads=Stream.DEFAULT_THREADS
+            )
         )
     name = 'stream'
 
@@ -125,7 +131,7 @@ class Stream(Benchmark):
         for feature in self.attributes['features']:
             if feature in self.FEATURES.keys():
                 for numa_policy in self.FEATURES[feature]:
-                    for thread in [1, 4, 16, 26, 52, 104]:
+                    for thread in self.attributes['threads']:
                         yield dict(
                             category=Stream.FEATURE_CPU,
                             command=[
