@@ -2,11 +2,6 @@
 
 from setuptools import setup, find_packages
 
-__version__ = None
-with open('hpcbench/__init__.py') as istr:
-    for l in filter(lambda l: l.startswith('__version__ ='), istr):
-        exec(l)
-
 with open('README.rst') as f:
     readme = f.read()
 
@@ -15,13 +10,13 @@ with open('LICENSE') as f:
 
 setup(
     name='hpcbench',
-    version=__version__,
     description='Specify and run your benchmarks',
     long_description=readme,
     author='Tristan Carel',
     author_email='tristan.carel@gmail.com',
     url='https://github.com/tristan0x/hpcbench',
     license=license,
+    use_scm_version=True,
     packages=find_packages(exclude=('tests', 'docs')),
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
@@ -40,11 +35,13 @@ setup(
         'Topic :: System :: Benchmark',
         'Topic :: Utilities',
     ],
+    setup_requires=[
+        'setuptools_scm==1.15.6',
+    ],
     install_requires=[
         'cached-property==1.3.0',
         'docopt==0.6.2',
         'elasticsearch==5.4.0',
-        'packaging==16.8',
         'PyYAML>=3.12',
         'six==1.10',
     ],
