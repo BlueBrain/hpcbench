@@ -9,8 +9,23 @@ from hpcbench.toolbox.collections_ext import nameddict
 
 class TestVersion(unittest.TestCase):
     def test_pip_version(self):
-        self.assertTrue('github' in pip_installer_url('0.1-dev'))
         self.assertEqual(pip_installer_url('1.2.3'), 'hpcbench==1.2.3')
+        self.assertEqual(
+            pip_installer_url('0.1.dev'),
+            'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench'
+        )
+        self.assertEqual(
+            pip_installer_url('0.1.dev64+gff343d5.d20170803'),
+            'git+http://github.com/tristan0x/hpcbench@ff343d5#egg=hpcbench'
+        )
+        self.assertEqual(
+            pip_installer_url('0.1.dev64+gff343d5'),
+            'git+http://github.com/tristan0x/hpcbench@ff343d5#egg=hpcbench'
+        )
+        self.assertEqual(
+            pip_installer_url('0.1.dev'),
+            'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench'
+        )
 
 
 class TestCampaign(unittest.TestCase):

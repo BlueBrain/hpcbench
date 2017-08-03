@@ -1,3 +1,5 @@
 """hpcbench package to specify and execute benchmarks
 """
-__version__ = '0.1b.dev'
+from pkg_resources import get_distribution
+
+__version__ = get_distribution(__name__).version

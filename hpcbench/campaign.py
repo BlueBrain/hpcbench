@@ -4,8 +4,6 @@ import collections
 import re
 import uuid
 
-from packaging.version import Version
-
 import hpcbench
 
 from . toolbox.collections_ext import Configuration
@@ -15,10 +13,19 @@ def pip_installer_url(version=None):
     """Get argument to give to ``pip`` to install HPCBench.
     """
     version = version or hpcbench.__version__
-    version = Version(version)
     version = str(version)
     if '.dev' in version:
-        return 'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench'
+        try:
+            git_rev = version.split('+', 1)[1]
+            if '.' in git_rev:  # get rid of date suffix
+                git_rev = git_rev.split('.', 1)[0]
+            git_rev = git_rev[1:]  # get rid of scm letter
+        except:
+            git_rev = 'master'
+        return 'git+{project_url}@{git_rev}#egg=hpcbench'.format(
+            project_url='http://github.com/tristan0x/hpcbench',
+            git_rev=git_rev
+        )
     return 'hpcbench=={}'.format(version)
 
 
