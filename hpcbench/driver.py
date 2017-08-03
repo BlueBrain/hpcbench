@@ -61,8 +61,9 @@ def write_yaml_report(func):
 
 class Enumerator(six.with_metaclass(ABCMeta, object)):
     """Common class for every campaign node"""
-    def __init__(self, campaign):
+    def __init__(self, campaign, node):
         self.campaign = campaign
+        self.node = node
 
     @abstractmethod
     def child_builder(self, child):
@@ -105,20 +106,22 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
 
 
 class Leaf(Enumerator):
-    def __init__(self, name):
+    def __init__(self, node, name):
         self.name = name
 
 
 class CampaignDriver(Enumerator):
     """Abstract representation of an entire campaign"""
-    def __init__(self, campaign_file=None, campaign_path=None):
+    def __init__(self, campaign_file=None, campaign_path=None, node=None):
+        node = node or socket.gethostname()
         if campaign_file and campaign_path:
             raise Exception('Either campaign_file xor path can be specified')
         if campaign_path:
             campaign_file = osp.join(campaign_path, YAML_CAMPAIGN_FILE)
         self.campaign_file = osp.abspath(campaign_file)
         super(CampaignDriver, self).__init__(
-            campaign=from_file(campaign_file)
+            campaign=from_file(campaign_file),
+            node=node
         )
         if campaign_path:
             self.existing_campaign = True
@@ -129,11 +132,11 @@ class CampaignDriver(Enumerator):
             self.campaign_path = now.strftime(self.campaign.output_dir)
 
     def child_builder(self, child):
-        return HostDriver(self.campaign, child)
+        return HostDriver(self.campaign, self.node, child)
 
     @cached_property
     def children(self):
-        return [socket.gethostname()]
+        return [self.node]
 
     def __call__(self, **kwargs):
         """execute benchmarks"""
@@ -150,8 +153,8 @@ class CampaignDriver(Enumerator):
 
 class HostDriver(Enumerator):
     """Abstract representation of the campaign for the current host"""
-    def __init__(self, campaign, name):
-        super(HostDriver, self).__init__(campaign)
+    def __init__(self, campaign, node, name):
+        super(HostDriver, self).__init__(campaign, node)
         self.name = name
 
     @cached_property
@@ -179,14 +182,14 @@ class HostDriver(Enumerator):
         return benchmarks
 
     def child_builder(self, child):
-        return BenchmarkTagDriver(self.campaign, child)
+        return BenchmarkTagDriver(self.campaign, self.node, child)
 
 
 class BenchmarkTagDriver(Enumerator):
     """Abstract representation of a campaign tag
     (keys of "benchmark" YAML tag)"""
-    def __init__(self, campaign, name):
-        super(BenchmarkTagDriver, self).__init__(campaign)
+    def __init__(self, campaign, node, name):
+        super(BenchmarkTagDriver, self).__init__(campaign, node)
         self.name = name
 
     @cached_property
@@ -198,12 +201,12 @@ class BenchmarkTagDriver(Enumerator):
         benchmark = Benchmark.get_subclass(conf['type'])()
         if 'attributes' in conf:
             benchmark.attributes = copy.deepcopy(conf['attributes'])
-        return BenchmarkDriver(self.campaign, benchmark)
+        return BenchmarkDriver(self.campaign, self.node, benchmark)
 
 
 class BenchmarkDriver(Enumerator):
-    def __init__(self, campaign, benchmark):
-        super(BenchmarkDriver, self).__init__(campaign)
+    def __init__(self, campaign, node, benchmark):
+        super(BenchmarkDriver, self).__init__(campaign, node)
         self.benchmark = benchmark
 
     @cached_property
@@ -214,14 +217,15 @@ class BenchmarkDriver(Enumerator):
         return categories
 
     def child_builder(self, child):
-        return BenchmarkCategoryDriver(self.campaign, child, self.benchmark)
+        return BenchmarkCategoryDriver(self.campaign, self.node,
+                                       child, self.benchmark)
 
 
 class BenchmarkCategoryDriver(Enumerator):
     """Abstract representation of one benchmark to execute
     (one of "benchmarks" YAML tag values")"""
-    def __init__(self, campaign, category, benchmark):
-        super(BenchmarkCategoryDriver, self).__init__(campaign)
+    def __init__(self, campaign, node, category, benchmark):
+        super(BenchmarkCategoryDriver, self).__init__(campaign, node)
         self.category = category
         self.benchmark = benchmark
 
@@ -275,7 +279,8 @@ class BenchmarkCategoryDriver(Enumerator):
                         execution
                     )
                     driver(**kwargs)
-                    MetricsDriver(self.campaign, self.benchmark)(**kwargs)
+                    md = MetricsDriver(self.campaign, self.benchmark)
+                    md(**kwargs)
                     yield run_dir
             self.gather_metrics(runs)
         elif 'plot' in kwargs:
@@ -327,7 +332,7 @@ class BenchmarkCategoryDriver(Enumerator):
         plotter = Plotter(
             metrics,
             category=category,
-            hostname=socket.gethostname()
+            hostname=self.node
         )
         plotter(desc)
 
