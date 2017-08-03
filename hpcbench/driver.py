@@ -177,18 +177,16 @@ class HostDriver(Enumerator):
     @cached_property
     def children(self):
         """Retrieve tags associated to the current node"""
-        hostnames = {'localhost', self.name}
         benchmarks = {'*'}
         for tag, configs in self.campaign.network.tags.items():
             for config in configs:
                 for mode, kconfig in config.items():
                     if mode == 'match':
-                        for host in hostnames:
-                            if kconfig.match(host):
-                                benchmarks.add(tag)
-                                break
+                        if kconfig.match(self.name):
+                            benchmarks.add(tag)
+                            break
                     elif mode == 'nodes':
-                        if hostnames & kconfig:
+                        if self.name in kconfig:
                             benchmarks.add(tag)
                             break
                     else:

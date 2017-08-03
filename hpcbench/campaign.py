@@ -2,6 +2,7 @@
 """
 import collections
 import re
+import socket
 import uuid
 
 import hpcbench
@@ -30,7 +31,7 @@ DEFAULT_CAMPAIGN = dict(
     output_dir="hpcbench-%Y%m%d-%H:%M:%S",
     network=dict(
         nodes=[
-            'localhost',
+            socket.gethostname(),
         ],
         tags=dict(),
         ssh_config_file=None,

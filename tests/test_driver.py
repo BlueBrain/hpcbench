@@ -2,11 +2,11 @@ import json
 import os
 import os.path as osp
 import shutil
-import socket
 import sys
 import tempfile
 from textwrap import dedent
 import unittest
+
 from cached_property import cached_property
 
 from hpcbench.api import (
@@ -147,7 +147,7 @@ class TestDriver(unittest.TestCase):
         # simply ensure metrics have been generated
         aggregated_metrics_f = osp.join(
             TestDriver.CAMPAIGN_PATH,
-            socket.gethostname(),
+            TestDriver.driver.node,
             '*',
             'test01',
             'main',
@@ -169,7 +169,7 @@ class TestDriver(unittest.TestCase):
         benplot.main(TestDriver.CAMPAIGN_PATH)
         plot_file_f = osp.join(
             TestDriver.CAMPAIGN_PATH,
-            socket.gethostname(),
+            TestDriver.driver.node,
             '*',
             'test01',
             'main',
