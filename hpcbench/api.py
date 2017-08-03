@@ -128,6 +128,13 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         environment (optional):
             a dictionary providing additional environment variables
             to be given to the executed command
+        srun_options (optional):
+            When the `srun` execution layer is enabled,
+            a list of string providing additional options given to
+            the `srun` command.
+        srun_nodes (optional):
+            When the `srun` execution layer is enabled,
+            an integer providing the number of required nodes.
 
         Execution context: for every command, a dedicated output directory
         is created and the current working directory changed to this directory

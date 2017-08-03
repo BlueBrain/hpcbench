@@ -191,7 +191,23 @@ type (optional)
 A string indicating the execution layer. Possible values are:
 
 * ``local`` (default) to spawn processes where ``ben-sh`` is running.
+* ``srun`` to use `srun <https://slurm.schedmd.com/srun.html>`_ to launch
+  processes.
 
 config (optional)
 ~~~~~~~~~~~~~~~~~
 This dictionary provides the execution layer configuration.
+
+The ``srun`` layer accepts the following keys:
+
+* ``srun`` (optional) a string indicating the path to srun executable
+* ``srun_options`` a list of string providing the options given to every srun commands. It is the proper place to specify the account name for instance.
+
+.. code-block:: yaml
+
+  process:
+    type: srun
+    config:
+      options:
+        - --account=project42
+        - --partition=über-cluster

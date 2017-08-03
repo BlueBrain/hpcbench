@@ -31,7 +31,7 @@ from . toolbox.contextlib_ext import (
     pushd,
     Timer,
 )
-
+from . toolbox.process import find_executable
 
 LOGGER = logging.getLogger('hpcbench')
 YAML_REPORT_FILE = 'hpcbench.yaml'
@@ -198,6 +198,27 @@ class HostDriver(Enumerator):
 
     def child_builder(self, child):
         return BenchmarkTagDriver(self, child)
+
+    def nodes(self, tag):
+        """get list of nodes that belong to a tag
+        :rtype: list of string
+        """
+        if tag == '*':
+            return self.campaign.network.nodes
+        definition = self.campaign.network.tags.get('tag')
+        if definition is None:
+            return []
+        mode, value = definition.items()[0]
+        if mode == 'match':
+            return [
+                node for node in self.campaign.network.nodes
+                if value.match(node)
+            ]
+        elif mode == 'nodes':
+            return value
+        else:
+            raise Exception('Unknown tag association pattern: %s',
+                            mode)
 
 
 class BenchmarkTagDriver(Enumerator):
@@ -471,4 +492,57 @@ class ExecutionDriver(Leaf):
             benchmark=self.benchmark.name,
         )
         report.update(self.execution)
+        report.update(command=self.command)
         return report
+
+
+class SlurmExecutionDriver(ExecutionDriver):
+    """Manage process execution with srun (SLURM)
+    """
+    name = 'srun'
+
+    @cached_property
+    def srun(self):
+        """Get path to srun executable
+
+        :rtype: string
+        """
+        srun = self.campaign.process.config.get('srun') or 'srun'
+        return find_executable(srun)
+
+    @cached_property
+    def common_srun_options(self):
+        """Get options to be given to all srun commands
+
+        :rtype: list of string
+        """
+        slurm_config = self.campaign.process.get('config', {})
+        return slurm_config.get('options') or []
+
+    @cached_property
+    def command(self):
+        """get command to execute
+
+        :return: list of string
+        """
+        srun_options = copy.copy(self.common_srun_options)
+        srun_options += self.execution.get('srun_options') or []
+        srun_options.append('--nodelist=' + ','.join(self.srun_nodes))
+        command = super(SlurmExecutionDriver, self).command
+        return [self.srun] + srun_options + command
+
+    @cached_property
+    def srun_nodes(self):
+        """Get list of nodes where to execute the command
+        """
+        count = self.execution.get('srun_nodes') or 1
+        assert isinstance(count, int)
+        assert count > 0
+        tag = self.parent.parent.parent.name
+        self.logger.info(tag)
+        tag_nodes = self.parent.parent.parent.parent.nodes(tag)
+        self.logger.info(tag_nodes)
+        assert count <= len(tag_nodes)
+        pos = tag_nodes.index(self.node)
+        tag_nodes = tag_nodes + tag_nodes
+        return tag_nodes[pos:pos + count]
