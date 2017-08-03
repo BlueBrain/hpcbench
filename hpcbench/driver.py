@@ -5,10 +5,12 @@ from abc import (
     abstractmethod,
     abstractproperty,
 )
+from collections import namedtuple
 import copy
 import datetime
 from functools import wraps
 import json
+import logging
 import os
 import os.path as osp
 import shutil
@@ -31,6 +33,7 @@ from . toolbox.contextlib_ext import (
 )
 
 
+LOGGER = logging.getLogger('hpcbench')
 YAML_REPORT_FILE = 'hpcbench.yaml'
 YAML_CAMPAIGN_FILE = 'campaign.yaml'
 JSON_METRICS_FILE = 'metrics.json'
@@ -61,11 +64,21 @@ def write_yaml_report(func):
 
 class Enumerator(six.with_metaclass(ABCMeta, object)):
     """Common class for every campaign node"""
-    def __init__(self, campaign):
-        self.campaign = campaign
+    def __init__(self, parent, name=None, logger=None):
+        self.campaign = parent.campaign
+        self.node = parent.node
+        self.name = name
+        if logger:
+            self.logger = logger
+        elif name:
+            self.logger = parent.logger.getChild(name)
+        else:
+            self.logger = parent.logger
 
     @abstractmethod
     def child_builder(self, child):
+        """Provides callable object returning child instance.
+        """
         raise NotImplementedError  # pragma: no cover
 
     @abstractproperty
@@ -94,31 +107,40 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
             return self.report['children']
         return self.children
 
-    def traverse(self, leaf=False):
-        if leaf:
-            builder = Leaf
-        else:
-            builder = self.child_builder
+    def traverse(self):
+        """Enumerate children and build associated objects
+        """
+        builder = self.child_builder
         for child in self._children:
             with pushd(str(child)):
                 yield child, builder(child)
 
 
 class Leaf(Enumerator):
-    def __init__(self, name):
-        self.name = name
+    """Enumerator class for classes at the bottom of the hierarchy
+    """
+    def child_builder(self, child):
+        del child  # unused
+
+    def children(self):
+        return []
 
 
 class CampaignDriver(Enumerator):
     """Abstract representation of an entire campaign"""
-    def __init__(self, campaign_file=None, campaign_path=None):
+    def __init__(self, campaign_file=None, campaign_path=None,
+                 node=None, logger=None):
+        node = node or socket.gethostname()
         if campaign_file and campaign_path:
             raise Exception('Either campaign_file xor path can be specified')
         if campaign_path:
             campaign_file = osp.join(campaign_path, YAML_CAMPAIGN_FILE)
         self.campaign_file = osp.abspath(campaign_file)
+        top = namedtuple('top', ['campaign', 'node'])
         super(CampaignDriver, self).__init__(
-            campaign=from_file(campaign_file)
+            top(campaign=from_file(campaign_file), node=node),
+            None,
+            logger=logger or LOGGER
         )
         if campaign_path:
             self.existing_campaign = True
@@ -129,11 +151,11 @@ class CampaignDriver(Enumerator):
             self.campaign_path = now.strftime(self.campaign.output_dir)
 
     def child_builder(self, child):
-        return HostDriver(self.campaign, child)
+        return HostDriver(self, name=child)
 
     @cached_property
     def children(self):
-        return [socket.gethostname()]
+        return [self.node]
 
     def __call__(self, **kwargs):
         """execute benchmarks"""
@@ -150,9 +172,6 @@ class CampaignDriver(Enumerator):
 
 class HostDriver(Enumerator):
     """Abstract representation of the campaign for the current host"""
-    def __init__(self, campaign, name):
-        super(HostDriver, self).__init__(campaign)
-        self.name = name
 
     @cached_property
     def children(self):
@@ -179,15 +198,12 @@ class HostDriver(Enumerator):
         return benchmarks
 
     def child_builder(self, child):
-        return BenchmarkTagDriver(self.campaign, child)
+        return BenchmarkTagDriver(self, child)
 
 
 class BenchmarkTagDriver(Enumerator):
     """Abstract representation of a campaign tag
     (keys of "benchmark" YAML tag)"""
-    def __init__(self, campaign, name):
-        super(BenchmarkTagDriver, self).__init__(campaign)
-        self.name = name
 
     @cached_property
     def children(self):
@@ -198,12 +214,14 @@ class BenchmarkTagDriver(Enumerator):
         benchmark = Benchmark.get_subclass(conf['type'])()
         if 'attributes' in conf:
             benchmark.attributes = copy.deepcopy(conf['attributes'])
-        return BenchmarkDriver(self.campaign, benchmark)
+        return BenchmarkDriver(self, benchmark)
 
 
 class BenchmarkDriver(Enumerator):
-    def __init__(self, campaign, benchmark):
-        super(BenchmarkDriver, self).__init__(campaign)
+    """Abstract representation of a benchmark, part of a campaign tag
+    """
+    def __init__(self, parent, benchmark):
+        super(BenchmarkDriver, self).__init__(parent, benchmark.name)
         self.benchmark = benchmark
 
     @cached_property
@@ -214,24 +232,30 @@ class BenchmarkDriver(Enumerator):
         return categories
 
     def child_builder(self, child):
-        return BenchmarkCategoryDriver(self.campaign, child, self.benchmark)
+        return BenchmarkCategoryDriver(self, child, self.benchmark)
 
 
 class BenchmarkCategoryDriver(Enumerator):
     """Abstract representation of one benchmark to execute
     (one of "benchmarks" YAML tag values")"""
-    def __init__(self, campaign, category, benchmark):
-        super(BenchmarkCategoryDriver, self).__init__(campaign)
+    def __init__(self, parent, category, benchmark):
+        super(BenchmarkCategoryDriver, self).__init__(parent, category)
         self.category = category
         self.benchmark = benchmark
 
     @cached_property
     def plot_files(self):
+        """Get path to the benchmark category plots files
+        """
         for plot in self.benchmark.plots[self.category]:
             yield osp.join(os.getcwd(), Plotter.get_filename(plot))
 
     @cached_property
     def commands(self):
+        """Get all commands of the benchmark category
+
+        :return generator of string
+        """
         for child in self._children:
             with open(osp.join(child, YAML_REPORT_FILE)) as istr:
                 command = yaml.load(istr)['command']
@@ -245,9 +269,12 @@ class BenchmarkCategoryDriver(Enumerator):
             if category != self.category:
                 continue
             name = execution.get('name') or ''
-            children.append(osp.join(
-                name,
-                str(uuid.uuid4())
+            children.append((
+                execution,
+                osp.join(
+                    name,
+                    str(uuid.uuid4())
+                )
             ))
         return children
 
@@ -258,29 +285,22 @@ class BenchmarkCategoryDriver(Enumerator):
     def __call__(self, **kwargs):
         if "no_exec" not in kwargs:
             runs = dict()
-            for execution in self.benchmark.execution_matrix:
-                category = execution.get('category')
-                if self.category != category:
-                    continue
-                name = execution.get('name') or ''
-                run_dir = osp.join(
-                    name,
-                    str(uuid.uuid4())
-                )
-                runs.setdefault(category, []).append(run_dir)
+            for execution, run_dir in self.children:
+                runs.setdefault(execution['category'], []).append(run_dir)
                 with pushd(run_dir, mkdir=True):
                     driver = ExecutionDriver(
-                        self.campaign,
+                        self,
                         self.benchmark,
                         execution
                     )
                     driver(**kwargs)
-                    MetricsDriver(self.campaign, self.benchmark)(**kwargs)
+                    mdriver = MetricsDriver(self.campaign, self.benchmark)
+                    mdriver(**kwargs)
                     yield run_dir
             self.gather_metrics(runs)
         elif 'plot' in kwargs:
             for plot in self.benchmark.plots.get(self.category):
-                self.generate_plot(plot, self.category)
+                self._generate_plot(plot, self.category)
         else:
             runs = dict()
             for child in self.report['children']:
@@ -294,7 +314,9 @@ class BenchmarkCategoryDriver(Enumerator):
             self.gather_metrics(runs)
 
     def gather_metrics(self, runs):
-        for category, run_dirs in runs.items():
+        """Write a JSON file with the result of every runs
+        """
+        for run_dirs in runs.values():
             with open(JSON_METRICS_FILE, 'w') as ostr:
                 ostr.write('[\n')
                 for i in range(len(run_dirs)):
@@ -318,16 +340,18 @@ class BenchmarkCategoryDriver(Enumerator):
 
     @cached_property
     def metrics(self):
+        """Get content of the JSON metrics file
+        """
         with open(JSON_METRICS_FILE) as istr:
             return yaml.load(istr)
 
-    def generate_plot(self, desc, category):
+    def _generate_plot(self, desc, category):
         with open(JSON_METRICS_FILE) as istr:
             metrics = json.load(istr)
         plotter = Plotter(
             metrics,
             category=category,
-            hostname=socket.gethostname()
+            hostname=self.node
         )
         plotter(desc)
 
@@ -374,12 +398,12 @@ class MetricsDriver(object):
                 raise Exception(message)
 
 
-class ExecutionDriver(object):
+class ExecutionDriver(Leaf):
     """Abstract representation of a benchmark command execution
     (a benchmark is made of several commands)
     """
-    def __init__(self, campaign, benchmark, execution):
-        self.campaign = campaign
+    def __init__(self, parent, benchmark, execution):
+        super(ExecutionDriver, self).__init__(parent)
         self.benchmark = benchmark
         self.execution = execution
 
@@ -394,6 +418,11 @@ class ExecutionDriver(object):
                 env = copy.deepcopy(os.environ)
                 env.update(custom_env)
                 kwargs.update(env=env)
+            command_str = ' '.join(map(
+                six.moves.shlex_quote,
+                self.execution['command']
+            ))
+            self.logger.info('Executing command: %s', command_str)
             process = subprocess.Popen(
                 self.execution['command'],
                 **kwargs
