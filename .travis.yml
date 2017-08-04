@@ -1,28 +1,30 @@
 language: python
-
 python:
-#  - 2.6
-  - 2.7
-#  - 3.3
-  - 3.4
-  - 3.5
-  - 3.6
-
+- 2.7
+- 3.4
+- 3.5
+- 3.6
 services:
 - elasticsearch
-
 install:
-    # Temporary solution for Travis CI multiprocessing issue #943
-    # https://github.com/travis-ci/travis-ci/issues/943
-    - sudo rm -rf /dev/shm && sudo ln -s /run/shm /dev/shm
-    # Work around https://github.com/travis-ci/travis-ci/issues/5485
-    - travis_retry pip install setuptools==29.0.1
-    - travis_retry pip install virtualenv==15.1
-    - pip install tox-travis coveralls
-
+# Temporary solution for Travis CI multiprocessing issue #943
+# https://github.com/travis-ci/travis-ci/issues/943
+- sudo rm -rf /dev/shm && sudo ln -s /run/shm /dev/shm
+# Work around https://github.com/travis-ci/travis-ci/issues/5485
+- travis_retry pip install setuptools==29.0.1
+- travis_retry pip install virtualenv==15.1
+- pip install tox-travis coveralls
 script: tox
 after_success: coveralls --verbose
 branches:
   only:
   - master
   - /^v.*$/
+deploy:
+  provider: pypi
+  user: tcarel
+  password:
+    secure: imteanLgbp2t2oIT/lTeO5NMil8ci8JWmH0TglL3SSSNCsGLK4uMnhF7LXcLWIAfMtUvSuJ9Wor/3r837ZSWW6Xw78/2a1zzH0x4il/tH5M++aCtbf9ofHe+E6R5K1yrHjlujAjkIAt3zR1fDXTdxEcxnf6YlWP5o+Wg9Y3RMAn3jA/tCbQDZtRk0/PAW5mG750kSH6H7E2YR/HYVbbneLP0oZe3ROt0nnYfB7cDdK8w9cSSA+lpW9gLddOtELdZEe0RiRW4J4vpqf6zAnbGKDLNNxWUMFQTacyikrrTi49Z8yK5bArYU7wgeeQt8LPCkorNG/sa7tp13FbTi6jDc+1JyDOT/hQPdqxWkY2n3JaXDFf5BIuJ4HDvklTlMFQ6LZti8gyic40uROSAeh+wsWpCZngtVzdjKxtf9HpO6SZKhVyV+zINChrPKWzKle8bbE4kr7eaYUfXfF5ra80Amc5wlYauPTmlF3eYN6P8a/MMiJHK7NacSWwQYoXsbr4tTh/aRpqiRhW5o+WckKMColXvbUGRfSSXdGYffvFFV2od8F3r3A3IvRNb2ZVG25953SFpMHYxz0P7//kPF1u3YNs+nB4K6O6rYx6Mo45QMWx21lJ9FMmdk5gc/Aw36QCNTAHlGBz0b+2WdFqlNbv3Yw52O9WBpGOFb/JygtBTAiE=
+  distributions: sdist bdist_wheel
+  on:
+    tags: true
