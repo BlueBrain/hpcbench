@@ -1,0 +1,10 @@
+process:
+    type: srun
+    config:
+        srun: srun-ut
+        srun_options:
+            - --exclusive
+benchmarks:
+    '*':
+        test-slurm:
+            type: fake

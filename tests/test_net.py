@@ -4,7 +4,7 @@ import unittest
 from hpcbench.net import CampaignHolder
 from hpcbench.cli import benet
 
-from . test_driver import FakeBenchmark
+from . import FakeBenchmark
 from hpcbench.toolbox.contextlib_ext import (
     mkdtemp,
     pushd,
