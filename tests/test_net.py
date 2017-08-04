@@ -37,6 +37,7 @@ class TestNet(unittest.TestCase):
     def get_campaign_file():
         return osp.splitext(__file__)[0] + '.yaml'
 
+    @unittest.skipIf('TRAVIS_TAG' in os.environ)
     def test_local(self):
         with mkdtemp() as temp_dir:
             with pushd(temp_dir):
