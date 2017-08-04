@@ -26,12 +26,15 @@ import yaml
 from . api import Benchmark
 from . campaign import from_file
 from . plot import Plotter
-from . toolbox.collections_ext import nameddict
+from . toolbox.collections_ext import (
+    dict_merge,
+    nameddict,
+)
 from . toolbox.contextlib_ext import (
     pushd,
     Timer,
 )
-
+from . toolbox.process import find_executable
 
 LOGGER = logging.getLogger('hpcbench')
 YAML_REPORT_FILE = 'hpcbench.yaml'
@@ -65,6 +68,7 @@ def write_yaml_report(func):
 class Enumerator(six.with_metaclass(ABCMeta, object)):
     """Common class for every campaign node"""
     def __init__(self, parent, name=None, logger=None):
+        self.parent = parent
         self.campaign = parent.campaign
         self.node = parent.node
         self.name = name
@@ -176,18 +180,16 @@ class HostDriver(Enumerator):
     @cached_property
     def children(self):
         """Retrieve tags associated to the current node"""
-        hostnames = {'localhost', self.name}
         benchmarks = {'*'}
         for tag, configs in self.campaign.network.tags.items():
             for config in configs:
                 for mode, kconfig in config.items():
                     if mode == 'match':
-                        for host in hostnames:
-                            if kconfig.match(host):
-                                benchmarks.add(tag)
-                                break
+                        if kconfig.match(self.name):
+                            benchmarks.add(tag)
+                            break
                     elif mode == 'nodes':
-                        if hostnames & kconfig:
+                        if self.name in kconfig:
                             benchmarks.add(tag)
                             break
                     else:
@@ -199,6 +201,27 @@ class HostDriver(Enumerator):
 
     def child_builder(self, child):
         return BenchmarkTagDriver(self, child)
+
+    def nodes(self, tag):
+        """get list of nodes that belong to a tag
+        :rtype: list of string
+        """
+        if tag == '*':
+            return self.campaign.network.nodes
+        definition = self.campaign.network.tags.get('tag')
+        if definition is None:
+            return []
+        mode, value = definition.items()[0]
+        if mode == 'match':
+            return [
+                node for node in self.campaign.network.nodes
+                if value.match(node)
+            ]
+        elif mode == 'nodes':
+            return value
+        else:
+            raise Exception('Unknown tag association pattern: %s',
+                            mode)
 
 
 class BenchmarkTagDriver(Enumerator):
@@ -213,7 +236,10 @@ class BenchmarkTagDriver(Enumerator):
         conf = self.campaign.benchmarks[self.name][child]
         benchmark = Benchmark.get_subclass(conf['type'])()
         if 'attributes' in conf:
-            benchmark.attributes = copy.deepcopy(conf['attributes'])
+            dict_merge(
+                benchmark.attributes,
+                conf['attributes']
+            )
         return BenchmarkDriver(self, benchmark)
 
 
@@ -281,6 +307,21 @@ class BenchmarkCategoryDriver(Enumerator):
     def child_builder(self, child):
         del child  # unused
 
+    @cached_property
+    def execution_layer_class(self):
+        """Get execution layer class
+        """
+        name = self.campaign.process.type
+        for clazz in [ExecutionDriver, SlurmExecutionDriver]:
+            if name == clazz.name:
+                return clazz
+        raise NameError("Unknown execution layer: '%s'" % name)
+
+    def execution_layer(self, execution):
+        """Build the proper execution layer
+        """
+        return self.execution_layer_class(self, self.benchmark, execution)
+
     @write_yaml_report
     def __call__(self, **kwargs):
         if "no_exec" not in kwargs:
@@ -288,11 +329,7 @@ class BenchmarkCategoryDriver(Enumerator):
             for execution, run_dir in self.children:
                 runs.setdefault(execution['category'], []).append(run_dir)
                 with pushd(run_dir, mkdir=True):
-                    driver = ExecutionDriver(
-                        self,
-                        self.benchmark,
-                        execution
-                    )
+                    driver = self.execution_layer(execution)
                     driver(**kwargs)
                     mdriver = MetricsDriver(self.campaign, self.benchmark)
                     mdriver(**kwargs)
@@ -380,11 +417,12 @@ class MetricsDriver(object):
         for extractor in extractors:
             run_metrics = extractor.extract(os.getcwd(),
                                             self.report.get('metas'))
-            self.check_metrics(extractor, run_metrics)
+            MetricsDriver._check_metrics(extractor, run_metrics)
             metrics.setdefault(cat, []).append(run_metrics)
         return self.report
 
-    def check_metrics(self, extractor, metrics):
+    @classmethod
+    def _check_metrics(cls, extractor, metrics):
         """Ensure that returned metrics are properly exposed
         """
         exposed_metrics = extractor.metrics
@@ -402,35 +440,115 @@ class ExecutionDriver(Leaf):
     """Abstract representation of a benchmark command execution
     (a benchmark is made of several commands)
     """
+
+    name = 'local'
+
     def __init__(self, parent, benchmark, execution):
         super(ExecutionDriver, self).__init__(parent)
         self.benchmark = benchmark
         self.execution = execution
+
+    @property
+    def command(self):
+        """get command to execute
+
+        :return: list of string
+        """
+        return self.execution['command']
+
+    @cached_property
+    def command_str(self):
+        """get command to execute as string properly escaped
+
+        :return: string
+        """
+        return ' '.join(map(
+            six.moves.shlex_quote,
+            self.command
+        ))
+
+    def _popen_env(self, kwargs):
+        custom_env = self.execution.get('environment')
+        if custom_env:
+            env = copy.deepcopy(os.environ)
+            env.update(custom_env)
+            kwargs.update(env=env)
+
+    def popen(self, stdout, stderr):
+        """Build popen object to run
+
+        :rtype: subprocess.Popen
+        """
+        kwargs = dict(stdout=stdout, stderr=stderr)
+        self._popen_env(kwargs)
+        self.logger.info('Executing command: %s', self.command_str)
+        return subprocess.Popen(
+            self.command,
+            **kwargs
+        )
 
     @write_yaml_report
     def __call__(self, **kwargs):
         self.benchmark.pre_execute()
         with open('stdout.txt', 'w') as stdout, \
                 open('stderr.txt', 'w') as stderr:
-            kwargs = dict(stdout=stdout, stderr=stderr)
-            custom_env = self.execution.get('environment')
-            if custom_env:
-                env = copy.deepcopy(os.environ)
-                env.update(custom_env)
-                kwargs.update(env=env)
-            command_str = ' '.join(map(
-                six.moves.shlex_quote,
-                self.execution['command']
-            ))
-            self.logger.info('Executing command: %s', command_str)
-            process = subprocess.Popen(
-                self.execution['command'],
-                **kwargs
-            )
-            exit_status = process.wait()
+            exit_status = self.popen(stdout, stderr).wait()
         report = dict(
             exit_status=exit_status,
             benchmark=self.benchmark.name,
         )
         report.update(self.execution)
+        report.update(command=self.command)
         return report
+
+
+class SlurmExecutionDriver(ExecutionDriver):
+    """Manage process execution with srun (SLURM)
+    """
+    name = 'srun'
+
+    @cached_property
+    def srun(self):
+        """Get path to srun executable
+
+        :rtype: string
+        """
+        srun = self.campaign.process.config.get('srun') or 'srun'
+        return find_executable(srun)
+
+    @cached_property
+    def common_srun_options(self):
+        """Get options to be given to all srun commands
+
+        :rtype: list of string
+        """
+        slurm_config = self.campaign.process.get('config', {})
+        return slurm_config.get('options') or []
+
+    @cached_property
+    def command(self):
+        """get command to execute
+
+        :return: list of string
+        """
+        srun_options = copy.copy(self.common_srun_options)
+        srun_options += self.execution.get('srun_options') or []
+        srun_options.append('--nodelist=' + ','.join(self.srun_nodes))
+        command = super(SlurmExecutionDriver, self).command
+        return [self.srun] + srun_options + command
+
+    @cached_property
+    def srun_nodes(self):
+        """Get list of nodes where to execute the command
+        """
+        count = self.execution.get('srun_nodes') or 1
+        assert isinstance(count, int)
+        assert count > 0
+        tag = self.parent.parent.parent.name
+        self.logger.info(tag)
+        tag_nodes = self.parent.parent.parent.parent.nodes(tag)
+        self.logger.info(tag_nodes)
+        assert count <= len(tag_nodes)
+        pos = tag_nodes.index(self.node)
+        tag_nodes = tag_nodes + tag_nodes
+        return tag_nodes[pos:pos + count]

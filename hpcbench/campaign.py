@@ -2,6 +2,7 @@
 """
 import collections
 import re
+import socket
 import uuid
 
 import hpcbench
@@ -15,16 +16,21 @@ def pip_installer_url(version=None):
     version = version or hpcbench.__version__
     version = str(version)
     if '.dev' in version:
-        try:
-            git_rev = version.split('+', 1)[1]
-            if '.' in git_rev:  # get rid of date suffix
-                git_rev = git_rev.split('.', 1)[0]
-            git_rev = git_rev[1:]  # get rid of scm letter
-        except:
-            git_rev = 'master'
+        git_rev = None
+        # FIXME: comment git revision extraction because
+        # Jenkins use a merge commit that cannot be installed
+        # with pip to test pull-requests, for instance:
+        # pip install \
+        #    'git+http://github.com/tristan0x/hpcbench@820bf2b#egg=hpcbench'
+        # -> fatal: reference is not a tree: 820bf2b27d86d4fdd657a8e461f4183dc
+        #
+        # git_rev = version.split('+', 1)[-1]
+        # if '.' in git_rev:  # get rid of date suffix
+        #     git_rev = git_rev.split('.', 1)[0]
+        # git_rev = git_rev[1:]  # get rid of scm letter
         return 'git+{project_url}@{git_rev}#egg=hpcbench'.format(
             project_url='http://github.com/tristan0x/hpcbench',
-            git_rev=git_rev
+            git_rev=git_rev or 'master'
         )
     return 'hpcbench=={}'.format(version)
 
@@ -33,7 +39,7 @@ DEFAULT_CAMPAIGN = dict(
     output_dir="hpcbench-%Y%m%d-%H:%M:%S",
     network=dict(
         nodes=[
-            'localhost',
+            socket.gethostname(),
         ],
         tags=dict(),
         ssh_config_file=None,
@@ -42,6 +48,10 @@ DEFAULT_CAMPAIGN = dict(
         installer_prelude_file=None,
         max_concurrent_runs=4,
         pip_installer_url=pip_installer_url(),
+    ),
+    process=dict(
+        type='local',
+        config=dict(),
     ),
     tag=dict(),
     benchmarks={

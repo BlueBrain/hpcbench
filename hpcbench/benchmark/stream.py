@@ -10,12 +10,15 @@ from hpcbench.api import (
     Metrics,
     MetricsExtractor,
 )
+from hpcbench.toolbox.process import find_executable
 
 
 class StreamExtractor(MetricsExtractor):
     """Ignore stdout until this line"""
-    STDOUT_IGNORE_PRIOR = \
-        'Function      Rate (MB/s)   Avg time     Min time     Max time'
+    STDOUT_IGNORE_PRIOR = set([
+        'Function      Rate (MB/s)   Avg time     Min time     Max time',
+        'Function    Best Rate MB/s  Avg time     Min time     Max time',
+    ])
     KEEP_NUMBERS = re.compile('[^0-9.]')
     SECTIONS = ['copy', 'scale', 'add', 'triad']
     regex = dict(
@@ -62,7 +65,7 @@ class StreamExtractor(MetricsExtractor):
         # parse stdout and extract desired metrics
         with open(self.stdout(outdir)) as istr:
             for line in istr:
-                if line.strip() == self.STDOUT_IGNORE_PRIOR:
+                if line.strip() in self.STDOUT_IGNORE_PRIOR:
                     break
             for line in istr:
                 line = line.strip()
@@ -89,6 +92,9 @@ class StreamExtractor(MetricsExtractor):
 class Stream(Benchmark):
     """Benchmark wrapper for the streambench utility
     """
+    DEFAULT_THREADS = [1, 4, 16, 26, 52, 104]
+    DEFAULT_FEATURES = ["cache", "mcdram", "cpu"]
+
     FEATURE_CPU = 'cpu'
     FEATURES = dict(
         cache=[dict(args=["--all"], name="all")],
@@ -111,8 +117,14 @@ class Stream(Benchmark):
     )
 
     def __init__(self):
+        # locate `stream_c` executable
+        stream_c = find_executable('stream_c', required=False) or 'stream_c'
         super(Stream, self).__init__(
-            attributes=dict(features=["cache", "mcdram", "cpu"])
+            attributes=dict(
+                features=Stream.DEFAULT_FEATURES,
+                threads=Stream.DEFAULT_THREADS,
+                stream_c=stream_c,
+            )
         )
     name = 'stream'
 
@@ -120,19 +132,20 @@ class Stream(Benchmark):
 
     @property
     def execution_matrix(self):
+        stream_c = self.attributes['stream_c']
         for feature in self.attributes['features']:
             if feature in self.FEATURES.keys():
                 for numa_policy in self.FEATURES[feature]:
-                    for thread in [1, 4, 16, 26, 52, 104]:
+                    for thread in self.attributes['threads']:
                         yield dict(
                             category=Stream.FEATURE_CPU,
                             command=[
                                 'numactl',
                                 " ".join(numa_policy['args']),
-                                'stream_c',
+                                stream_c,
                             ],
                             metas=dict(
-                                thread=thread,
+                                threads=thread,
                                 numa_policy=numa_policy['name'],
                                 memory_type=feature,
                             ),

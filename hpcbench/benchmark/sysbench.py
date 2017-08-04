@@ -96,7 +96,7 @@ class Sysbench(Benchmark):
                             'run'
                         ],
                         metas=dict(
-                            thread=thread,
+                            threads=thread,
                             max_prime=max_prime
                         )
                     )

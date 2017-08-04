@@ -11,8 +11,8 @@ Network configuration reference
 -------------------------------
 
 A Campaign is made of a set of nodes to benchmarks. Those nodes
-can be tagged create groups, that can be later used to 
-filter nodes where benchmarks are executed.
+can be tagged to create groups, later used to
+filter nodes where certain benchmarks are executed on.
 
 nodes
 ~~~~~
@@ -181,3 +181,33 @@ they are not converted to True or False by YAML parse.
         environment:
           TEST_ALL: 'true'
           LD_LIBRARY_PATH: /usr/local/lib64
+
+Process configuration reference
+-------------------------------
+This section specifies how ``ben-sh`` execute the benchmark commands.
+
+type (optional)
+~~~~~~~~~~~~~~~
+A string indicating the execution layer. Possible values are:
+
+* ``local`` (default) to spawn processes where ``ben-sh`` is running.
+* ``srun`` to use `srun <https://slurm.schedmd.com/srun.html>`_ to launch
+  processes.
+
+config (optional)
+~~~~~~~~~~~~~~~~~
+This dictionary provides the execution layer configuration.
+
+The ``srun`` layer accepts the following keys:
+
+* ``srun`` (optional) a string indicating the path to srun executable
+* ``srun_options`` a list of string providing the options given to every srun commands. It is the proper place to specify the account name for instance.
+
+.. code-block:: yaml
+
+  process:
+    type: srun
+    config:
+      options:
+        - --account=project42
+        - --partition=über-cluster
