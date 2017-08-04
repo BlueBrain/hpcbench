@@ -10,6 +10,7 @@ from hpcbench.api import (
     Metrics,
     MetricsExtractor,
 )
+from hpcbench.toolbox.process import find_executable
 
 
 class StreamExtractor(MetricsExtractor):
@@ -116,10 +117,13 @@ class Stream(Benchmark):
     )
 
     def __init__(self):
+        # locate `stream_c` executable
+        stream_c = find_executable('stream_c', required=False) or 'stream_c'
         super(Stream, self).__init__(
             attributes=dict(
                 features=Stream.DEFAULT_FEATURES,
-                threads=Stream.DEFAULT_THREADS
+                threads=Stream.DEFAULT_THREADS,
+                stream_c=stream_c,
             )
         )
     name = 'stream'
@@ -128,6 +132,7 @@ class Stream(Benchmark):
 
     @property
     def execution_matrix(self):
+        stream_c = self.attributes['stream_c']
         for feature in self.attributes['features']:
             if feature in self.FEATURES.keys():
                 for numa_policy in self.FEATURES[feature]:
@@ -137,7 +142,7 @@ class Stream(Benchmark):
                             command=[
                                 'numactl',
                                 " ".join(numa_policy['args']),
-                                'stream_c',
+                                stream_c,
                             ],
                             metas=dict(
                                 threads=thread,
