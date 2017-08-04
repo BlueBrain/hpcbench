@@ -57,9 +57,9 @@ class CpuExtractor(MetricsExtractor):
                         metrics[metric] = float(value)
         # ensure all metrics have been extracted
         unset_attributes = set(mapping.values()) - set(metrics)
-        # if any(unset_attributes):
-        #     raise Exception('Could not extract some metrics: %s',
-        #                     ' '.join(unset_attributes))
+        if any(unset_attributes):
+            raise Exception('Could not extract some metrics: %s',
+                            ' '.join(unset_attributes))
         return metrics
 
 
