@@ -493,6 +493,7 @@ class ExecutionDriver(Leaf):
         with open('stdout.txt', 'w') as stdout, \
                 open('stderr.txt', 'w') as stderr:
             exit_status = self.popen(stdout, stderr).wait()
+        self.benchmark.post_execute()
         report = dict(
             exit_status=exit_status,
             benchmark=self.benchmark.name,

@@ -164,7 +164,13 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         raise NotImplementedError  # pragma: no cover
 
     def pre_execute(self):
-        """Method called before executing one of the command.
+        """Method called before executing one of the commands.
+        Current working directory is the execution directory.
+        """
+        pass
+
+    def post_execute(self):
+        """Method called after executing one of the commands.
         Current working directory is the execution directory.
         """
         pass
