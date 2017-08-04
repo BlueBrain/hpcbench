@@ -170,12 +170,12 @@ class Stream(Benchmark):
                     series=dict(
                         metas=['thread'],
                         metrics=[
-                            'cpu__copy_min_time', 'cpu__copy_avg_time',
-                            'cpu__copy_max_time', 'cpu__scale_min_time',
-                            'cpu__scale_avg_time', 'cpu__scale_max_time',
-                            'cpu__add_min_time', 'cpu__add_avg_time',
-                            'cpu__add_max_time', 'cpu__triad_min_time',
-                            'cpu__triad_avg_time', 'cpu__triad_max_time',
+                            'copy_min_time', 'copy_avg_time',
+                            'copy_max_time', 'scale_min_time',
+                            'scale_avg_time', 'scale_max_time',
+                            'add_min_time', 'add_avg_time',
+                            'add_max_time', 'triad_min_time',
+                            'triad_avg_time', 'triad_max_time',
                         ],
 
                     ),
@@ -189,11 +189,11 @@ class Stream(Benchmark):
         """Generate timings plot
         """
         del description  # unused
-        plt.plot(metas['threads'], metrics['cpu__copy_min_time'],
+        plt.plot(metas['threads'], metrics['copy_min_time'],
                  'bs-', label='minimum')
-        plt.plot(metas['threads'], metrics['cpu__copy_avg_time'],
+        plt.plot(metas['threads'], metrics['copy_avg_time'],
                  'g^', label='average')
-        plt.plot(metas['threads'], metrics['cpu__copy_max_time'],
+        plt.plot(metas['threads'], metrics['copy_max_time'],
                  'g^', label='maximum')
         plt.legend(loc='upper right', frameon=False)
         plt.xlabel('thread')

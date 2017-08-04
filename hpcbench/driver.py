@@ -362,13 +362,6 @@ class BenchmarkCategoryDriver(Enumerator):
                         data.pop('category', None)
                         data.pop('command', None)
                         data['id'] = run_dirs[i]
-                        gathered_metrics = dict()
-                        for cat, metricss in data.get('metrics', {}).items():
-                            gathered = dict()
-                            for metrics in metricss:
-                                gathered.update(metrics)
-                            gathered_metrics[cat] = gathered
-                        data['metrics'] = gathered_metrics
                         json.dump(data, ostr, indent=2)
                     if i != len(run_dirs) - 1:
                         ostr.write(',')
@@ -417,8 +410,7 @@ class MetricsDriver(object):
         for extractor in extractors:
             run_metrics = extractor.extract(os.getcwd(),
                                             self.report.get('metas'))
-            MetricsDriver._check_metrics(extractor, run_metrics)
-            metrics.setdefault(cat, []).append(run_metrics)
+            metrics.update(run_metrics)
         return self.report
 
     @classmethod

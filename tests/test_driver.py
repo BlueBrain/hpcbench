@@ -69,8 +69,8 @@ class TestDriver(DriverTestCase, unittest.TestCase):
             '*',
             'test01',
             'main',
-            '91859462124ccb92b82125a312b1ff3d10'
-            '86fe44b668f96eddc073e3e4e37204.png'
+            '7b9d424b038a9c89bf48c0b183864e61b1'
+            '724a109b8f2d9d756b594f8f29b861.png'
         )
         self.assertTrue(osp.isfile(plot_file_f))
 
