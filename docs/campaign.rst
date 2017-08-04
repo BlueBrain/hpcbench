@@ -103,7 +103,7 @@ Default is 4.
 pip_installer_url
 ~~~~~~~~~~~~~~~~~
 
-HPCBench version to install on nodes. By default it is the current ``ben-et``
+HPCBench version to install on nodes. By default it is the current ``ben-nett``
 version managing the cluster. This is an argument given to ``pip`` installer, here are a some examples:
 
 * ``hpcbench==2.0`` to force a version available PyPi

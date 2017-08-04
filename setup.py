@@ -51,8 +51,8 @@ setup(
     entry_points="""
         [console_scripts]
         ben-doc = hpcbench.cli.bendoc:main
-        ben-elk = hpcbench.cli.benelk:main
-        ben-et = hpcbench.cli.benet:main
+        ben-elastic = hpcbench.cli.benelastic:main
+        ben-net = hpcbench.cli.bennet:main
         ben-plot = hpcbench.cli.benplot:main [PLOTTING]
         ben-sh = hpcbench.cli.bensh:main
         ben-umb = hpcbench.cli.benumb:main

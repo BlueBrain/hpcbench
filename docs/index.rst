@@ -57,10 +57,10 @@ CLI
 * ben-sh: Execute a tests campaign on your workstation
 * ben-umb: Extract metrics of an existing campaign
 * ben-plop: Draw figures of an existing campaign
-* ben-elk: Push campaign data to Elasticsearch
-* ben-et: Execute a tests campaign on a cluster
+* ben-elastic: Push campaign data to Elasticsearch
+* ben-nett: Execute a tests campaign on a cluster
 
-**ben-sh** and **ben-et** expect a YAML file describing the campaign to execute.
+**ben-sh** and **ben-nett** expect a YAML file describing the campaign to execute.
 Structure of this YAML file is detailled in the :doc:`campaign file reference <campaign>`.
 
 API
@@ -128,11 +128,11 @@ You can add servers to the ``nodes`` section.
 Launch the benchmark
 ~~~~~~~~~~~~~~~~~~~~
 
-Use the ``ben-et`` utility to execute the campaign on every nodes.
+Use the ``ben-nett`` utility to execute the campaign on every nodes.
 It uses SSH to submit jobs so you have to sure you can access those servers without passphrase. You can use the ``ssh_config_file`` key in YAML to specify a custom
 configuration (see) :doc:`campaign file reference <campaign>`)::
 
-   $ ben-et remote-campaign.yaml
+   $ ben-nett remote-campaign.yaml
 
 Development Guide
 =================

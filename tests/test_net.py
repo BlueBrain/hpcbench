@@ -3,7 +3,7 @@ import os.path as osp
 import unittest
 
 from hpcbench.net import CampaignHolder
-from hpcbench.cli import benet
+from hpcbench.cli import bennett
 
 from . import FakeBenchmark
 from hpcbench.toolbox.contextlib_ext import (
@@ -43,4 +43,4 @@ class TestNet(unittest.TestCase):
     def test_local(self):
         with mkdtemp() as temp_dir:
             with pushd(temp_dir):
-                benet.main(TestNet.get_campaign_file())
+                bennett.main(TestNet.get_campaign_file())

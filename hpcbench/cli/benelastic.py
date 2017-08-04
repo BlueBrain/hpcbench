@@ -1,9 +1,9 @@
-"""ben-elk - Export campaign in Elasticsearch
+"""ben-elastic - Export campaign in Elasticsearch
 
 Usage:
-  ben-elk [-v | -vv] [--es=<host>] CAMPAIGN-DIR
-  ben-elk (-h | --help)
-  ben-elk --version
+  ben-elastic [-v | -vv] [--es=<host>] CAMPAIGN-DIR
+  ben-elastic (-h | --help)
+  ben-elastic --version
 
 Options:
   --es=<host> Elasticsearch host [default: localhost]
@@ -19,7 +19,7 @@ from . import cli_common
 
 
 def main(argv=None):
-    """ben-elk entry point"""
+    """ben-elastic entry point"""
     arguments = cli_common(__doc__, argv=argv)
     campaign_path = arguments['CAMPAIGN-DIR']
     driver = CampaignDriver(campaign_path=campaign_path)
