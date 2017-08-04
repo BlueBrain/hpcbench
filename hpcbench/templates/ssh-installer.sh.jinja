@@ -9,6 +9,8 @@ rm -rf "$HPCBENCH_WORK_DIR"
 mkdir -p "$HPCBENCH_WORK_DIR"
 cd "$HPCBENCH_WORK_DIR"
 
+export PATH="/usr/local/bin:$PATH"
+
 virtualenv hpcbench
 . hpcbench/bin/activate
 pip install {{ hpcbench_pip_pkg }}
