@@ -84,11 +84,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
                 md = MetricsDriver('test-category', benchmark)
                 report = md()
                 parsed_metrics = report.get('metrics', {})
-                expected_metrics = {
-                        category: [
-                            self.get_expected_metrics(category)
-                        ]
-                }
+                expected_metrics = self.get_expected_metrics(category)
                 assert parsed_metrics == expected_metrics
 
     def test_has_description(self):

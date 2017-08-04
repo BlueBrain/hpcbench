@@ -119,8 +119,8 @@ class Sysbench(Benchmark):
                     ),
                     series=dict(
                         metas=['-threads'],
-                        metrics=['cpu__minimum', 'cpu__average',
-                                 'cpu__maximum', 'cpu__percentile95'],
+                        metrics=['minimum', 'average',
+                                 'maximum', 'percentile95'],
                     ),
                     plotter=Sysbench.plot_timing
                 ),

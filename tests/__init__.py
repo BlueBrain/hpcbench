@@ -98,8 +98,8 @@ class FakeBenchmark(Benchmark):
                     series=dict(
                         metas=['field'],
                         metrics=[
-                            'main__performance',
-                            'main__standard_error'
+                            'performance',
+                            'standard_error'
                         ],
                     ),
                     plotter=self.plot_performance
@@ -109,6 +109,6 @@ class FakeBenchmark(Benchmark):
 
     def plot_performance(self, plt, description, metas, metrics):
         plt.errorbar(metas['field'],
-                     metrics['main__performance'],
-                     yerr=metrics['main__standard_error'],
+                     metrics['performance'],
+                     yerr=metrics['standard_error'],
                      fmt='o', ecolor='g', capthick=2)
