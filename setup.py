@@ -49,6 +49,10 @@ setup(
     extras_require=dict(
       PLOTTING=['matplotlib==2.0.2'],
     ),
+    include_package_data=True,
+    package_data={
+        'hpcbench': ['templates/*.jinja']
+    },
     entry_points="""
         [console_scripts]
         ben-doc = hpcbench.cli.bendoc:main
