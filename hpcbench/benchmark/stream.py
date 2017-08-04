@@ -189,11 +189,11 @@ class Stream(Benchmark):
         """Generate timings plot
         """
         del description  # unused
-        plt.plot(metas['thread'], metrics['cpu__copy_min_time'],
+        plt.plot(metas['threads'], metrics['cpu__copy_min_time'],
                  'bs-', label='minimum')
-        plt.plot(metas['thread'], metrics['cpu__copy_avg_time'],
+        plt.plot(metas['threads'], metrics['cpu__copy_avg_time'],
                  'g^', label='average')
-        plt.plot(metas['thread'], metrics['cpu__copy_max_time'],
+        plt.plot(metas['threads'], metrics['cpu__copy_max_time'],
                  'g^', label='maximum')
         plt.legend(loc='upper right', frameon=False)
         plt.xlabel('thread')

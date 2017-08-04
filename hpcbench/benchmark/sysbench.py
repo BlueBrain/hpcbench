@@ -118,7 +118,7 @@ class Sysbench(Benchmark):
                         metas__max_prime=30
                     ),
                     series=dict(
-                        metas=['-thread'],
+                        metas=['-threads'],
                         metrics=['cpu__minimum', 'cpu__average',
                                  'cpu__maximum', 'cpu__percentile95'],
                     ),
@@ -132,12 +132,12 @@ class Sysbench(Benchmark):
         """Generate timings plot
         """
         del description  # unused
-        plt.plot(metas['thread'], metrics['cpu__minimum'],
+        plt.plot(metas['threads'], metrics['cpu__minimum'],
                  'r--', label='minimum')
-        plt.plot(metas['thread'], metrics['cpu__maximum'],
+        plt.plot(metas['threads'], metrics['cpu__maximum'],
                  'bs-', label='maximum')
-        plt.plot(metas['thread'], metrics['cpu__average'],
+        plt.plot(metas['threads'], metrics['cpu__average'],
                  'g^', label='average')
         plt.legend(loc='upper right', frameon=False)
-        plt.xlabel('thread')
+        plt.xlabel('threads')
         plt.ylabel("t (sec)")
