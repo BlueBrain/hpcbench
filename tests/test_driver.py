@@ -20,7 +20,7 @@ from hpcbench.toolbox.contextlib_ext import (
 )
 from hpcbench.cli import (
     bendoc,
-    benelk,
+    benelastic,
     benplot,
     bensh,
     benumb,
@@ -88,7 +88,7 @@ class TestDriver(DriverTestCase, unittest.TestCase):
         argv = [TestDriver.CAMPAIGN_PATH]
         if 'UT_ELASTICSEARCH_HOST' in os.environ:
             argv += ['--es', os.environ['UT_ELASTICSEARCH_HOST']]
-        exporter = benelk.main(TestDriver.CAMPAIGN_PATH)
+        exporter = benelastic.main(TestDriver.CAMPAIGN_PATH)
         # Ensure they are searchable
         exporter.index_client.refresh(exporter.index_name)
         # Expect 3 documents in the index dedicated to the campaign

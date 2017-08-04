@@ -1,9 +1,9 @@
-"""ben-et
+"""ben-nett
 
 Usage:
-  ben-et [-v | -vv ] CAMPAIGN_FILE
-  ben-et (-h | --help)
-  ben-et --version
+  ben-nett [-v | -vv ] CAMPAIGN_FILE
+  ben-nett (-h | --help)
+  ben-nett --version
 
 Options:
   -h --help   Show this screen
@@ -17,7 +17,7 @@ from . import cli_common
 
 
 def main(argv=None):
-    """ben-et entry point"""
+    """ben-nett entry point"""
     arguments = cli_common(__doc__, argv=argv)
     benet = BeNet(arguments['CAMPAIGN_FILE'])
     benet.run()

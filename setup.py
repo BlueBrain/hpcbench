@@ -42,6 +42,7 @@ setup(
         'cached-property==1.3.0',
         'docopt==0.6.2',
         'elasticsearch==5.4.0',
+        'jinja2==2.9.6',
         'PyYAML>=3.12',
         'six==1.10',
     ],
@@ -51,8 +52,8 @@ setup(
     entry_points="""
         [console_scripts]
         ben-doc = hpcbench.cli.bendoc:main
-        ben-elk = hpcbench.cli.benelk:main
-        ben-et = hpcbench.cli.benet:main
+        ben-elastic = hpcbench.cli.benelastic:main
+        ben-net = hpcbench.cli.bennet:main
         ben-plot = hpcbench.cli.benplot:main [PLOTTING]
         ben-sh = hpcbench.cli.bensh:main
         ben-umb = hpcbench.cli.benumb:main
