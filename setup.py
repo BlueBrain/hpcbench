@@ -53,7 +53,7 @@ setup(
         [console_scripts]
         ben-doc = hpcbench.cli.bendoc:main
         ben-elastic = hpcbench.cli.benelastic:main
-        ben-nett = hpcbench.cli.bennet:main
+        ben-nett = hpcbench.cli.bennett:main
         ben-plot = hpcbench.cli.benplot:main [PLOTTING]
         ben-sh = hpcbench.cli.bensh:main
         ben-umb = hpcbench.cli.benumb:main
