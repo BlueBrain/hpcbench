@@ -34,6 +34,7 @@ from . toolbox.contextlib_ext import (
     pushd,
     Timer,
 )
+from . toolbox.functools_ext import listify
 from . toolbox.process import find_executable
 
 LOGGER = logging.getLogger('hpcbench')
@@ -288,21 +289,20 @@ class BenchmarkCategoryDriver(Enumerator):
                 yield ' '.join(map(six.moves.shlex_quote, command))
 
     @cached_property
+    @listify
     def children(self):
-        children = []
         for execution in self.benchmark.execution_matrix:
             category = execution.get('category')
             if category != self.category:
                 continue
             name = execution.get('name') or ''
-            children.append((
+            yield (
                 execution,
                 osp.join(
                     name,
                     str(uuid.uuid4())
                 )
-            ))
-        return children
+            )
 
     def child_builder(self, child):
         del child  # unused
