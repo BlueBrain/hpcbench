@@ -18,7 +18,7 @@ def pip_installer_url(version=None):
     version = str(version)
     if '.dev' in version:
         git_rev = 'master'
-        if not os.get('TRAVIS_BRANCH'):
+        if 'TRAVIS_BRANCH' in os.environ:
             git_rev = version.split('+', 1)[-1]
             if '.' in git_rev:  # get rid of date suffix
                 git_rev = git_rev.split('.', 1)[0]
