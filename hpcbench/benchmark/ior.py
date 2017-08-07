@@ -242,9 +242,4 @@ class IOR(Benchmark):
     @cached_property
     def metrics_extractors(self):
         # Use same extractor for all categories of commands
-        extractor = Extractor()
-        return dict((api, extractor) for api in IOR.APIS)
-
-    @cached_property
-    def plots(self):
-        pass
+        return Extractor()

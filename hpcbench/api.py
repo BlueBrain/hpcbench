@@ -184,20 +184,30 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         in the ``execution_matrix`` member method.
 
         :return: metrics_extractors instances for each category
-        :rtype: ``dict of list of hpcbench.api.MetricsExtractor``
+        :rtype: ``dict of list of hpcbench.api.MetricsExtractor`` instances.
+                if there are dedicated extractors for each category.
+                Otherwise a ``list of hpcbench.api.MetricsExtractor``
+                instances of there are common extractors for all categories,
 
         The list structure can be skipped when there is one
-        element. For instance:
+        element. For instance if there are dedicated extractors for every
+        categories:
 
         >>> def metrics_extractors(self):
                 return dict(
                     foo=foo_stdout_extractor(metrics=['rmax', 'efficiency']),
                     bar=[bar_extractor(), foobar_extractor()]
                 )
+
+        If there is only one extractor:
+
+        >>> def metrics_extractors(self):
+            return foobar_extractor()
+
         """
         raise NotImplementedError  # pragma: no cover
 
-    @abstractproperty
+    @property
     def plots(self):
         """Describe figures to generate
 
@@ -222,7 +232,7 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         * *plotter*:
             callable object that will be given metrics to plot
         """
-        raise NotImplementedError  # pragma: no cover
+        return {}
 
     @classmethod
     def get_subclass(cls, name):

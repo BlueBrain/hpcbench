@@ -1,3 +1,4 @@
+from collections import Mapping
 import inspect
 import os
 import os.path as osp
@@ -116,11 +117,17 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
         clazz = self.get_benchmark_clazz()
         benchmark = clazz()
         all_extractors = benchmark.metrics_extractors
-        assert isinstance(all_extractors, dict)
-        for name, extractors in all_extractors.items():
-            assert isinstance(name, str)
-            assert name
-            if not isinstance(extractors, list):
-                extractors = [extractors]
-            for extractor in extractors:
-                assert isinstance(extractor, MetricsExtractor)
+        assert isinstance(all_extractors, (Mapping, list, MetricsExtractor))
+        def _check_extractor(exts):
+            if not isinstance(exts, list):
+                exts = [exts]
+            for ext in exts:
+                assert isinstance(ext, MetricsExtractor)
+
+        if isinstance(all_extractors, Mapping):
+            for name, extractors in all_extractors.items():
+                assert isinstance(name, str)
+                assert name
+                _check_extractor(extractors)
+        else:
+            _check_extractor(all_extractors)

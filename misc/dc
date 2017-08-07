@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DOCKER_COMPOSE="${DOCKER_COMPOSE:-docker-compose}"
+
+exec "$DOCKER_COMPOSE" -f "$SCRIPT_DIR/docker-elk.yaml" $@

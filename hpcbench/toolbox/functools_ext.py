@@ -56,11 +56,11 @@ def listify(func=None, wrapper=list):
         >>> get_lengths_tuple(["foo", "bar"])
         (3, 3)
     """
-    def listify_return(func):
+    def _listify_return(func):
         @functools.wraps(func)
-        def listify_helper(*args, **kw):
+        def _listify_helper(*args, **kw):
             return wrapper(func(*args, **kw))
-        return listify_helper
+        return _listify_helper
     if func is None:
-        return listify_return
-    return listify_return(func)
+        return _listify_return
+    return _listify_return(func)
