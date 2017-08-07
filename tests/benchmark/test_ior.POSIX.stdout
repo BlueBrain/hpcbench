@@ -1,0 +1,34 @@
+IOR-3.0.1: MPI Coordinated Test of Parallel I/O
+ 
+Began: Mon Jul 24 16:10:54 2017
+Command line used: ior -a POSIX
+Machine: CNK bbpbgio058
+ 
+Test 0 started: Mon Jul 24 16:10:54 2017
+Summary:
+    api                = POSIX
+    test filename      = testFile
+    access             = single-shared-file
+    ordering in a file = sequential offsets
+    ordering inter file= no tasks offsets
+    clients            = 1 (1 per node)
+    repetitions        = 1
+    xfersize           = 262144 bytes
+    blocksize          = 1 MiB
+    aggregate filesize = 1 MiB
+ 
+access    bw(MiB/s)  block(KiB) xfer(KiB)  open(s)    wr/rd(s)   close(s)   total(s)   iter
+------    ---------  ---------- ---------  --------   --------   --------   --------   ----
+write     75.82      1024.00    256.00     0.001198   0.010607   0.001384   0.013190   0  
+read      85.18      1024.00    256.00     0.000416   0.011002   0.000320   0.011740   0  
+remove    -          -          -          -          -          -          0.001328   0  
+ 
+Max Write: 75.82 MiB/sec (79.50 MB/sec)
+Max Read:  85.18 MiB/sec (89.31 MB/sec)
+ 
+Summary of all tests:
+Operation   Max(MiB)   Min(MiB)  Mean(MiB)     StdDev    Mean(s) Test# #Tasks tPN reps fPP reord reordoff reordrand seed segcnt blksiz xsize aggsize API RefNum
+write          75.82      75.82      75.82       0.00    0.01319 0 1 1 1 0 0 1 0 0 1 1048576 262144 1048576 POSIX 0
+read           85.18      85.18      85.18       0.00    0.01174 0 1 1 1 0 0 1 0 0 1 1048576 262144 1048576 POSIX 0
+ 
+Finished: Mon Jul 24 16:10:54 2017
