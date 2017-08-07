@@ -159,9 +159,9 @@ Post-installation instructions to use Docker without root privileges (logout/log
    $ sudo usermod -aG docker $USER
 
 To start an Elasticsearch container, you can use the
-``misc/docker-elk.yaml`` file::
+``misc/dc`` script wrapper on top of ``docker-compose``::
 
-   $ docker-compose -f misc/docker-elk.yaml up -d
+   $ misc/dc up -d
 
 It will start an Elasticsearch container listening on port 9200 and a Kibana
 instance listening on port 5612.
