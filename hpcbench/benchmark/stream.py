@@ -157,9 +157,7 @@ class Stream(Benchmark):
 
     @cached_property
     def metrics_extractors(self):
-        return {
-            Stream.FEATURE_CPU: StreamExtractor(),
-        }
+        return StreamExtractor()
 
     @property
     def plots(self):

@@ -103,9 +103,7 @@ class Sysbench(Benchmark):
 
     @cached_property
     def metrics_extractors(self):
-        return {
-            Sysbench.FEATURE_CPU: CpuExtractor(),
-        }
+        return CpuExtractor()
 
     @property
     def plots(self):

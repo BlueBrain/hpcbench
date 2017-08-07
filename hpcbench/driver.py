@@ -5,7 +5,10 @@ from abc import (
     abstractmethod,
     abstractproperty,
 )
-from collections import namedtuple
+from collections import (
+    Mapping,
+    namedtuple,
+)
 import copy
 import datetime
 from functools import wraps
@@ -400,10 +403,13 @@ class MetricsDriver(object):
     def __call__(self, **kwargs):
         cat = self.report.get('category')
         all_extractors = self.benchmark.metrics_extractors
-        if cat not in all_extractors:
-            raise Exception('No extractor for benchmark category %s' %
-                            cat)
-        extractors = all_extractors[cat]
+        if isinstance(all_extractors, Mapping):
+            if cat not in all_extractors:
+                raise Exception('No extractor for benchmark category %s' %
+                                cat)
+            extractors = all_extractors[cat]
+        else:
+            extractors = all_extractors
         if not isinstance(extractors, list):
             extractors = [extractors]
         metrics = self.report.setdefault('metrics', {})
