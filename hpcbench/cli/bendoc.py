@@ -29,6 +29,8 @@ def main(argv=None):
         render(driver,
                template=arguments['--template'],
                ostr=arguments['--output'])
+    if argv is not None:
+        return driver
 
 
 if __name__ == '__main__':

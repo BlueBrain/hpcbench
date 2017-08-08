@@ -31,7 +31,7 @@ def main(argv=None):
     es_export = ESExporter(driver)
     with pushd(campaign_path):
         es_export.export()
-    if __name__ != '__main__':
+    if argv is not None:
         return es_export
 
 
