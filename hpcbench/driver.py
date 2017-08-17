@@ -134,6 +134,10 @@ class Leaf(Enumerator):
         return []
 
 
+Top = namedtuple('top', ['campaign', 'node', 'logger'])
+Top.__new__.__defaults__ = (None, ) * len(Top._fields)
+
+
 class CampaignDriver(Enumerator):
     """Abstract representation of an entire campaign"""
     def __init__(self, campaign_file=None, campaign_path=None,
@@ -144,11 +148,12 @@ class CampaignDriver(Enumerator):
         if campaign_path:
             campaign_file = osp.join(campaign_path, YAML_CAMPAIGN_FILE)
         self.campaign_file = osp.abspath(campaign_file)
-        top = namedtuple('top', ['campaign', 'node'])
         super(CampaignDriver, self).__init__(
-            top(campaign=from_file(campaign_file), node=node),
-            None,
-            logger=logger or LOGGER
+            Top(
+                campaign=from_file(campaign_file),
+                node=node,
+                logger=logger or LOGGER
+            ),
         )
         if campaign_path:
             self.existing_campaign = True
