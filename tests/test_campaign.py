@@ -1,6 +1,8 @@
+from collections import namedtuple
 import re
 import unittest
 
+from hpcbench.driver import ExecutionDriver, Top
 from hpcbench.campaign import (
     fill_default_campaign_values,
     pip_installer_url,
@@ -66,3 +68,30 @@ class TestCampaign(unittest.TestCase):
         )
         with self.assertRaises(Exception) as exc:
             fill_default_campaign_values(config)
+
+
+class TestBenchmark(unittest.TestCase):
+    TOP = Top()
+
+    def test_exec_prefix_as_list(self):
+        execution = dict(
+            exec_prefix=['numactl', '--all'],
+            command=['ls', '-la']
+        )
+
+        ed = ExecutionDriver(TestBenchmark.TOP, None, execution)
+        self.assertEqual(
+            ['numactl', '--all', 'ls', '-la'],
+            ed.command
+        )
+
+    def test_exec_prefix_as_string(self):
+        execution = dict(
+            exec_prefix='numactl --all',
+            command=['ls', '-la']
+        )
+        ed = ExecutionDriver(TestBenchmark.TOP, None, execution)
+        self.assertEqual(
+            ['numactl', '--all', 'ls', '-la'],
+            ed.command
+        )

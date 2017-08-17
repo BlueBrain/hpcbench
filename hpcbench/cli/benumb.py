@@ -22,7 +22,3 @@ def main(argv=None):
     driver(no_exec=True)
     if argv is not None:
         return driver
-
-
-if __name__ == '__main__':
-    main()

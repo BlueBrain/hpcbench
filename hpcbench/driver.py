@@ -16,6 +16,7 @@ import json
 import logging
 import os
 import os.path as osp
+import shlex
 import shutil
 import socket
 import subprocess
@@ -134,6 +135,10 @@ class Leaf(Enumerator):
         return []
 
 
+Top = namedtuple('top', ['campaign', 'node', 'logger'])
+Top.__new__.__defaults__ = (None, ) * len(Top._fields)
+
+
 class CampaignDriver(Enumerator):
     """Abstract representation of an entire campaign"""
     def __init__(self, campaign_file=None, campaign_path=None,
@@ -144,11 +149,12 @@ class CampaignDriver(Enumerator):
         if campaign_path:
             campaign_file = osp.join(campaign_path, YAML_CAMPAIGN_FILE)
         self.campaign_file = osp.abspath(campaign_file)
-        top = namedtuple('top', ['campaign', 'node'])
         super(CampaignDriver, self).__init__(
-            top(campaign=from_file(campaign_file), node=node),
-            None,
-            logger=logger or LOGGER
+            Top(
+                campaign=from_file(campaign_file),
+                node=node,
+                logger=logger or LOGGER
+            ),
         )
         if campaign_path:
             self.existing_campaign = True
@@ -460,13 +466,16 @@ class ExecutionDriver(Leaf):
         self.benchmark = benchmark
         self.execution = execution
 
-    @property
+    @cached_property
     def command(self):
         """get command to execute
 
         :return: list of string
         """
-        return self.execution['command']
+        exec_prefix = self.execution.get('exec_prefix') or []
+        if not isinstance(exec_prefix, list):
+            exec_prefix = shlex.split(exec_prefix)
+        return exec_prefix + self.execution['command']
 
     @cached_property
     def command_str(self):

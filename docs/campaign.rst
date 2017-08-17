@@ -165,6 +165,20 @@ override default behavior.
           features:
           - gpu
 
+exec_prefix (optional)
+~~~~~~~~~~~~~~~~~~~~~~
+Command prepended to every commands spawned by the tagged benchmark. Can 
+be either a string or a list of string, for instance:
+
+.. code-block:: yaml
+  :emphasize-lines: 4
+
+  benchmarks:
+    cpu:
+      mcdram:
+        exec_prefix: numactl -m 1
+        type: stream
+
 environment (optional)
 ~~~~~~~~~~~~~~~~~~~~~~
 A dictionary to add environment variables.

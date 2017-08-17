@@ -23,7 +23,3 @@ def main(argv=None):
     benet.run()
     if argv is not None:
         return benet
-
-
-if __name__ == '__main__':
-    main()
