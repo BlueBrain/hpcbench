@@ -16,6 +16,7 @@ import json
 import logging
 import os
 import os.path as osp
+import shlex
 import shutil
 import socket
 import subprocess
@@ -465,13 +466,16 @@ class ExecutionDriver(Leaf):
         self.benchmark = benchmark
         self.execution = execution
 
-    @property
+    @cached_property
     def command(self):
         """get command to execute
 
         :return: list of string
         """
-        return self.execution['command']
+        exec_prefix = self.execution.get('exec_prefix') or []
+        if not isinstance(exec_prefix, list):
+            exec_prefix = shlex.split(exec_prefix)
+        return exec_prefix + self.execution['command']
 
     @cached_property
     def command_str(self):
