@@ -31,7 +31,3 @@ def main(argv=None):
                ostr=arguments['--output'])
     if argv is not None:
         return driver
-
-
-if __name__ == '__main__':
-    main()

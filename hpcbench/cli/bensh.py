@@ -25,7 +25,3 @@ def main(argv=None):
     driver()
     if argv is not None:
         return driver
-
-
-if __name__ == '__main__':
-    main()

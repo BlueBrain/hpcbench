@@ -33,7 +33,3 @@ def main(argv=None):
         es_export.export()
     if argv is not None:
         return es_export
-
-
-if __name__ == '__main__':
-    main()
