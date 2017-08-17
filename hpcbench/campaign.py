@@ -58,8 +58,8 @@ DEFAULT_CAMPAIGN = dict(
             connection_params=dict(),
             index_name='hpcbench-{date}'
         )
-    )
-
+    ),
+    precondition=dict(),
 )
 
 
@@ -91,6 +91,11 @@ def fill_default_campaign_values(campaign):
                 _camp[key] = _deft[key]
     _merger(campaign, DEFAULT_CAMPAIGN)
     campaign.setdefault('campaign_id', str(uuid.uuid4()))
+
+    for precondition in campaign.precondition.keys():
+        config = campaign.precondition[precondition]
+        if not isinstance(config, list):
+            campaign.precondition[precondition] = [config]
 
     for tag in list(campaign.network.tags):
         config = campaign.network.tags[tag]

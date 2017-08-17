@@ -254,7 +254,7 @@ How to integrate a new benchmark utility?
 9. Submit a `pull-request <https://github.com/tristan0x/hpcbench>`_
 
 How to add a new plots to an existing benchmark?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. Install `hpcbench` on a server where the benchmark utility is installed.
 2. Execute a campaign on this server with ``ben-sh``.

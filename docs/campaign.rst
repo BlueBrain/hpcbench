@@ -182,6 +182,35 @@ they are not converted to True or False by YAML parse.
           TEST_ALL: 'true'
           LD_LIBRARY_PATH: /usr/local/lib64
 
+Precondition configuration reference
+------------------------------------
+This section specifies conditions to filter benchmarks execution.
+
+.. code-block:: yaml
+  :emphasize-lines: 11-15
+
+  benchmarks:
+    '*':
+      cpu_numactl_0:
+        exec_prefix: [numctl, -m, 0]
+        type: stream
+      cpu_numactl_1:
+        exec_prefix: [numctl, -m, 1]
+        type: stream
+      disk:
+        type: mdtest
+  precondition:
+    cpu_numactl_0: HPCBENCH_MCDRAM
+    cpu_numactl_1:
+      - HPCBENCH_MCDRAM
+      - HPCBENCH_CACHE
+
+* **cpu_numactl_0** benchmark needs the ``HPCBENCH_MCDRAM`` environment
+  to be defined for being executed.
+* **cpu_numactl_1** benchmark needs either ``HPCBENCH_MCDRAM`` or
+  ``HPCBENCH_CACHE`` environment variables to defined for being executed.
+*  **disk** benchmark will be executed in all cases.
+
 Process configuration reference
 -------------------------------
 This section specifies how ``ben-sh`` execute the benchmark commands.
