@@ -233,8 +233,22 @@ class BenchmarkTagDriver(Enumerator):
     (keys of "benchmark" YAML tag)"""
 
     @cached_property
+    @listify
     def children(self):
-        return list(self.campaign.benchmarks.get(self.name, []))
+        return [
+            name for name in
+            self.campaign.benchmarks.get(self.name, [])
+            if self._precondition_is_met(name)
+        ]
+
+    def _precondition_is_met(self, name):
+        config = self.campaign.precondition.get(name)
+        if config is None:
+            return True
+        for var in config:
+            if var in os.environ:
+                return True
+        return False
 
     def child_builder(self, child):
         conf = self.campaign.benchmarks[self.name][child]
