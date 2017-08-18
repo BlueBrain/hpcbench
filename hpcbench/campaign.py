@@ -1,10 +1,17 @@
 """HPCBench campaign helper functions
 """
 import collections
+from contextlib import contextmanager
+import filecmp
+import json
 import os
+import os.path as osp
 import re
+import shutil
 import socket
 import uuid
+
+import yaml
 
 import hpcbench
 
@@ -148,3 +155,135 @@ def get_metrics(campaign):
                         ),
                         cat_obj.metrics
                     )
+
+
+class CampaignMerge(object):
+    """Merge 2 campaign directories
+    """
+
+    def __init__(self, lhs, rhs):
+        """Merge 2 campaign directories
+
+        :param lhs: path to campaign that will receive data
+        of the second campaign
+        :param rhs: campaign to merge data from
+        """
+        self.lhs = lhs
+        self.rhs = rhs
+        self.serializers = dict(
+            json=CampaignMerge.SERIALIZER_CLASS(
+                reader=CampaignMerge._reader_json,
+                writer=CampaignMerge._writer_json
+            ),
+            yaml=CampaignMerge.SERIALIZER_CLASS(
+                reader=CampaignMerge._reader_yaml,
+                writer=CampaignMerge._writer_yaml
+            )
+        )
+
+    def merge(self):
+        """Perform merge operation between 2 campaign directories
+        """
+        self.ensure_has_same_campaigns()
+        self._merge()
+
+    @staticmethod
+    def _reader_json(path):
+        with open(path) as istr:
+            return json.load(istr)
+
+    @staticmethod
+    def _reader_yaml(path):
+        with open(path) as istr:
+            return yaml.load(istr)
+
+    @staticmethod
+    def _writer_json(data, path):
+        with open(path, 'w') as ostr:
+            json.dump(data, ostr, indent=2)
+
+    @staticmethod
+    def _writer_yaml(data, path):
+        with open(path, 'w') as ostr:
+            yaml.dump(data, ostr, default_flow_style=False)
+
+    DATA_FILE_EXTENSIONS = {'yaml', 'json'}
+    IGNORED_FILES = 'campaign.yaml'
+    SERIALIZER_CLASS = collections.namedtuple('serializer',
+                                              ['reader', 'writer'])
+
+    def _merge_data_file(self, path, extension):
+        def _merge(lhs, rhs):
+            if isinstance(rhs, list):
+                lhs += rhs
+                return
+            for key in rhs.keys():
+                if key in lhs:
+                    if (isinstance(lhs[key], dict)
+                            and isinstance(rhs[key], collections.Mapping)):
+                        _merge(lhs[key], rhs[key])
+                    elif (isinstance(lhs[key], list)
+                          and isinstance(rhs[key], list)):
+                        lhs[key] += rhs[key]
+                    elif key == 'elapsed':
+                        lhs[key] += rhs[key]
+                elif key not in lhs:
+                    lhs[key] = rhs[key]
+        lhs_file = osp.join(self.lhs, path)
+        rhs_file = osp.join(self.lhs, path)
+        assert osp.isfile(rhs_file)
+        assert osp.isfile(lhs_file)
+        lhs_data = self.serializers[extension].reader(lhs_file)
+        rhs_data = self.serializers[extension].reader(rhs_file)
+        _merge(lhs_data, rhs_data)
+        self.serializers[extension].writer(lhs_data, lhs_file)
+
+    def ensure_has_same_campaigns(self):
+        """Ensure that the 2 campaigns to merge have been generated
+        from the same campaign.yaml
+        """
+        lhs_yaml = osp.join(self.lhs, 'campaign.yaml')
+        rhs_yaml = osp.join(self.rhs, 'campaign.yaml')
+        assert osp.isfile(lhs_yaml)
+        assert osp.isfile(rhs_yaml)
+        assert filecmp.cmp(lhs_yaml, rhs_yaml)
+
+    def _merge(self):
+        for filename in os.listdir(self.rhs):
+            file_path = osp.join(self.rhs, filename)
+            if osp.isdir(file_path):
+                dest_path = osp.join(self.lhs, filename)
+                if not osp.isdir(dest_path):
+                    shutil.copytree(file_path, dest_path)
+                else:
+                    with self._push(filename):
+                        self._merge()
+            else:
+                if file_path in CampaignMerge.IGNORED_FILES:
+                    continue
+                extension = osp.splitext(filename)[1][1:]
+                if extension in CampaignMerge.DATA_FILE_EXTENSIONS:
+                    self._merge_data_file(filename, extension)
+
+    @contextmanager
+    def _push(self, subdir):
+        lhs = self.lhs
+        rhs = self.rhs
+        try:
+            self.lhs = osp.join(self.lhs, subdir)
+            self.rhs = osp.join(self. rhs, subdir)
+            yield
+        finally:
+            self.lhs = lhs
+            self.rhs = rhs
+
+
+def merge_campaigns(output_campaign, *campaigns):
+    """Merge campaign directories
+
+    :param output_campaign: existing campaign directory
+    where data from others campaigns will be merged into
+    :param campaigns: existing campaigns to merge from
+    """
+    for campaign in campaigns:
+        CampaignMerge(output_campaign, campaign).merge()
