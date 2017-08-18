@@ -59,6 +59,7 @@ CLI
 * ben-plop: Draw figures of an existing campaign
 * ben-elastic: Push campaign data to Elasticsearch
 * ben-nett: Execute a tests campaign on a cluster
+* ben-merge: Merge campaign output directories
 
 **ben-sh** and **ben-nett** expect a YAML file describing the campaign to execute.
 Structure of this YAML file is detailled in the :doc:`campaign file reference <campaign>`.

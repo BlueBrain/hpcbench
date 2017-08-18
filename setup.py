@@ -61,6 +61,7 @@ setup(
         ben-plot = hpcbench.cli.benplot:main [PLOTTING]
         ben-sh = hpcbench.cli.bensh:main
         ben-umb = hpcbench.cli.benumb:main
+        ben-merge = hpcbench.cli.benmerge:main
         [hpcbench.benchmarks]
         sysbench = hpcbench.benchmark.sysbench
         stream = hpcbench.benchmark.stream
