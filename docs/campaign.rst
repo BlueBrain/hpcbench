@@ -179,6 +179,66 @@ be either a string or a list of string, for instance:
         exec_prefix: numactl -m 1
         type: stream
 
+attempts (optional)
+~~~~~~~~~~~~~~~~~~~
+Dictionary to specify the number of times a command must be executed before
+retrieving its results. Those settings allow benchmark execution on warm caches.
+Number of times can be either specified statically or dynamically.
+
+The static way to specify the number of times a command is executed is thru
+the ``fixed`` option.
+
+.. code-block:: yaml
+  :emphasize-lines: 5-6
+
+  benchmarks:
+      '*':
+          test01:
+              type: stream
+              attempts:
+                  fixed: 2
+
+
+The dynamic way allow you to execute the same command over and over again
+until a certain metric converges. The convergence condition is either fixed
+with the ``epsilon`` parameter or relative with ``percent``.
+
+.. code-block:: yaml
+  :emphasize-lines: 6-8
+
+  benchmarks:
+      '*':
+          test01:
+              type: stream
+              attempts:
+                  metric: bandwith
+                  epsilon: 50
+                  maximum: 5
+
+Every commands of the ``stream`` benchmark will be executed:
+
+* as long as the difference of ``bandwidth`` metric between two consecutive
+  runs is above 50.
+* at most 5 times
+
+
+.. code-block:: yaml
+  :emphasize-lines: 6-8
+
+  benchmarks:
+      '*':
+          test01:
+              type: stream
+              attempts:
+                  metric: bandwith
+                  percent: 10
+                  maximum: 5
+
+Every commands of the ``stream`` benchmark will be executed:
+
+* as long: ``abs(bandwith(n) - bandwith(n - 1)) < bandwith(n) * percent / 100``
+* at most 5 times
+
 environment (optional)
 ~~~~~~~~~~~~~~~~~~~~~~
 A dictionary to add environment variables.

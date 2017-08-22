@@ -102,15 +102,18 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
         with open(YAML_REPORT_FILE) as istr:
             return nameddict(yaml.load(istr))
 
-    @write_yaml_report
-    def __call__(self, **kwargs):
+    def _call_without_report(self, **kwargs):
         for child in self._children:
             with pushd(str(child), mkdir=True):
                 child_obj = self.child_builder(child)
                 child_obj(**kwargs)
                 yield child
 
-    @cached_property
+    @write_yaml_report
+    def __call__(self, **kwargs):
+        return self._call_without_report(**kwargs)
+
+    @property
     def _children(self):
         if osp.isfile(YAML_REPORT_FILE):
             return self.report['children']
@@ -264,15 +267,16 @@ class BenchmarkTagDriver(Enumerator):
                 benchmark.attributes,
                 conf['attributes']
             )
-        return BenchmarkDriver(self, benchmark)
+        return BenchmarkDriver(self, benchmark, conf)
 
 
 class BenchmarkDriver(Enumerator):
     """Abstract representation of a benchmark, part of a campaign tag
     """
-    def __init__(self, parent, benchmark):
+    def __init__(self, parent, benchmark, config):
         super(BenchmarkDriver, self).__init__(parent, benchmark.name)
         self.benchmark = benchmark
+        self.config = config
 
     @cached_property
     def children(self):
@@ -282,16 +286,16 @@ class BenchmarkDriver(Enumerator):
         return categories
 
     def child_builder(self, child):
-        return BenchmarkCategoryDriver(self, child, self.benchmark)
+        return BenchmarkCategoryDriver(self, child)
 
 
 class BenchmarkCategoryDriver(Enumerator):
     """Abstract representation of one benchmark to execute
     (one of "benchmarks" YAML tag values")"""
-    def __init__(self, parent, category, benchmark):
+    def __init__(self, parent, category):
         super(BenchmarkCategoryDriver, self).__init__(parent, category)
         self.category = category
-        self.benchmark = benchmark
+        self.benchmark = self.parent.benchmark
 
     @cached_property
     def plot_files(self):
@@ -330,20 +334,15 @@ class BenchmarkCategoryDriver(Enumerator):
     def child_builder(self, child):
         del child  # unused
 
-    @cached_property
-    def execution_layer_class(self):
-        """Get execution layer class
-        """
-        name = self.campaign.process.type
-        for clazz in [ExecutionDriver, SlurmExecutionDriver]:
-            if name == clazz.name:
-                return clazz
-        raise NameError("Unknown execution layer: '%s'" % name)
-
-    def execution_layer(self, execution):
-        """Build the proper execution layer
-        """
-        return self.execution_layer_class(self, self.benchmark, execution)
+    def attempt_run_class(self, execution):
+        config = self.parent.config.get('attempts')
+        if config:
+            fixed = config.get('fixed')
+            if fixed is not None:
+                assert isinstance(fixed, int)
+                return FixedAttempts
+            return DynamicAttempts
+        return FixedAttempts
 
     @write_yaml_report
     def __call__(self, **kwargs):
@@ -352,10 +351,11 @@ class BenchmarkCategoryDriver(Enumerator):
             for execution, run_dir in self.children:
                 runs.setdefault(execution['category'], []).append(run_dir)
                 with pushd(run_dir, mkdir=True):
-                    driver = self.execution_layer(execution)
-                    driver(**kwargs)
-                    mdriver = MetricsDriver(self.campaign, self.benchmark)
-                    mdriver(**kwargs)
+                    attempt_cls = self.attempt_run_class(execution)
+                    attempt = attempt_cls(self, execution)
+                    self.logger.info('-> call FixedAttempt.__call__')
+                    for attempt in attempt(**kwargs):
+                        pass
                     yield run_dir
             self.gather_metrics(runs)
         elif 'plot' in kwargs:
@@ -454,6 +454,135 @@ class MetricsDriver(object):
                 raise Exception(message)
 
 
+class FixedAttempts(Enumerator):
+    def __init__(self, parent, execution):
+        super(FixedAttempts, self).__init__(parent)
+        self.execution = execution
+        self.paths = []
+
+    __call__ = Enumerator._call_without_report
+
+    @property
+    def benchmark(self):
+        return self.parent.benchmark
+
+    @cached_property
+    def attempts_config(self):
+        return self.parent.parent.config.get('attempts', {})
+
+    @cached_property
+    def attempts(self):
+        return self.attempts_config.get('fixed', 1)
+
+    @property
+    def children(self):
+        attempt = 1
+        self.paths = []
+        while self._should_run(attempt):
+            path = str(uuid.uuid4())
+            self.paths.append(path)
+            yield path
+            attempt += 1
+        attempt_path = self.last_attempt(self.paths)
+        for file_ in os.listdir(attempt_path):
+            os.symlink(
+                osp.join(attempt_path, file_),
+                file_
+            )
+
+    def child_builder(self, child):
+        def _wrap(**kwargs):
+            driver = self.execution_layer(self)
+            driver(**kwargs)
+            mdriver = MetricsDriver(self.campaign, self.benchmark)
+            mdriver(**kwargs)
+            return self.report
+        return _wrap
+
+    def _should_run(self, attempt):
+        return attempt <= self.attempts
+
+    @cached_property
+    def execution_layer_class(self):
+        """Get execution layer class
+        """
+        name = self.campaign.process.type
+        for clazz in [ExecutionDriver, SlurmExecutionDriver]:
+            if name == clazz.name:
+                return clazz
+        raise NameError("Unknown execution layer: '%s'" % name)
+
+    def execution_layer(self, execution):
+        """Build the proper execution layer
+        """
+        return self.execution_layer_class(self)
+
+    def last_attempt(self, paths):
+        self._sort_attempts(paths)
+        return paths[-1]
+
+    def _sort_attempts(self, paths):
+        if self.sort_config is not None:
+            attempts = []
+            for path in self.paths:
+                with open(osp.join(path, YAML_REPORT_FILE)) as istr:
+                    report = yaml.load(istr)
+                report['path'] = path
+                attempts.append(report)
+            sorted(attempts, **self.sort_config)
+            self.attempts_dir = [
+                report_['path']
+                for report_ in attempts
+            ]
+
+    @cached_property
+    def sort_config(self):
+        return self.attempts_config.get('sorted')
+
+
+class DynamicAttempts(FixedAttempts):
+    def __init__(self, parent, execution):
+        super(DynamicAttempts, self).__init__(parent, execution)
+
+    @cached_property
+    def metric(self):
+        return self.attempts_config['metric']
+
+    @cached_property
+    def attempts(self):
+        return self.attempts_config['maximum']
+
+    @cached_property
+    def epsilon(self):
+        return self.attempts_config.get('epsilon')
+
+    @cached_property
+    def percent(self):
+        return self.attempts_config.get('percent')
+
+    def _should_run(self, attempt):
+        if attempt > self.attempts:
+            return False
+        if attempt < 3:
+            return True
+        with open(osp.join(self.paths[-2], YAML_REPORT_FILE)) as istr:
+            data_n1 = nameddict(yaml.load(istr))
+        with open(osp.join(self.paths[-1], YAML_REPORT_FILE)) as istr:
+            data_n = nameddict(yaml.load(istr))
+        return not self._metric_converged(data_n1, data_n)
+
+    def _metric_converged(self, data_n1, data_n):
+        def get_metric(report):
+            return report['metrics'][self.metric]
+        value_n1 = get_metric(data_n1)
+        value_n = get_metric(data_n)
+        if self.epsilon is not None:
+            return abs(value_n - value_n1) < self.epsilon
+        else:
+            assert self.percent is not None
+            return abs(value_n - value_n1) < self.percent / 100.0
+
+
 class ExecutionDriver(Leaf):
     """Abstract representation of a benchmark command execution
     (a benchmark is made of several commands)
@@ -461,10 +590,10 @@ class ExecutionDriver(Leaf):
 
     name = 'local'
 
-    def __init__(self, parent, benchmark, execution):
+    def __init__(self, parent):
         super(ExecutionDriver, self).__init__(parent)
-        self.benchmark = benchmark
-        self.execution = execution
+        self.benchmark = self.parent.benchmark
+        self.execution = parent.execution
 
     @cached_property
     def command(self):
@@ -472,10 +601,11 @@ class ExecutionDriver(Leaf):
 
         :return: list of string
         """
-        exec_prefix = self.execution.get('exec_prefix') or []
+        benchmark_config = self.parent.parent.parent.config
+        exec_prefix = benchmark_config.get('exec_prefix') or []
         if not isinstance(exec_prefix, list):
             exec_prefix = shlex.split(exec_prefix)
-        return exec_prefix + self.execution['command']
+        return list(exec_prefix) + self.execution['command']
 
     @cached_property
     def command_str(self):
@@ -566,10 +696,8 @@ class SlurmExecutionDriver(ExecutionDriver):
         count = self.execution.get('srun_nodes') or 1
         assert isinstance(count, int)
         assert count > 0
-        tag = self.parent.parent.parent.name
-        self.logger.info(tag)
-        tag_nodes = self.parent.parent.parent.parent.nodes(tag)
-        self.logger.info(tag_nodes)
+        tag = self.parent.parent.parent.parent.name
+        tag_nodes = self.parent.parent.parent.parent.parent.nodes(tag)
         assert count <= len(tag_nodes)
         pos = tag_nodes.index(self.node)
         tag_nodes = tag_nodes + tag_nodes
