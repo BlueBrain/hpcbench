@@ -67,10 +67,16 @@ class Sysbench(Benchmark):
     """Benchmark wrapper for the sysbench utility
     """
     FEATURE_CPU = 'cpu'
+    MAX_PRIMES = [30]
+    THREADS = [1, 4, 16]
 
     def __init__(self):
         super(Sysbench, self).__init__(
-            attributes=dict(features=[Sysbench.FEATURE_CPU])
+            attributes=dict(
+                features=[Sysbench.FEATURE_CPU],
+                max_primes=Sysbench.MAX_PRIMES,
+                threads=Sysbench.THREADS,
+            )
         )
 
     name = 'sysbench'
@@ -84,8 +90,8 @@ class Sysbench(Benchmark):
     @property
     def execution_matrix(self):
         if Sysbench.FEATURE_CPU in self.attributes['features']:
-            for thread in [1, 4, 16]:
-                for max_prime in [30]:
+            for thread in self.attributes['threads']:
+                for max_prime in self.attributes['max_primes']:
                     yield dict(
                         category=Sysbench.FEATURE_CPU,
                         command=[
