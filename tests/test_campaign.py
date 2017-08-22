@@ -1,13 +1,24 @@
 from collections import namedtuple
+import logging
 import re
 import unittest
 
-from hpcbench.driver import ExecutionDriver, Top
+from hpcbench.driver import (
+    BenchmarkCategoryDriver,
+    BenchmarkDriver,
+    ExecutionDriver,
+    FixedAttempts,
+    Top,
+)
 from hpcbench.campaign import (
     fill_default_campaign_values,
     pip_installer_url,
 )
 from hpcbench.toolbox.collections_ext import nameddict
+
+
+LOGGER = logging.getLogger()
+
 
 class TestVersion(unittest.TestCase):
     def test_pip_version(self):
@@ -71,26 +82,30 @@ class TestCampaign(unittest.TestCase):
 
 
 class TestBenchmark(unittest.TestCase):
-    TOP = Top()
-
-    def test_exec_prefix_as_list(self):
-        execution = dict(
-            exec_prefix=['numactl', '--all'],
-            command=['ls', '-la']
+    def _top(self, exec_prefix):
+        return ExecutionDriver(
+            FixedAttempts(
+                BenchmarkCategoryDriver(
+                    BenchmarkDriver(
+                        Top(logger=LOGGER),
+                        namedtuple('benchmark', ['name'])(name='benchmark'),
+                        dict(exec_prefix=exec_prefix),
+                    ),
+                    'category'
+                ),
+                dict(command=['ls', '-la'])
+            )
         )
 
-        ed = ExecutionDriver(TestBenchmark.TOP, None, execution)
+    def test_exec_prefix_as_list(self):
+        ed = self._top(['numactl', '--all'])
         self.assertEqual(
             ['numactl', '--all', 'ls', '-la'],
             ed.command
         )
 
     def test_exec_prefix_as_string(self):
-        execution = dict(
-            exec_prefix='numactl --all',
-            command=['ls', '-la']
-        )
-        ed = ExecutionDriver(TestBenchmark.TOP, None, execution)
+        ed = self._top('numactl --all')
         self.assertEqual(
             ['numactl', '--all', 'ls', '-la'],
             ed.command

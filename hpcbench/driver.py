@@ -286,16 +286,16 @@ class BenchmarkDriver(Enumerator):
         return categories
 
     def child_builder(self, child):
-        return BenchmarkCategoryDriver(self, child, self.benchmark)
+        return BenchmarkCategoryDriver(self, child)
 
 
 class BenchmarkCategoryDriver(Enumerator):
     """Abstract representation of one benchmark to execute
     (one of "benchmarks" YAML tag values")"""
-    def __init__(self, parent, category, benchmark):
+    def __init__(self, parent, category):
         super(BenchmarkCategoryDriver, self).__init__(parent, category)
         self.category = category
-        self.benchmark = benchmark
+        self.benchmark = self.parent.benchmark
 
     @cached_property
     def plot_files(self):
@@ -492,7 +492,7 @@ class FixedAttempts(Enumerator):
 
     def child_builder(self, child):
         def _wrap(**kwargs):
-            driver = self.execution_layer(self.execution)
+            driver = self.execution_layer(self)
             driver(**kwargs)
             mdriver = MetricsDriver(self.campaign, self.benchmark)
             mdriver(**kwargs)
@@ -515,7 +515,7 @@ class FixedAttempts(Enumerator):
     def execution_layer(self, execution):
         """Build the proper execution layer
         """
-        return self.execution_layer_class(self, self.benchmark, self.execution)
+        return self.execution_layer_class(self)
 
     def last_attempt(self, paths):
         self._sort_attempts(paths)
@@ -590,10 +590,10 @@ class ExecutionDriver(Leaf):
 
     name = 'local'
 
-    def __init__(self, parent, benchmark, execution):
+    def __init__(self, parent):
         super(ExecutionDriver, self).__init__(parent)
-        self.benchmark = benchmark
-        self.execution = execution
+        self.benchmark = self.parent.benchmark
+        self.execution = parent.execution
 
     @cached_property
     def command(self):
@@ -605,7 +605,7 @@ class ExecutionDriver(Leaf):
         exec_prefix = benchmark_config.get('exec_prefix') or []
         if not isinstance(exec_prefix, list):
             exec_prefix = shlex.split(exec_prefix)
-        return exec_prefix + self.execution['command']
+        return list(exec_prefix) + self.execution['command']
 
     @cached_property
     def command_str(self):
