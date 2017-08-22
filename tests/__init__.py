@@ -61,6 +61,15 @@ class FakeBenchmark(Benchmark):
         fake benchmark for HPCBench testing purpose
     '''
 
+    INPUTS = [10, 20, 100]
+
+    def __init__(self):
+        super(FakeBenchmark, self).__init__(
+            attributes=dict(
+                input=FakeBenchmark.INPUTS
+            )
+        )
+
     def pre_execute(self):
         with open('test.py', 'w') as ostr:
             ostr.write(dedent("""\
@@ -82,7 +91,7 @@ class FakeBenchmark(Benchmark):
                 field=value / 10
             )
         )
-            for value in (10, 50, 100)
+            for value in self.attributes['input']
         ]
 
     @property

@@ -1,0 +1,24 @@
+benchmarks:
+    '*':
+        test01:
+            type: fake
+            attempts:
+                fixed: 2
+            attributes:
+                input: [10]
+        test02:
+            type: fake
+            attempts:
+                metric: performance
+                epsilon: 0.00001
+                maximum: 3
+            attributes:
+                input: [10]
+        test03:
+            type: fake
+            attempts:
+                metric: performance
+                percent: 1
+                maximum: 3
+            attributes:
+                input: [10]
