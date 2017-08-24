@@ -441,6 +441,7 @@ class MetricsDriver(object):
         for extractor in extractors:
             run_metrics = extractor.extract(os.getcwd(),
                                             self.report.get('metas'))
+            MetricsDriver._check_metrics(extractor, run_metrics)
             metrics.update(run_metrics)
         return self.report
 
