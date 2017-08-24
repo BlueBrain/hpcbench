@@ -1,0 +1,75 @@
+================================================================================
+HPLinpack 2.2  --  High-Performance Linpack benchmark  --   February 24, 2016
+Written by A. Petitet and R. Clint Whaley,  Innovative Computing Laboratory, UTK
+Modified by Piotr Luszczek, Innovative Computing Laboratory, UTK
+Modified by Julien Langou, University of Colorado Denver
+================================================================================
+
+An explanation of the input/output parameters follows:
+T/V    : Wall time / encoded variant.
+N      : The order of the coefficient matrix A.
+NB     : The partitioning blocking factor.
+P      : The number of process rows.
+Q      : The number of process columns.
+Time   : Time in seconds to solve the linear system.
+Gflops : Rate of execution for solving the linear system.
+
+The following parameter values will be used:
+
+N      :    2096 
+NB     :     192 
+PMAP   : Row-major process mapping
+P      :       2 
+Q      :       2 
+PFACT  :   Right 
+NBMIN  :       4 
+NDIV   :       2 
+RFACT  :   Crout 
+BCAST  :  1ringM 
+DEPTH  :       1 
+SWAP   : Mix (threshold = 64)
+L1     : transposed form
+U      : transposed form
+EQUIL  : yes
+ALIGN  : 8 double precision words
+
+--------------------------------------------------------------------------------
+
+- The matrix A is randomly generated for each test.
+- The following scaled residual check will be computed:
+      ||Ax-b||_oo / ( eps * ( || x ||_oo * || A ||_oo + || b ||_oo ) * N )
+- The relative machine precision (eps) is taken to be               1.110223e-16
+- Computational tests pass if scaled residuals are less than                16.0
+
+Column=000000192 Fraction= 9.2% Gflops=1.637e+02
+Column=000000384 Fraction=18.3% Gflops=5.360e+01
+Column=000000576 Fraction=27.5% Gflops=2.771e+01
+Column=000000768 Fraction=36.6% Gflops=2.919e+01
+Column=000000960 Fraction=45.8% Gflops=2.504e+01
+Column=000001152 Fraction=55.0% Gflops=2.526e+01
+Column=000001344 Fraction=64.1% Gflops=2.312e+01
+Column=000001536 Fraction=73.3% Gflops=2.274e+01
+Column=000001728 Fraction=82.4% Gflops=2.180e+01
+Column=000001920 Fraction=91.6% Gflops=2.137e+01
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR11C2R4        2096   192     2     2               0.29              2.098e+01
+HPL_pdgesv() start time Wed Aug 23 13:31:46 2017
+
+HPL_pdgesv() end time   Wed Aug 23 13:31:46 2017
+
+--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV-
+Max aggregated wall time rfact . . . :               0.09
++ Max aggregated wall time pfact . . :               0.08
++ Max aggregated wall time mxswp . . :               0.07
+Max aggregated wall time update  . . :               0.21
++ Max aggregated wall time laswp . . :               0.08
+Max aggregated wall time up tr sv  . :               0.00
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=        0.0051555 ...... PASSED
+================================================================================
+
+Finished      1 tests with the following results:
+              1 tests completed and passed residual checks,
+              0 tests completed and failed residual checks,

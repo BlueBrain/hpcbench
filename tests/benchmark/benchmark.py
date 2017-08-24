@@ -12,6 +12,7 @@ from hpcbench.api import (
     MetricsExtractor,
 )
 from hpcbench.driver import YAML_REPORT_FILE, MetricsDriver
+from hpcbench.toolbox.collections_ext import dict_merge
 from hpcbench.toolbox.contextlib_ext import (
     mkdtemp,
     pushd,
@@ -42,6 +43,14 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
         :rtype: dictionary name -> value
         """
         raise NotImplementedError
+
+    @property
+    def attributes(self):
+        """
+        :return: attributes to merge on the Benchmark instance
+        :rtype: dictionary
+        """
+        return {}
 
     def create_sample_run(self, category):
         pyfile = inspect.getfile(self.__class__)
@@ -86,7 +95,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
                 report = md()
                 parsed_metrics = report.get('metrics', {})
                 expected_metrics = self.get_expected_metrics(category)
-                assert parsed_metrics == expected_metrics
+                self.assertEqual(parsed_metrics, expected_metrics)
 
     def test_has_description(self):
         clazz = self.get_benchmark_clazz()
@@ -95,6 +104,10 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
     def test_execution_matrix(self):
         clazz = self.get_benchmark_clazz()
         benchmark = clazz()
+        dict_merge(
+            benchmark.attributes,
+            self.attributes
+        )
         exec_matrix = benchmark.execution_matrix
         exec_matrix = list(exec_matrix)
         assert isinstance(exec_matrix, list)
