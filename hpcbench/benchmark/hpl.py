@@ -78,7 +78,6 @@ class HPLExtractor(MetricsExtractor):
 
         # ensure all metrics have been extracted
         unset_attributes = HPLExtractor.METRICS_NAMES - set(metrics)
-        print(metrics)
         if any(unset_attributes):
             error = \
                 'Could not extract some metrics: %s\n' \
