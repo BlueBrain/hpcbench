@@ -163,17 +163,23 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def pre_execute(self):
+    def pre_execute(self, execution):
         """Method called before executing one of the commands.
         Current working directory is the execution directory.
-        """
-        pass
 
-    def post_execute(self):
+        :param execution: one of the dictionary
+        provided in ``exedcution_matrix`` member method.
+        """
+        del execution  # unused
+
+    def post_execute(self, execution):
         """Method called after executing one of the commands.
         Current working directory is the execution directory.
+
+        :param execution: one of the dictionary
+        provided in ``exedcution_matrix`` member method.
         """
-        pass
+        del execution  # unused
 
     @abstractproperty
     def metrics_extractors(self):

@@ -70,7 +70,7 @@ class FakeBenchmark(Benchmark):
             )
         )
 
-    def pre_execute(self):
+    def pre_execute(self, execution):
         with open('test.py', 'w') as ostr:
             ostr.write(dedent("""\
             from __future__ import print_function
