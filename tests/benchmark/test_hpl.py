@@ -24,3 +24,9 @@ class TestHpl(AbstractBenchmarkTest, unittest.TestCase):
 
     def get_benchmark_categories(self):
         return [self.get_benchmark_clazz().DEFAULT_DEVICE]
+
+    @property
+    def attributes(self):
+        return dict(
+            executable='/path/to/fake'
+        )

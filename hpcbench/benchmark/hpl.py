@@ -9,6 +9,7 @@ from cached_property import cached_property
 
 from hpcbench.api import (
     Benchmark,
+    Metric,
     Metrics,
     MetricsExtractor,
 )
@@ -36,8 +37,8 @@ class HPLExtractor(MetricsExtractor):
 
     REGEX = dict(
         flops=re.compile(
-            r'^[\\w]+[\s]+([\\d]+)[\s]+([\\d]+)[\s]+([\\d]+)[\s]+'
-            r'([\\d]+)[\s]+([\\d.]+)[\s]+([\\d.]+e[+-][\\d]+)'
+            r'^[\w]+[\s]+([\d]+)[\s]+([\d]+)[\s]+([\d]+)[\s]+'
+            r'([\d]+)[\s]+([\d.]+)[\s]+([\d.]+e[+-][\d]+)'
         ),
         precision=get_precision_regex()
     )
@@ -50,6 +51,7 @@ class HPLExtractor(MetricsExtractor):
         time=Metrics.Second,
         flops=Metrics.Flops,
         validity=Metrics.Validity,
+        precision=Metric(unit='', type=float)
     )
 
     METRICS_NAMES = set(METRICS)
