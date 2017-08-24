@@ -353,30 +353,37 @@ class BenchmarkCategoryDriver(Enumerator):
     @write_yaml_report
     def __call__(self, **kwargs):
         if "no_exec" not in kwargs:
-            runs = dict()
-            for execution, run_dir in self.children:
-                runs.setdefault(execution['category'], []).append(run_dir)
-                with pushd(run_dir, mkdir=True):
-                    attempt_cls = self.attempt_run_class(execution)
-                    attempt = attempt_cls(self, execution)
-                    for attempt in attempt(**kwargs):
-                        pass
-                    yield run_dir
-            self.gather_metrics(runs)
+            for run_dir in self._execute(**kwargs):
+                yield run_dir
         elif 'plot' in kwargs:
             for plot in self.benchmark.plots.get(self.category):
                 self._generate_plot(plot, self.category)
         else:
-            runs = dict()
-            for child in self.report['children']:
-                child_yaml = osp.join(child, YAML_REPORT_FILE)
-                with open(child_yaml) as istr:
-                    child_config = yaml.load(istr)
-                child_config.pop('children', None)
-                runs.setdefault(self.category, []).append(child)
-                with pushd(child):
-                    MetricsDriver(self.campaign, self.benchmark)(**kwargs)
-            self.gather_metrics(runs)
+            self._extract_metrics(**kwargs)
+
+    def _extract_metrics(self, **kwargs):
+        runs = dict()
+        for child in self.report['children']:
+            child_yaml = osp.join(child, YAML_REPORT_FILE)
+            with open(child_yaml) as istr:
+                child_config = yaml.load(istr)
+            child_config.pop('children', None)
+            runs.setdefault(self.category, []).append(child)
+            with pushd(child):
+                MetricsDriver(self.campaign, self.benchmark)(**kwargs)
+        self.gather_metrics(runs)
+
+    def _execute(self, **kwargs):
+        runs = dict()
+        for execution, run_dir in self.children:
+            runs.setdefault(execution['category'], []).append(run_dir)
+            with pushd(run_dir, mkdir=True):
+                attempt_cls = self.attempt_run_class(execution)
+                attempt = attempt_cls(self, execution)
+                for attempt in attempt(**kwargs):
+                    pass
+                yield run_dir
+        self.gather_metrics(runs)
 
     def gather_metrics(self, runs):
         """Write a JSON file with the result of every runs
@@ -705,14 +712,23 @@ class SlurmExecutionDriver(ExecutionDriver):
         else:
             assert isinstance(count, int)
             tag = self.parent.parent.parent.parent.name
+        return self._srun_nodes(tag, count)
+
+    @cached_property
+    def network(self):
+        return self.parent.parent.parent.parent.parent
+
+    def _srun_nodes(self, tag, count):
         assert count >= 0
-        network = self.parent.parent.parent.parent.parent
-        if tag != '*' and not network.has_tag(tag):
+        if tag != '*' and not self.network.has_tag(tag):
             raise ValueError('Unknown tag: {}'.format(tag))
-        tag_nodes = sorted(list(network.nodes(tag)))
+        nodes = sorted(list(self.network.nodes(tag)))
         if count > 0:
-            assert count <= len(tag_nodes)
-            pos = tag_nodes.index(self.node)
-            tag_nodes = tag_nodes + tag_nodes
-            return tag_nodes[pos:pos + count]
-        return tag_nodes
+            return self._filter_srun_nodes(nodes, count)
+        return nodes
+
+    def _filter_srun_nodes(self, nodes, count):
+        assert count <= len(nodes)
+        pos = nodes.index(self.node)
+        nodes = nodes + nodes
+        return nodes[pos:pos + count]
