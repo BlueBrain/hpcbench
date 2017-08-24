@@ -102,6 +102,10 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
         with open(YAML_REPORT_FILE) as istr:
             return nameddict(yaml.load(istr))
 
+    def children_objects(self):
+        for child in self._children:
+            yield self.child_builder(child)
+
     def _call_without_report(self, **kwargs):
         for child in self._children:
             with pushd(str(child), mkdir=True):
@@ -193,48 +197,50 @@ class HostDriver(Enumerator):
     @cached_property
     def children(self):
         """Retrieve tags associated to the current node"""
-        benchmarks = {'*'}
+        tags = {'*'}
         for tag, configs in self.campaign.network.tags.items():
             for config in configs:
                 for mode, kconfig in config.items():
                     if mode == 'match':
                         if kconfig.match(self.name):
-                            benchmarks.add(tag)
-                            break
-                    elif mode == 'nodes':
-                        if self.name in kconfig:
-                            benchmarks.add(tag)
+                            tags.add(tag)
                             break
                     else:
-                        raise Exception('Unknown tag association pattern: %s',
-                                        mode)
-                if tag in benchmarks:
+                        assert mode == 'nodes'
+                        if self.name in kconfig:
+                            tags.add(tag)
+                            break
+                if tag in tags:
                     break
-        return benchmarks
+        return tags
 
     def child_builder(self, child):
         return BenchmarkTagDriver(self, child)
+
+    def has_tag(self, tag):
+        return tag in self.campaign.network.tags
 
     def nodes(self, tag):
         """get list of nodes that belong to a tag
         :rtype: list of string
         """
         if tag == '*':
-            return self.campaign.network.nodes
-        definition = self.campaign.network.tags.get('tag')
-        if definition is None:
+            return set(self.campaign.network.nodes)
+        definitions = self.campaign.network.tags.get(tag)
+        if definitions is None:
             return []
-        mode, value = definition.items()[0]
-        if mode == 'match':
-            return [
-                node for node in self.campaign.network.nodes
-                if value.match(node)
-            ]
-        elif mode == 'nodes':
-            return value
-        else:
-            raise Exception('Unknown tag association pattern: %s',
-                            mode)
+        nodes = set()
+        for definition in definitions:
+            mode, value = list(definition.items())[0]
+            if mode == 'match':
+                nodes = nodes.union(set([
+                    node for node in self.campaign.network.nodes
+                    if value.match(node)
+                ]))
+            else:
+                assert mode == 'nodes'
+                nodes = nodes.union(set(value))
+        return nodes
 
 
 class BenchmarkTagDriver(Enumerator):
@@ -347,31 +353,37 @@ class BenchmarkCategoryDriver(Enumerator):
     @write_yaml_report
     def __call__(self, **kwargs):
         if "no_exec" not in kwargs:
-            runs = dict()
-            for execution, run_dir in self.children:
-                runs.setdefault(execution['category'], []).append(run_dir)
-                with pushd(run_dir, mkdir=True):
-                    attempt_cls = self.attempt_run_class(execution)
-                    attempt = attempt_cls(self, execution)
-                    self.logger.info('-> call FixedAttempt.__call__')
-                    for attempt in attempt(**kwargs):
-                        pass
-                    yield run_dir
-            self.gather_metrics(runs)
+            for run_dir in self._execute(**kwargs):
+                yield run_dir
         elif 'plot' in kwargs:
             for plot in self.benchmark.plots.get(self.category):
                 self._generate_plot(plot, self.category)
         else:
-            runs = dict()
-            for child in self.report['children']:
-                child_yaml = osp.join(child, YAML_REPORT_FILE)
-                with open(child_yaml) as istr:
-                    child_config = yaml.load(istr)
-                child_config.pop('children', None)
-                runs.setdefault(self.category, []).append(child)
-                with pushd(child):
-                    MetricsDriver(self.campaign, self.benchmark)(**kwargs)
-            self.gather_metrics(runs)
+            self._extract_metrics(**kwargs)
+
+    def _extract_metrics(self, **kwargs):
+        runs = dict()
+        for child in self.report['children']:
+            child_yaml = osp.join(child, YAML_REPORT_FILE)
+            with open(child_yaml) as istr:
+                child_config = yaml.load(istr)
+            child_config.pop('children', None)
+            runs.setdefault(self.category, []).append(child)
+            with pushd(child):
+                MetricsDriver(self.campaign, self.benchmark)(**kwargs)
+        self.gather_metrics(runs)
+
+    def _execute(self, **kwargs):
+        runs = dict()
+        for execution, run_dir in self.children:
+            runs.setdefault(execution['category'], []).append(run_dir)
+            with pushd(run_dir, mkdir=True):
+                attempt_cls = self.attempt_run_class(execution)
+                attempt = attempt_cls(self, execution)
+                for attempt in attempt(**kwargs):
+                    pass
+                yield run_dir
+        self.gather_metrics(runs)
 
     def gather_metrics(self, runs):
         """Write a JSON file with the result of every runs
@@ -436,6 +448,7 @@ class MetricsDriver(object):
         for extractor in extractors:
             run_metrics = extractor.extract(os.getcwd(),
                                             self.report.get('metas'))
+            MetricsDriver._check_metrics(extractor, run_metrics)
             metrics.update(run_metrics)
         return self.report
 
@@ -483,7 +496,7 @@ class FixedAttempts(Enumerator):
             self.paths.append(path)
             yield path
             attempt += 1
-        attempt_path = self.last_attempt(self.paths)
+        attempt_path = self.last_attempt()
         for file_ in os.listdir(attempt_path):
             os.symlink(
                 osp.join(attempt_path, file_),
@@ -492,7 +505,7 @@ class FixedAttempts(Enumerator):
 
     def child_builder(self, child):
         def _wrap(**kwargs):
-            driver = self.execution_layer(self)
+            driver = self.execution_layer()
             driver(**kwargs)
             mdriver = MetricsDriver(self.campaign, self.benchmark)
             mdriver(**kwargs)
@@ -512,16 +525,16 @@ class FixedAttempts(Enumerator):
                 return clazz
         raise NameError("Unknown execution layer: '%s'" % name)
 
-    def execution_layer(self, execution):
+    def execution_layer(self):
         """Build the proper execution layer
         """
         return self.execution_layer_class(self)
 
-    def last_attempt(self, paths):
-        self._sort_attempts(paths)
-        return paths[-1]
+    def last_attempt(self):
+        self._sort_attempts()
+        return self.paths[-1]
 
-    def _sort_attempts(self, paths):
+    def _sort_attempts(self):
         if self.sort_config is not None:
             attempts = []
             for path in self.paths:
@@ -530,7 +543,7 @@ class FixedAttempts(Enumerator):
                 report['path'] = path
                 attempts.append(report)
             sorted(attempts, **self.sort_config)
-            self.attempts_dir = [
+            self.paths = [
                 report_['path']
                 for report_ in attempts
             ]
@@ -578,9 +591,8 @@ class DynamicAttempts(FixedAttempts):
         value_n = get_metric(data_n)
         if self.epsilon is not None:
             return abs(value_n - value_n1) < self.epsilon
-        else:
-            assert self.percent is not None
-            return abs(value_n - value_n1) < self.percent / 100.0
+        assert self.percent is not None
+        return abs(value_n - value_n1) < self.percent / 100.0
 
 
 class ExecutionDriver(Leaf):
@@ -640,11 +652,11 @@ class ExecutionDriver(Leaf):
 
     @write_yaml_report
     def __call__(self, **kwargs):
-        self.benchmark.pre_execute()
+        self.benchmark.pre_execute(self.execution)
         with open('stdout.txt', 'w') as stdout, \
                 open('stderr.txt', 'w') as stderr:
             exit_status = self.popen(stdout, stderr).wait()
-        self.benchmark.post_execute()
+        self.benchmark.post_execute(self.execution)
         report = dict(
             exit_status=exit_status,
             benchmark=self.benchmark.name,
@@ -693,12 +705,30 @@ class SlurmExecutionDriver(ExecutionDriver):
     def srun_nodes(self):
         """Get list of nodes where to execute the command
         """
-        count = self.execution.get('srun_nodes') or 1
-        assert isinstance(count, int)
-        assert count > 0
-        tag = self.parent.parent.parent.parent.name
-        tag_nodes = self.parent.parent.parent.parent.parent.nodes(tag)
-        assert count <= len(tag_nodes)
-        pos = tag_nodes.index(self.node)
-        tag_nodes = tag_nodes + tag_nodes
-        return tag_nodes[pos:pos + count]
+        count = self.execution.get('srun_nodes', 1)
+        if isinstance(count, six.string_types):
+            tag = count
+            count = 0
+        else:
+            assert isinstance(count, int)
+            tag = self.parent.parent.parent.parent.name
+        return self._srun_nodes(tag, count)
+
+    @cached_property
+    def network(self):
+        return self.parent.parent.parent.parent.parent
+
+    def _srun_nodes(self, tag, count):
+        assert count >= 0
+        if tag != '*' and not self.network.has_tag(tag):
+            raise ValueError('Unknown tag: {}'.format(tag))
+        nodes = sorted(list(self.network.nodes(tag)))
+        if count > 0:
+            return self._filter_srun_nodes(nodes, count)
+        return nodes
+
+    def _filter_srun_nodes(self, nodes, count):
+        assert count <= len(nodes)
+        pos = nodes.index(self.node)
+        nodes = nodes + nodes
+        return nodes[pos:pos + count]

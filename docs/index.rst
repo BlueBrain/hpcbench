@@ -36,7 +36,7 @@ We recommend using `pip <http://pypi.python.org/pypi/pip>`_ to install hpcbench 
 
   $ python -m pip install hpcbench
 
-To upgrade using pip::
+To upgrade HPCBench with pip::
 
   $ python -m pip install --upgrade hpcbench
 
@@ -231,10 +231,12 @@ How to integrate a new benchmark utility?
 1. First make sure you can properly build the project and tests pass successfully.
    It may be tempting to skip this part, but please don't.
 2. Create a dedicated Git branch.
-3. Create a dedicated Python module in ``hpcbench/benchmark`` directory.
-4. Implement ``hpcbench.api.Benchmark`` and ``hpcbench.MetricsExtractor`` classes
+3. Create a new Python module in ``hpcbench/benchmark`` directory named after the
+   utility to integrate.
+4. In this new module, implement ``hpcbench.api.Benchmark`` and
+  ``hpcbench.MetricsExtractor`` classes.
 5. Register the new module in ``setup.py`` ``[hpcbench.benchmarks]`` entrypoint
-   so that it can be introspectable.
+   so that it can be found by HPCBench.
 6. Create a dedicate tests class in `tests/benchmark/` directory.
    Purpose of this test is to make sure that:
 
