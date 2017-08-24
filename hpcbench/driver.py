@@ -578,9 +578,8 @@ class DynamicAttempts(FixedAttempts):
         value_n = get_metric(data_n)
         if self.epsilon is not None:
             return abs(value_n - value_n1) < self.epsilon
-        else:
-            assert self.percent is not None
-            return abs(value_n - value_n1) < self.percent / 100.0
+        assert self.percent is not None
+        return abs(value_n - value_n1) < self.percent / 100.0
 
 
 class ExecutionDriver(Leaf):
