@@ -197,24 +197,22 @@ class HostDriver(Enumerator):
     @cached_property
     def children(self):
         """Retrieve tags associated to the current node"""
-        benchmarks = {'*'}
+        tags = {'*'}
         for tag, configs in self.campaign.network.tags.items():
             for config in configs:
                 for mode, kconfig in config.items():
                     if mode == 'match':
                         if kconfig.match(self.name):
-                            benchmarks.add(tag)
-                            break
-                    elif mode == 'nodes':
-                        if self.name in kconfig:
-                            benchmarks.add(tag)
+                            tags.add(tag)
                             break
                     else:
-                        raise Exception('Unknown tag association pattern: %s',
-                                        mode)
-                if tag in benchmarks:
+                        assert mode == 'nodes'
+                        if self.name in kconfig:
+                            tags.add(tag)
+                            break
+                if tag in tags:
                     break
-        return benchmarks
+        return tags
 
     def child_builder(self, child):
         return BenchmarkTagDriver(self, child)
@@ -233,7 +231,7 @@ class HostDriver(Enumerator):
             return []
         nodes = set()
         for definition in definitions:
-            mode, value = definition.items()[0]
+            mode, value = list(definition.items())[0]
             if mode == 'match':
                 nodes = nodes.union(set([
                     node for node in self.campaign.network.nodes

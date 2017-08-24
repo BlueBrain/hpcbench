@@ -147,13 +147,19 @@ class TestHostDriver(unittest.TestCase):
 
                     ),
                     dict(
-                        group_nodes=dict(
-                            nodes=[
-                                "node01",
-                                "node02",
-                                "node03",
-                            ],
-                        ),
+                        group_nodes=[
+                            dict(
+                                nodes=[
+                                    "node01",
+                                    "node02",
+                                ],
+                            ),
+                            dict(
+                                nodes=[
+                                    "node03",
+                                ],
+                            ),
+                        ],
                         group_match=dict(
                             match="node1.*"
                         ),
@@ -170,6 +176,25 @@ class TestHostDriver(unittest.TestCase):
         with open(cls.CAMPAIGN_FILE, 'w') as ostr:
             yaml.dump(cls.CAMPAIGN, ostr, default_flow_style=False)
         cls.DRIVER = CampaignDriver(campaign_file=cls.CAMPAIGN_FILE)
+
+    def host_driver(self, node):
+        return HostDriver(
+            CampaignDriver(
+                campaign_file=TestHostDriver.CAMPAIGN_FILE,
+                node=node
+            ),
+            node
+        )
+
+    def test_host_driver_children(self):
+        self.assertEqual(
+            self.host_driver('node01').children,
+            {'*', 'n01', 'group_nodes'}
+        )
+        self.assertEqual(
+            self.host_driver('node10').children,
+            {'*', 'n10', 'group_match'}
+        )
 
     def slurm(self, node='node01', tag='group_nodes', srun_nodes=1):
         execution = dict(
@@ -248,6 +273,7 @@ class TestHostDriver(unittest.TestCase):
             ]
         )
 
+    def test_srun_nodes_method_errors(self):
         negative_srun_nodes = self.slurm(node='node03', srun_nodes=-1)
         with self.assertRaises(AssertionError):
             negative_srun_nodes.srun_nodes
