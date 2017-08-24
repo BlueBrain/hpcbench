@@ -8,6 +8,7 @@ from cached_property import cached_property
 
 from hpcbench.api import (
     Benchmark,
+    Metric,
     MetricsExtractor,
 )
 from hpcbench.toolbox.functools_ext import listify
@@ -19,81 +20,73 @@ class Extractor(MetricsExtractor):
     RE_MULTIPLE_SPACES = re.compile('\\s+')
     OPERATIONS = set(['write', 'read'])
     METAS = {
-        'Max(MiB)': dict(
-            name='max',
-            type=float,
-            unit='Mib',
-        ),
-        'Min(MiB)': dict(
-            name='min',
-            type=float,
-            unit='MiB',
-        ),
-        'Mean(MiB)': dict(
-            name='mean',
-            type=float,
-            unit='MiB',
-        ),
-        'StdDev': dict(
-            name='std_dev',
-            type=float,
-        ),
-        'Mean(s)': dict(
-            name='mean_time',
-            type=float,
-            unit='s',
-        ),
-        '#Tasks': dict(
-            name='tasks',
-            type=int,
-        ),
-        'tPN': dict(
-            name='tasks_per_node',
-            type=int,
-        ),
-        'reps': dict(
-            name='repetitions',
-            type=int,
-        ),
-        'fPP': dict(
-            name='file_per_proc',
-            type=int,
-        ),
-        'reord': dict(
-            name='reorder_tasks',
-            type=bool,
-        ),
-        'reordoff': dict(
-            name='task_per_node_offset',
-            type=int,
-        ),
-        'reordrand': dict(
-            name='reorder_tasks_random',
-            type=bool,
-        ),
-        'seed': dict(
-            name='reorder_tasks_random_seed',
-            type=int,
-        ),
-        'segcnt': dict(
-            name='segments',
-            type=int,
-        ),
-        'blksiz': dict(
-            name='block_size',
-            type=int,
-            unit='B',
-        ),
-        'xsize': dict(
-            name='transfer_size',
-            type=int,
-            unit='B',
-        ),
-        'aggsize': dict(
-            name='agg_size',
-            type=int,
-            unit='?',
-        ),
+        '#Tasks': {
+            'name': 'tasks',
+            'metric': Metric(unit='', type=int)
+        },
+        'Max(MiB)': {
+            'name': 'max',
+            'metric': Metric(unit='Mib', type=float)
+        },
+        'Mean(MiB)': {
+            'name': 'mean',
+            'metric': Metric(unit='MiB', type=float)
+        },
+        'Mean(s)': {
+            'name': 'mean_time',
+            'metric': Metric(unit='s', type=float)
+        },
+        'Min(MiB)': {
+            'name': 'min',
+            'metric': Metric(unit='MiB', type=float)
+        },
+        'StdDev': {
+            'name': 'std_dev',
+            'metric': Metric(unit='', type=float)
+        },
+        'aggsize': {
+            'name': 'agg_size',
+            'metric': Metric(unit='?', type=int)
+        },
+        'blksiz': {
+            'name': 'block_size',
+            'metric': Metric(unit='B', type=int)
+        },
+        'fPP': {
+            'name': 'file_per_proc',
+            'metric': Metric(unit='', type=int)
+        },
+        'reord': {
+            'name': 'reorder_tasks',
+            'metric': Metric(unit='', type=bool)
+        },
+        'reordoff': {
+            'name': 'task_per_node_offset',
+            'metric': Metric(unit='', type=int)
+        },
+        'reordrand': {
+            'name': 'reorder_tasks_random',
+            'metric': Metric(unit='', type=bool)
+        },
+        'reps': {
+            'name': 'repetitions',
+            'metric': Metric(unit='', type=int)
+        },
+        'seed': {
+            'name': 'reorder_tasks_random_seed',
+            'metric': Metric(unit='', type=int)
+        },
+        'segcnt': {
+            'name': 'segments',
+            'metric': Metric(unit='', type=int)
+        },
+        'tPN': {
+            'name': 'tasks_per_node',
+            'metric': Metric(unit='', type=int)
+        },
+        'xsize': {
+            'name': 'transfer_size',
+            'metric': Metric(unit='B', type=int)}
     }
 
     METAS_IGNORED = set([
@@ -103,16 +96,14 @@ class Extractor(MetricsExtractor):
     SUMMARY_HEADER = 'Summary of all tests:'
     RESULTS_HEADER_START = 'Operation'
 
+    @cached_property
     def metrics(self):
         metrics = {}
         for operation in Extractor.OPERATIONS:
             for meta, desc in Extractor.METAS.items():
                 name = Extractor.get_meta_name(operation,
                                                desc.get('name') or meta)
-                metrics[name] = dict(
-                    (k, v) for k, v in desc.items()
-                    if k != 'name'
-                )
+                metrics[name] = desc['metric']
         return metrics
 
     def extract(self, outdir, metas):
@@ -175,7 +166,7 @@ class Extractor(MetricsExtractor):
             if desc is None:
                 raise Exception('Unrecognized column: %s' % col)
             meta = cls.get_meta_name(operation, desc.get('name') or col)
-            value = desc['type'](line[i])
+            value = desc['metric'].type(line[i])
             metrics[meta] = value
 
 

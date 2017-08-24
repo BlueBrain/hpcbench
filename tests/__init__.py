@@ -32,8 +32,7 @@ class DriverTestCase(object):
 
     @classmethod
     def tearDownClass(cls):
-        pass
-        #shutil.rmtree(cls.TEST_DIR)
+        shutil.rmtree(cls.TEST_DIR)
 
 
 class FakeExtractor(MetricsExtractor):
@@ -70,7 +69,7 @@ class FakeBenchmark(Benchmark):
             )
         )
 
-    def pre_execute(self):
+    def pre_execute(self, execution):
         with open('test.py', 'w') as ostr:
             ostr.write(dedent("""\
             from __future__ import print_function
