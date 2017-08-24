@@ -483,7 +483,7 @@ class FixedAttempts(Enumerator):
             self.paths.append(path)
             yield path
             attempt += 1
-        attempt_path = self.last_attempt(self.paths)
+        attempt_path = self.last_attempt()
         for file_ in os.listdir(attempt_path):
             os.symlink(
                 osp.join(attempt_path, file_),
@@ -492,7 +492,7 @@ class FixedAttempts(Enumerator):
 
     def child_builder(self, child):
         def _wrap(**kwargs):
-            driver = self.execution_layer(self)
+            driver = self.execution_layer()
             driver(**kwargs)
             mdriver = MetricsDriver(self.campaign, self.benchmark)
             mdriver(**kwargs)
@@ -512,16 +512,16 @@ class FixedAttempts(Enumerator):
                 return clazz
         raise NameError("Unknown execution layer: '%s'" % name)
 
-    def execution_layer(self, execution):
+    def execution_layer(self):
         """Build the proper execution layer
         """
         return self.execution_layer_class(self)
 
-    def last_attempt(self, paths):
-        self._sort_attempts(paths)
-        return paths[-1]
+    def last_attempt(self):
+        self._sort_attempts()
+        return self.paths[-1]
 
-    def _sort_attempts(self, paths):
+    def _sort_attempts(self):
         if self.sort_config is not None:
             attempts = []
             for path in self.paths:
@@ -530,7 +530,7 @@ class FixedAttempts(Enumerator):
                 report['path'] = path
                 attempts.append(report)
             sorted(attempts, **self.sort_config)
-            self.attempts_dir = [
+            self.paths = [
                 report_['path']
                 for report_ in attempts
             ]
