@@ -32,8 +32,7 @@ class DriverTestCase(object):
 
     @classmethod
     def tearDownClass(cls):
-        pass
-        #shutil.rmtree(cls.TEST_DIR)
+        shutil.rmtree(cls.TEST_DIR)
 
 
 class FakeExtractor(MetricsExtractor):

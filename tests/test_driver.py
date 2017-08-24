@@ -1,19 +1,32 @@
+from collections import namedtuple
+from functools import reduce
 import json
+import logging
 import os
 import os.path as osp
 import shutil
-import sys
 import tempfile
-from textwrap import dedent
 import unittest
 
 from cached_property import cached_property
+import yaml
 
 from hpcbench.api import (
     Benchmark,
     Metric,
     MetricsExtractor,
 )
+from hpcbench.driver import (
+    BenchmarkCategoryDriver,
+    BenchmarkDriver,
+    BenchmarkTagDriver,
+    CampaignDriver,
+    FixedAttempts,
+    HostDriver,
+    SlurmExecutionDriver,
+    Top
+)
+
 from hpcbench.toolbox.contextlib_ext import (
     capture_stdout,
     pushd,
@@ -28,6 +41,9 @@ from hpcbench.cli import (
 
 from .benchmark.benchmark import AbstractBenchmarkTest
 from . import DriverTestCase, FakeBenchmark
+
+
+LOGGER = logging.getLogger('hpcbench')
 
 class TestDriver(DriverTestCase, unittest.TestCase):
     def test_get_unknown_benchmark_class(self):
@@ -49,7 +65,10 @@ class TestDriver(DriverTestCase, unittest.TestCase):
             'main',
             'metrics.json'
         )
-        self.assertTrue(osp.isfile(aggregated_metrics_f), "Not file: " + aggregated_metrics_f)
+        self.assertTrue(
+            osp.isfile(aggregated_metrics_f),
+            "Not file: " + aggregated_metrics_f
+        )
         with open(aggregated_metrics_f) as istr:
             aggregated_metrics = json.load(istr)
         self.assertTrue(len(aggregated_metrics), 3)
@@ -111,3 +130,166 @@ class TestFakeBenchmark(AbstractBenchmarkTest, unittest.TestCase):
 
     def get_benchmark_categories(self):
         return ['main']
+
+
+class TestHostDriver(unittest.TestCase):
+    CAMPAIGN = dict(
+        network=dict(
+            nodes=[
+                'node{0:02}'.format(id_)
+                for id_ in range(1, 11)
+            ],
+            tags=reduce(lambda x, y: dict(x, **y),
+                (
+                    dict(
+                        ('n{0:02}'.format(id_), dict(nodes=['node{0:02}'.format(id_)]))
+                        for id_ in range(1, 11)
+
+                    ),
+                    dict(
+                        group_nodes=dict(
+                            nodes=[
+                                "node01",
+                                "node02",
+                                "node03",
+                            ],
+                        ),
+                        group_match=dict(
+                            match="node1.*"
+                        ),
+                    )
+                )
+            )
+        )
+    )
+
+    @classmethod
+    def setUpClass(cls):
+        cls.TEST_DIR = tempfile.mkdtemp(prefix='hpcbench-ut')
+        cls.CAMPAIGN_FILE = osp.join(cls.TEST_DIR, 'campaign.yaml')
+        with open(cls.CAMPAIGN_FILE, 'w') as ostr:
+            yaml.dump(cls.CAMPAIGN, ostr, default_flow_style=False)
+        cls.DRIVER = CampaignDriver(campaign_file=cls.CAMPAIGN_FILE)
+
+    def slurm(self, node='node01', tag='group_nodes', srun_nodes=1):
+        execution = dict(
+            command=['ls', '-la']
+        )
+        campaign_file = TestHostDriver.CAMPAIGN_FILE
+        if srun_nodes is not None:
+            execution.update(srun_nodes=srun_nodes)
+        return SlurmExecutionDriver(
+           FixedAttempts(
+                BenchmarkCategoryDriver(
+                    BenchmarkDriver(
+                        BenchmarkTagDriver(
+                            HostDriver(
+                                CampaignDriver(
+                                    campaign_file=campaign_file,
+                                    node=node
+                                ),
+                                node
+                            ),
+                            tag
+                        ),
+                        namedtuple('benchmark', ['name'])(name='benchmark'),
+                        dict(),
+                    ),
+                    'category'
+                ),
+                execution
+            )
+        )
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.TEST_DIR)
+
+    @cached_property
+    def network(self):
+        network = list(TestHostDriver.DRIVER.children_objects())
+        self.assertEqual(len(network), 1)
+        return network[0]
+
+    def test_srun_nodes_method(self):
+        self.assertEqual(
+            self.slurm(node='node03', srun_nodes=0).srun_nodes,
+            ['node01', 'node02', 'node03']
+        )
+        self.assertEqual(
+            self.slurm(node='node01', srun_nodes=1).srun_nodes,
+            ['node01']
+        )
+        self.assertEqual(
+            self.slurm(node='node02', srun_nodes=1).srun_nodes,
+            ['node02']
+        )
+        self.assertEqual(
+            self.slurm(node='node01', srun_nodes=2).srun_nodes,
+            ['node01', 'node02']
+        )
+        self.assertEqual(
+            self.slurm(node='node02', srun_nodes=2).srun_nodes,
+            ['node02', 'node03']
+        )
+        self.assertEqual(
+            self.slurm(node='node03', srun_nodes=2).srun_nodes,
+            ['node03', 'node01']
+        )
+        self.assertEqual(
+            self.slurm(node='node03', srun_nodes='group_match').srun_nodes,
+            ['node10']
+        )
+        self.assertEqual(
+            self.slurm(srun_nodes='*').srun_nodes,
+            [
+                'node{0:02}'.format(id_)
+                for id_ in range(1, 11)
+            ]
+        )
+
+        negative_srun_nodes = self.slurm(node='node03', srun_nodes=-1)
+        with self.assertRaises(AssertionError):
+            negative_srun_nodes.srun_nodes
+
+        host_not_in_tag = self.slurm(node='node04')
+        with self.assertRaises(ValueError):
+            host_not_in_tag.srun_nodes
+
+        unknown_tag = self.slurm(srun_nodes='unknown_tag')
+        with self.assertRaises(ValueError):
+            unknown_tag.srun_nodes
+
+        too_many_nodes = self.slurm(srun_nodes=4)
+        with self.assertRaises(AssertionError):
+            too_many_nodes.srun_nodes
+
+    def test_nodes_method(self):
+        self.assertEqual(
+            self.network.nodes('group_nodes'),
+            set([
+                'node01',
+                'node02',
+                'node03'
+            ])
+        )
+        self.assertEqual(
+            self.network.nodes('group_match'),
+            set([
+                'node10',
+            ])
+        )
+        self.assertEqual(
+            self.network.nodes('n01'),
+            set([
+                'node01',
+            ])
+        )
+        self.assertEqual(
+            self.network.nodes('*'),
+            set([
+                'node{0:02}'.format(id_)
+                for id_ in range(1, 11)
+            ])
+        )
+        self.assertEqual(self.network.nodes('unknown_group'), [])

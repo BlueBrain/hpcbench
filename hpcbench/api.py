@@ -134,8 +134,12 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         * *srun_nodes* (optional):
             When the `srun` execution layer is enabled,
             an integer providing the number of required nodes.
-            Must be greater than 0 and less than the number of nodes
+            Must be greater equal than 0 and less than the number of nodes
             of the tag the benchmark is part of.
+            If 0, then the job is executed on all nodes of the tag the
+            benchmark is part of.
+            If a string is provided, then all nodes of the given tag will
+            be used.
 
         Execution context: for every command, a dedicated output directory
         is created and the current working directory changed to this directory

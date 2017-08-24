@@ -102,6 +102,10 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
         with open(YAML_REPORT_FILE) as istr:
             return nameddict(yaml.load(istr))
 
+    def children_objects(self):
+        for child in self._children:
+            yield self.child_builder(child)
+
     def _call_without_report(self, **kwargs):
         for child in self._children:
             with pushd(str(child), mkdir=True):
@@ -215,26 +219,30 @@ class HostDriver(Enumerator):
     def child_builder(self, child):
         return BenchmarkTagDriver(self, child)
 
+    def has_tag(self, tag):
+        return tag in self.campaign.network.tags
+
     def nodes(self, tag):
         """get list of nodes that belong to a tag
         :rtype: list of string
         """
         if tag == '*':
-            return self.campaign.network.nodes
-        definition = self.campaign.network.tags.get('tag')
-        if definition is None:
+            return set(self.campaign.network.nodes)
+        definitions = self.campaign.network.tags.get(tag)
+        if definitions is None:
             return []
-        mode, value = definition.items()[0]
-        if mode == 'match':
-            return [
-                node for node in self.campaign.network.nodes
-                if value.match(node)
-            ]
-        elif mode == 'nodes':
-            return value
-        else:
-            raise Exception('Unknown tag association pattern: %s',
-                            mode)
+        nodes = set()
+        for definition in definitions:
+            mode, value = definition.items()[0]
+            if mode == 'match':
+                nodes = nodes.union(set([
+                    node for node in self.campaign.network.nodes
+                    if value.match(node)
+                ]))
+            else:
+                assert mode == 'nodes'
+                nodes = nodes.union(set(value))
+        return nodes
 
 
 class BenchmarkTagDriver(Enumerator):
@@ -353,7 +361,6 @@ class BenchmarkCategoryDriver(Enumerator):
                 with pushd(run_dir, mkdir=True):
                     attempt_cls = self.attempt_run_class(execution)
                     attempt = attempt_cls(self, execution)
-                    self.logger.info('-> call FixedAttempt.__call__')
                     for attempt in attempt(**kwargs):
                         pass
                     yield run_dir
@@ -692,12 +699,21 @@ class SlurmExecutionDriver(ExecutionDriver):
     def srun_nodes(self):
         """Get list of nodes where to execute the command
         """
-        count = self.execution.get('srun_nodes') or 1
-        assert isinstance(count, int)
-        assert count > 0
-        tag = self.parent.parent.parent.parent.name
-        tag_nodes = self.parent.parent.parent.parent.parent.nodes(tag)
-        assert count <= len(tag_nodes)
-        pos = tag_nodes.index(self.node)
-        tag_nodes = tag_nodes + tag_nodes
-        return tag_nodes[pos:pos + count]
+        count = self.execution.get('srun_nodes', 1)
+        if isinstance(count, six.string_types):
+            tag = count
+            count = 0
+        else:
+            assert isinstance(count, int)
+            tag = self.parent.parent.parent.parent.name
+        assert count >= 0
+        network = self.parent.parent.parent.parent.parent
+        if tag != '*' and not network.has_tag(tag):
+            raise ValueError('Unknown tag: {}'.format(tag))
+        tag_nodes = sorted(list(network.nodes(tag)))
+        if count > 0:
+            assert count <= len(tag_nodes)
+            pos = tag_nodes.index(self.node)
+            tag_nodes = tag_nodes + tag_nodes
+            return tag_nodes[pos:pos + count]
+        return tag_nodes
