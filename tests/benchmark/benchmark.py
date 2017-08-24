@@ -86,7 +86,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
                 report = md()
                 parsed_metrics = report.get('metrics', {})
                 expected_metrics = self.get_expected_metrics(category)
-                assert parsed_metrics == expected_metrics
+                self.assertEqual(parsed_metrics, expected_metrics)
 
     def test_has_description(self):
         clazz = self.get_benchmark_clazz()
