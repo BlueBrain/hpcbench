@@ -29,6 +29,31 @@ Here is an sample describing a cluster of 2 nodes.
       - gpu-srv01
       - gpu-srv02
 
+
+Nodes can also be specified using the
+`ClusterShell <http://clustershell.readthedocs.io/en/latest/tools/nodeset.html#usage-basics>`_
+`NodeSet` syntax. For instance
+
+.. code-block:: yaml
+  :emphasize-lines: 3
+
+  network:
+    nodes:
+      - srv[0-1,42,060-062]
+
+is equivalent to:
+
+.. code-block:: yaml
+
+  network:
+    nodes:
+    - srv0
+    - srv2
+    - srv42
+    - srv060
+    - srv061
+    - srv062
+
 tags
 ~~~~
 Specify groups of nodes.
@@ -57,7 +82,10 @@ For instance, given the set of nodes defined above, we can define the
 
 Both methods are being used:
 
-* **nodes** expects an exaustive list of nodes.
+* **nodes** expects an exhaustive list of nodes. The
+  `ClusterShell <http://clustershell.readthedocs.io/en/latest/tools/nodeset.html#usage-basics>`_
+  `NodeSet` syntax is also supported.
+
 * **match** expects a valid regular expression
 
 ssh_config_file
@@ -151,7 +179,7 @@ Benchmark name.
 
 attributes (optional)
 ~~~~~~~~~~~~~~~~~~~~~
-*kwargs** arguments given to the benchmarch Python class constructor to
+*kwargs** arguments given to the benchmark Python class constructor to
 override default behavior.
 
 .. code-block:: yaml
@@ -185,7 +213,7 @@ Dictionary to specify the number of times a command must be executed before
 retrieving its results. Those settings allow benchmark execution on warm caches.
 Number of times can be either specified statically or dynamically.
 
-The static way to specify the number of times a command is executed is thru
+The static way to specify the number of times a command is executed is through
 the ``fixed`` option.
 
 .. code-block:: yaml
@@ -211,7 +239,7 @@ with the ``epsilon`` parameter or relative with ``percent``.
           test01:
               type: stream
               attempts:
-                  metric: bandwith
+                  metric: bandwidth
                   epsilon: 50
                   maximum: 5
 
@@ -230,13 +258,13 @@ Every commands of the ``stream`` benchmark will be executed:
           test01:
               type: stream
               attempts:
-                  metric: bandwith
+                  metric: bandwidth
                   percent: 10
                   maximum: 5
 
 Every commands of the ``stream`` benchmark will be executed:
 
-* as long: ``abs(bandwith(n) - bandwith(n - 1)) < bandwith(n) * percent / 100``
+* as long: ``abs(bandwidth(n) - bandwidth(n - 1)) < bandwidth(n) * percent / 100``
 * at most 5 times
 
 environment (optional)
