@@ -24,6 +24,9 @@ class Metrics(object):  # pragma pylint: disable=too-few-public-methods
     Milisecond = Metric('ms', float)
     Second = Metric('s', float)
     MegaBytesPerSecond = Metric('MB/s', float)
+    Cardinal = Metric('#', int)
+    Flops = Metric('flop/s', float)
+    Validity = Metric('boolean', str)
 
 
 class MetricsExtractor(with_metaclass(ABCMeta, object)):
