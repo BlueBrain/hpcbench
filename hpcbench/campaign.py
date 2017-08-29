@@ -11,9 +11,11 @@ import shutil
 import socket
 import uuid
 
+import six
 import yaml
 
 import hpcbench
+from hpcbench.ext.ClusterShell.NodeSet import NodeSet
 
 from . toolbox.collections_ext import Configuration
 
@@ -104,24 +106,59 @@ def fill_default_campaign_values(campaign):
         if not isinstance(config, list):
             campaign.precondition[precondition] = [config]
 
-    for tag in list(campaign.network.tags):
-        config = campaign.network.tags[tag]
+    NetworkConfig(campaign).expand()
+    return campaign
+
+
+class NetworkConfig(object):
+    """Wrapper around network configuration
+    """
+    def __init__(self, campaign):
+        self.campaign = campaign
+
+    @property
+    def network(self):
+        """Get network section of the campaign
+        """
+        return self.campaign.network
+
+    def expand(self):
+        """Perforn node expansion of network section.
+        """
+        self.network.nodes = NetworkConfig._expand_nodes(self.network.nodes)
+        for tag in list(self.network.tags):
+            self._expand_tag(tag)
+
+    @classmethod
+    def _expand_nodes(cls, nodes):
+        if isinstance(nodes, six.string_types):
+            nodes = [nodes]
+        if not isinstance(nodes, list):
+            raise Exception('Invalid "nodes" value type.'
+                            ' list expected')
+        eax = NodeSet()
+        for node in nodes:
+            eax.update(node)
+        return list(eax)
+
+    @classmethod
+    def _expand_tag_pattern(cls, pattern):
+        for mode in list(pattern):
+            if mode == 'match':
+                pattern[mode] = re.compile(pattern[mode])
+            elif mode == 'nodes':
+                pattern[mode] = NetworkConfig._expand_nodes(pattern[mode])
+            else:
+                raise Exception('Unknown tag association pattern: %s',
+                                mode)
+
+    def _expand_tag(self, tag):
+        config = self.network.tags[tag]
         if isinstance(config, dict):
             config = [config]
-            campaign.network.tags[tag] = config
+            self.network.tags[tag] = config
         for pattern in config:
-            for mode in list(pattern):
-                if mode == 'match':
-                    pattern[mode] = re.compile(pattern[mode])
-                elif mode == 'nodes':
-                    if not isinstance(pattern[mode], list):
-                        raise Exception('Invalid "nodes" value type.'
-                                        ' list expected')
-                    pattern[mode] = set(pattern[mode])
-                else:
-                    raise Exception('Unknown tag association pattern: %s',
-                                    mode)
-    return campaign
+            self._expand_tag_pattern(pattern)
 
 
 def get_benchmark_types(campaign):

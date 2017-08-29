@@ -51,6 +51,9 @@ class TestCampaign(unittest.TestCase):
             ),
             by_regex=dict(
                 match='.*'
+            ),
+            by_nodeset=dict(
+                nodes='node[1-2]'
             )
         )
         return config
@@ -64,13 +67,17 @@ class TestCampaign(unittest.TestCase):
             RE_TYPE
         )
 
-    def test_tags_invalid_nodes_list(self):
+    def test_nodeset(self):
         config = self.new_config
-        config['network']['tags']['invalid'] = dict(
-            nodes='expecting list but got string'
+        fill_default_campaign_values(config)
+        self.assertEqual(
+            config['network']['tags']['by_nodeset'][0]['nodes'],
+            [
+                'node1',
+                'node2',
+            ]
         )
-        with self.assertRaises(Exception) as exc:
-            fill_default_campaign_values(config)
+
 
     def test_tags_invalid_mode(self):
         config = self.new_config
