@@ -136,5 +136,6 @@ class TestKwargSQL(unittest.TestCase):
                 return key + 1
         self.assertEqual(kwargsql.get(DumbSequence(), '1'), 2)
 
+
 if __name__ == '__main__':
     unittest.main()

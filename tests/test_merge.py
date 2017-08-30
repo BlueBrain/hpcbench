@@ -1,10 +1,14 @@
 import inspect
 import os.path as osp
-import unittest
+import shutil
 import tempfile
+import unittest
 
 from hpcbench.campaign import merge_campaigns
-from hpcbench.cli import bensh, benmerge
+from hpcbench.cli import (
+    benmerge,
+    bensh,
+)
 from hpcbench.toolbox.contextlib_ext import pushd
 
 
@@ -13,8 +17,7 @@ class TestMerge(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp(prefix='hpcbench-ut')
 
     def tearDown(self):
-        pass
-        #shutil.rmtree(self.temp_dir)
+        shutil.rmtree(self.temp_dir)
 
     def test_same_host(self):
         with pushd(self.temp_dir):

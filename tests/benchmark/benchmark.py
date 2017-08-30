@@ -1,16 +1,20 @@
+from abc import ABCMeta, abstractmethod
 from collections import Mapping
 import inspect
 import os.path as osp
 import shutil
-import yaml
+
 from six import with_metaclass
-from abc import ABCMeta, abstractmethod
+import yaml
 
 from hpcbench.api import (
     Benchmark,
     MetricsExtractor,
 )
-from hpcbench.driver import YAML_REPORT_FILE, MetricsDriver
+from hpcbench.driver import (
+    MetricsDriver,
+    YAML_REPORT_FILE,
+)
 from hpcbench.toolbox.collections_ext import dict_merge
 from hpcbench.toolbox.contextlib_ext import (
     mkdtemp,
@@ -130,6 +134,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
         benchmark = clazz()
         all_extractors = benchmark.metrics_extractors
         assert isinstance(all_extractors, (Mapping, list, MetricsExtractor))
+
         def _check_extractor(exts):
             if not isinstance(exts, list):
                 exts = [exts]

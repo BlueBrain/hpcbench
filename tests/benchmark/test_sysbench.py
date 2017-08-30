@@ -4,7 +4,6 @@ from hpcbench.benchmark.sysbench import Sysbench
 from . benchmark import AbstractBenchmarkTest
 
 
-
 class TestSysbench(AbstractBenchmarkTest, unittest.TestCase):
     _expected_metrics = dict(
         minimum=0.03,

@@ -1,10 +1,9 @@
-from textwrap import dedent
 import inspect
 import os.path as osp
 import shutil
 import sys
 import tempfile
-import unittest
+from textwrap import dedent
 
 from cached_property import cached_property
 

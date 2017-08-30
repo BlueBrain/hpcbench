@@ -11,10 +11,12 @@ import unittest
 from cached_property import cached_property
 import yaml
 
-from hpcbench.api import (
-    Benchmark,
-    Metric,
-    MetricsExtractor,
+from hpcbench.api import Benchmark
+from hpcbench.cli import (
+    bendoc,
+    benelastic,
+    benplot,
+    benumb,
 )
 from hpcbench.driver import (
     BenchmarkCategoryDriver,
@@ -24,26 +26,18 @@ from hpcbench.driver import (
     FixedAttempts,
     HostDriver,
     SlurmExecutionDriver,
-    Top
 )
 
 from hpcbench.toolbox.contextlib_ext import (
     capture_stdout,
-    pushd,
-)
-from hpcbench.cli import (
-    bendoc,
-    benelastic,
-    benplot,
-    bensh,
-    benumb,
 )
 
-from .benchmark.benchmark import AbstractBenchmarkTest
 from . import DriverTestCase, FakeBenchmark
+from . benchmark.benchmark import AbstractBenchmarkTest
 
 
 LOGGER = logging.getLogger('hpcbench')
+
 
 class TestDriver(DriverTestCase, unittest.TestCase):
     def test_get_unknown_benchmark_class(self):
@@ -139,10 +133,14 @@ class TestHostDriver(unittest.TestCase):
                 'node{0:02}'.format(id_)
                 for id_ in range(1, 11)
             ],
-            tags=reduce(lambda x, y: dict(x, **y),
+            tags=reduce(
+                lambda x, y: dict(x, **y),
                 (
                     dict(
-                        ('n{0:02}'.format(id_), dict(nodes=['node{0:02}'.format(id_)]))
+                        (
+                            'n{0:02}'.format(id_),
+                            dict(nodes=['node{0:02}'.format(id_)])
+                        )
                         for id_ in range(1, 11)
 
                     ),

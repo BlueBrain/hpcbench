@@ -3,16 +3,16 @@ import logging
 import re
 import unittest
 
+from hpcbench.campaign import (
+    fill_default_campaign_values,
+    pip_installer_url,
+)
 from hpcbench.driver import (
     BenchmarkCategoryDriver,
     BenchmarkDriver,
     ExecutionDriver,
     FixedAttempts,
     Top,
-)
-from hpcbench.campaign import (
-    fill_default_campaign_values,
-    pip_installer_url,
 )
 from hpcbench.toolbox.collections_ext import nameddict
 
@@ -77,7 +77,6 @@ class TestCampaign(unittest.TestCase):
                 'node2',
             ]
         )
-
 
     def test_tags_invalid_mode(self):
         config = self.new_config

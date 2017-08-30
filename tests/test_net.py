@@ -2,10 +2,9 @@ import os
 import os.path as osp
 import unittest
 
-from hpcbench.net import CampaignHolder
 from hpcbench.cli import bennett
+from hpcbench.net import CampaignHolder
 
-from . import FakeBenchmark
 from hpcbench.toolbox.contextlib_ext import (
     mkdtemp,
     pushd,
