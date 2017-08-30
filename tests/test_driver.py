@@ -274,19 +274,19 @@ class TestHostDriver(unittest.TestCase):
     def test_srun_nodes_method_errors(self):
         negative_srun_nodes = self.slurm(node='node03', srun_nodes=-1)
         with self.assertRaises(AssertionError):
-            negative_srun_nodes.srun_nodes
+            self.assertIsNotNone(negative_srun_nodes.srun_nodes)
 
         host_not_in_tag = self.slurm(node='node04')
         with self.assertRaises(ValueError):
-            host_not_in_tag.srun_nodes
+            self.assertIsNotNone(host_not_in_tag.srun_nodes)
 
         unknown_tag = self.slurm(srun_nodes='unknown_tag')
         with self.assertRaises(ValueError):
-            unknown_tag.srun_nodes
+            self.assertIsNotNone(unknown_tag.srun_nodes)
 
         too_many_nodes = self.slurm(srun_nodes=4)
         with self.assertRaises(AssertionError):
-            too_many_nodes.srun_nodes
+            self.assertIsNotNone(too_many_nodes.srun_nodes)
 
     def test_nodes_method(self):
         self.assertEqual(
