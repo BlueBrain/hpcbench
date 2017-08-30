@@ -64,8 +64,7 @@ import hpcbench.ext.ClusterShell.NodeUtils as NodeUtils
 
 # Import all RangeSet module public objects
 from hpcbench.ext.ClusterShell.RangeSet import RangeSet, RangeSetND, AUTOSTEP_DISABLED
-from hpcbench.ext.ClusterShell.RangeSet import RangeSetException, RangeSetParseError
-from hpcbench.ext.ClusterShell.RangeSet import RangeSetPaddingError
+from hpcbench.ext.ClusterShell.RangeSet import RangeSetParseError
 
 
 # Define default GroupResolver object used by NodeSet
@@ -154,7 +153,7 @@ class NodeSetBase(object):
             self._autostep = min(int(val), AUTOSTEP_DISABLED)
 
         # Update our RangeSet/RangeSetND objects
-        for pat, rset in self._patterns.items():
+        for _, rset in self._patterns.items():
             if rset:
                 rset.autostep = self._autostep
 
