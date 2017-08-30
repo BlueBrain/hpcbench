@@ -1,11 +1,10 @@
 import os
 import os.path as osp
 import unittest
-import platform
 
 from hpcbench.toolbox.contextlib_ext import (
-    pushd,
     mkdtemp,
+    pushd,
 )
 
 

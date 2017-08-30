@@ -1,6 +1,6 @@
 import os
-import tempfile
 import shutil
+import tempfile
 import unittest
 
 from hpcbench.toolbox.collections_ext import (
@@ -69,7 +69,7 @@ class TestNamedDict(unittest.TestCase):
         e = nameddict({'FOO': 'bar'})
         self.assertFalse('foo' in e)
         with self.assertRaises(AttributeError):
-            e.foo
+            self.assertIsNotNone(e.foo)
         self.assertEqual(e['FOO'], 'bar')
         self.assertEqual(e.FOO, 'bar')
 

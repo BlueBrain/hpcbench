@@ -18,6 +18,6 @@ class TestFindExecutable(unittest.TestCase):
 
     def test_process_not_found(self):
         self.assertIsNone(find_executable('ellesse', required=False))
-        with self.assertRaises(NameError) as ctx:
+        with self.assertRaises(NameError):
             find_executable('ellesse')
             find_executable('ellesse', ['elaisse'])

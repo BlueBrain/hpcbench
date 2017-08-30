@@ -21,8 +21,7 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
                 # skip options
                 while [[ "$1" == -* ]] ; do shift ; done
                 exec $@
-                """)
-            )
+                """))
             st = os.stat(srun_ut)
             os.chmod(srun_ut, st.st_mode | stat.S_IEXEC)
         os.environ['PATH'] = cls.SRUN_UT_DIR + os.pathsep + os.environ['PATH']
@@ -39,9 +38,10 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
             'main',
             'metrics.json'
         )
-        self.assertTrue(osp.isfile(aggregated_metrics_f), "Not file: " + aggregated_metrics_f)
+        self.assertTrue(osp.isfile(aggregated_metrics_f),
+                        "Not file: " + aggregated_metrics_f)
         with open(aggregated_metrics_f) as istr:
-            aggregated_metrics = json.load(istr)
+            json.load(istr)
 
     @classmethod
     def tearDownClass(cls):

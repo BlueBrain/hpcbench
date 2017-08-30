@@ -21,6 +21,7 @@ class TestPrecondition(DriverTestCase, unittest.TestCase):
         self.assertFalse(osp.isfile(TestPrecondition.metrics_file('test02')))
         self.assertTrue(osp.isfile(TestPrecondition.metrics_file('test03')))
         self.assertTrue(osp.isfile(TestPrecondition.metrics_file('test04')))
+
     @classmethod
     def metrics_file(cls, benchmark):
         return osp.join(
