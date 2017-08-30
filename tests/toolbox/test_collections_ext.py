@@ -34,7 +34,7 @@ class TestNamedDict(unittest.TestCase):
         del e['foo']
         self.assertEqual(len(e), 0)
         with self.assertRaises(AttributeError):
-            e.foo
+            self.assertIsNotNone(e.foo)
 
     def test_nested_dict(self):
         data = {

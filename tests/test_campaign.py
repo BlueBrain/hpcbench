@@ -84,7 +84,7 @@ class TestCampaign(unittest.TestCase):
         config['network']['tags']['invalid'] = dict(
             unknown=''
         )
-        with self.assertRaises(Exception) as exc:
+        with self.assertRaises(Exception):
             fill_default_campaign_values(config)
 
 

@@ -1,12 +1,10 @@
 import inspect
 import os.path as osp
 import unittest
-import shutil
 import tempfile
 
 from hpcbench.campaign import merge_campaigns
 from hpcbench.cli import bensh, benmerge
-from hpcbench.driver import CampaignDriver
 from hpcbench.toolbox.contextlib_ext import pushd
 
 
