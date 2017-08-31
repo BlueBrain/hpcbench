@@ -82,7 +82,7 @@ class BeNet(CampaignHolder):
     """Main driver
     """
     INSTALLER_SCRIPT = 'hpcbench-benet.sh'
-    REMOTE_BENCH_RUNNER = osp.join('/tmp/', INSTALLER_SCRIPT)
+    REMOTE_BENCH_RUNNER = osp.join(tempfile.gettempdir(), INSTALLER_SCRIPT)
 
     def __init__(self, campaign_file, logger=None):
         self.campaign_file = campaign_file

@@ -9,7 +9,6 @@ import sys
 
 import six
 import yaml
-from yaml import Loader
 
 
 class nameddict(dict):  # pragma pylint: disable=invalid-name
@@ -59,11 +58,11 @@ class Configuration(nameddict):
         :rtype: ``Configuration``
         """
         if path == '-':
-            return Configuration(yaml.load(sys.stdin, Loader=Loader))
+            return Configuration(yaml.safe_load(sys.stdin))
         if not osp.exists(path) and not osp.isabs(path):
             path = osp.join(osp.dirname(osp.abspath(__file__)), path)
         with open(path, 'r') as istr:
-            return Configuration(yaml.load(istr, Loader=Loader))
+            return Configuration(yaml.safe_load(istr))
 
     @classmethod
     def from_env(cls, envvars, default, default_config):

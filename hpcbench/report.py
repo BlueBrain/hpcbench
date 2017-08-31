@@ -3,12 +3,21 @@
 import re
 import sys
 
-from jinja2 import Environment, PackageLoader
+from jinja2 import (
+    Environment,
+    PackageLoader,
+    select_autoescape,
+)
 import six
 
 
 ENV = Environment(
     loader=PackageLoader('hpcbench', 'templates'),
+    autoescape=select_autoescape(
+        disabled_extensions=('txt',),
+        default_for_string=True,
+        default=True
+    ),
 )
 DEFAULT_TEMPLATE = 'report.tex.jinja'
 

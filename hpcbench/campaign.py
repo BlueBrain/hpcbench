@@ -232,7 +232,7 @@ class CampaignMerge(object):
     @staticmethod
     def _reader_yaml(path):
         with open(path) as istr:
-            return yaml.load(istr)
+            return yaml.safe_load(istr)
 
     @staticmethod
     def _writer_json(data, path):

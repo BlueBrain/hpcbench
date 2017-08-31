@@ -100,7 +100,7 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
         """Get object report. Content of ``YAML_REPORT_FILE``
         """
         with open(YAML_REPORT_FILE) as istr:
-            return nameddict(yaml.load(istr))
+            return nameddict(yaml.safe_load(istr))
 
     def children_objects(self):
         for child in self._children:
@@ -318,7 +318,7 @@ class BenchmarkCategoryDriver(Enumerator):
         """
         for child in self._children:
             with open(osp.join(child, YAML_REPORT_FILE)) as istr:
-                command = yaml.load(istr)['command']
+                command = yaml.safe_load(istr)['command']
                 yield ' '.join(map(six.moves.shlex_quote, command))
 
     @cached_property
@@ -366,7 +366,7 @@ class BenchmarkCategoryDriver(Enumerator):
         for child in self.report['children']:
             child_yaml = osp.join(child, YAML_REPORT_FILE)
             with open(child_yaml) as istr:
-                child_config = yaml.load(istr)
+                child_config = yaml.safe_load(istr)
             child_config.pop('children', None)
             runs.setdefault(self.category, []).append(child)
             with pushd(child):
@@ -393,7 +393,7 @@ class BenchmarkCategoryDriver(Enumerator):
                 ostr.write('[\n')
                 for i in range(len(run_dirs)):
                     with open(osp.join(run_dirs[i], YAML_REPORT_FILE)) as istr:
-                        data = yaml.load(istr)
+                        data = yaml.safe_load(istr)
                         data.pop('category', None)
                         data.pop('command', None)
                         data['id'] = run_dirs[i]
@@ -408,7 +408,7 @@ class BenchmarkCategoryDriver(Enumerator):
         """Get content of the JSON metrics file
         """
         with open(JSON_METRICS_FILE) as istr:
-            return yaml.load(istr)
+            return yaml.safe_load(istr)
 
     def _generate_plot(self, desc, category):
         with open(JSON_METRICS_FILE) as istr:
@@ -429,7 +429,7 @@ class MetricsDriver(object):
         self.campaign = campaign
         self.benchmark = benchmark
         with open(YAML_REPORT_FILE) as istr:
-            self.report = yaml.load(istr)
+            self.report = yaml.safe_load(istr)
 
     @write_yaml_report
     def __call__(self, **kwargs):
@@ -539,7 +539,7 @@ class FixedAttempts(Enumerator):
             attempts = []
             for path in self.paths:
                 with open(osp.join(path, YAML_REPORT_FILE)) as istr:
-                    report = yaml.load(istr)
+                    report = yaml.safe_load(istr)
                 report['path'] = path
                 attempts.append(report)
             sorted(attempts, **self.sort_config)
@@ -579,9 +579,9 @@ class DynamicAttempts(FixedAttempts):
         if attempt < 3:
             return True
         with open(osp.join(self.paths[-2], YAML_REPORT_FILE)) as istr:
-            data_n1 = nameddict(yaml.load(istr))
+            data_n1 = nameddict(yaml.safe_load(istr))
         with open(osp.join(self.paths[-1], YAML_REPORT_FILE)) as istr:
-            data_n = nameddict(yaml.load(istr))
+            data_n = nameddict(yaml.safe_load(istr))
         return not self._metric_converged(data_n1, data_n)
 
     def _metric_converged(self, data_n1, data_n):
