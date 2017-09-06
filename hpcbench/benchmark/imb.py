@@ -3,13 +3,11 @@
 """
 import os.path as osp
 import re
-import shutil
 
 from cached_property import cached_property
 
 from hpcbench.api import (
     Benchmark,
-    Metric,
     Metrics,
     MetricsExtractor,
 )
@@ -21,7 +19,7 @@ class IMBExtractor(MetricsExtractor):
         "# Benchmarking PingPong"
     )
 
-    latency_bandwidth=re.compile(
+    latency_bandwidth = re.compile(
         r'^\s*(\d)+\s+\d+\s+([0-9]*\.?[0-9]+)[\s]+([0-9]*\.?[0-9]+)'
     )
 
@@ -53,10 +51,10 @@ class IMBExtractor(MetricsExtractor):
                 print(repr(line))
                 search = IMBExtractor.latency_bandwidth.search(line)
                 if search:
-                   byte = int(search.group(1))
-                   if byte != 0:
-                       s_latency.add(float(search.group(2)))
-                       s_bandwidth.add(float(search.group(3)))
+                    byte = int(search.group(1))
+                    if byte != 0:
+                        s_latency.add(float(search.group(2)))
+                        s_bandwidth.add(float(search.group(3)))
 
         metrics["latency"] = min(s_latency)
         metrics["bandwidth"] = max(s_bandwidth)
