@@ -13,6 +13,7 @@ from hpcbench.api import (
 )
 from hpcbench.toolbox.process import find_executable
 
+
 class IMBExtractor(MetricsExtractor):
     """Ignore stdout until this line"""
     STDOUT_IGNORE_PRIOR = (
