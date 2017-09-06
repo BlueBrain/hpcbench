@@ -78,7 +78,6 @@ class IMB(Benchmark):
     DEFAULT_EXECUTABLE = 'IMB-MPI1'
 
     def __init__(self):
-        # locate `stream_c` executable
         super(IMB, self).__init__(
             attributes=dict(
                 threads=IMB.DEFAULT_THREADS,
@@ -89,7 +88,7 @@ class IMB(Benchmark):
         )
     name = 'imb'
 
-    description = "Provides latency/bandwidth of the newtork."
+    description = "Provides latency/bandwidth of the network."
 
     @cached_property
     def executable(self):
@@ -101,9 +100,7 @@ class IMB(Benchmark):
     def execution_matrix(self):
         yield dict(
             category=IMB.DEFAULT_DEVICE,
-            command=[
-                './' + osp.basename(self.executable),
-            ],
+            command=[self.executable],
         )
 
     @cached_property
