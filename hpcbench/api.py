@@ -25,6 +25,7 @@ class Metrics(object):  # pragma pylint: disable=too-few-public-methods
     Second = Metric('s', float)
     MegaBytesPerSecond = Metric('MB/s', float)
     Cardinal = Metric('#', int)
+    Byte = Metric('B', int)
     Flops = Metric('flop/s', float)
     Validity = Metric('boolean', str)
 
