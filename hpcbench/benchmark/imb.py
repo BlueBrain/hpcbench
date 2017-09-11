@@ -138,9 +138,6 @@ class IMBAllToAllExtractor(IMBExtractor):
 
 class IMBAllGatherExtractor(IMBAllToAllExtractor):
     """Metrics extractor for AllGather IMB benchmark"""
-    LATENCY_BANDWIDTH = re.compile(
-        r'^\s*(\d)+\s+\d+\s+\d*\.?\d+[\s]+\d*\.?\d+[\s]+(\d*\.?\d+)'
-    )
 
     def __init__(self):
         super(IMBAllGatherExtractor, self).__init__()

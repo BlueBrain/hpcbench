@@ -4,8 +4,10 @@
    READ: dd if=tempfile of=/dev/null bs=1M count=1024
 
 """
-from abc import abstractmethod
+import os
 import re
+import stat
+import textwrap
 
 from cached_property import cached_property
 
@@ -14,7 +16,6 @@ from hpcbench.api import (
     Metrics,
     MetricsExtractor,
 )
-from hpcbench.toolbox.process import find_executable
 
 
 class IOSSDExtractor(MetricsExtractor):
@@ -25,9 +26,8 @@ class IOSSDExtractor(MetricsExtractor):
     )
     METRICS_NAMES = set(METRICS)
 
-    BANDWIDTH = re.compile(
-        r'^\s*\d+\s\w+\s\w+\s\w+\s[0-9]*\.?[0-9]+\s\w+\s[(](\d+)'
-    )
+    BANDWIDTH = re.compile(r'^\s*\d+\s\w+\s\w+\s\w+\s\d*\.?\d+\s\w+\s[(](\d+)')
+
     @property
     def metrics(self):
         """ The metrics to be extracted.
@@ -48,7 +48,7 @@ class IOSSDExtractor(MetricsExtractor):
     def process_line(self, line):
         search = self.BANDWIDTH.search(line)
         if search:
-            self.s_bandwidth.add(float(int(search.group(1))/(1024*1024)))
+            self.s_bandwidth.add(float(int(search.group(1)) / (1024 * 1024)))
 
     def epilog(self):
         metrics = {}
@@ -62,6 +62,7 @@ class IOSSDExtractor(MetricsExtractor):
             raise Exception(error % (' ,'.join(unset_attributes),
                                      ' ,'.join(set(metrics))))
         return metrics
+
 
 class IOSSDWriteExtractor(IOSSDExtractor):
     def __init__(self):
@@ -78,7 +79,11 @@ class IOSSDReadExtractor(IOSSDExtractor):
 class IOSSD(Benchmark):
     """Benchmark wrapper for the SSDIObench utility
     """
-    DEFAULT_EXECUTABLE = 'to define'
+
+    name = 'iossd'
+
+    description = "Provides SSD bandwidth"
+
     SSD_READ = 'Read'
     SSD_WRITE = 'Write'
     DEFAULT_CATEGORIES = [
@@ -86,33 +91,46 @@ class IOSSD(Benchmark):
         SSD_READ,
     ]
 
+    SCRIPT_NAME = 'iossd.sh'
+    SCRIPT = textwrap.dedent("""\
+    #!/bin/bash
+    #mac: 1m, linux 1M
+
+    function benchmark_write {
+        echo "Writing benchmark"
+        sync; dd if=/dev/zero of=tempfile bs=1m count=1024; sync
+    }
+
+    function benchmark_read {
+        echo "Reading benchmark"
+        # flash the ddr to be sure we are using the IO
+        # /sbin/sysctl -w vm.drop_caches=3;
+        dd if=/dev/zero of=tempfile bs=1m count=1024
+    }
+
+    if [ $1 = "Write" ]; then
+        benchmark_write
+    else
+        benchmark_read
+    fi
+    """)
+
     def __init__(self):
         super(IOSSD, self).__init__(
             attributes=dict(
-                data="",
-                executable=IOSSD.DEFAULT_EXECUTABLE,
                 categories=[
                     IOSSD.SSD_READ,
                     IOSSD.SSD_WRITE,
                 ],
             )
         )
-    name = 'iossd'
-
-    description = "Provides bandwidth of the ssd"
-
-    @cached_property
-    def executable(self):
-        """Get absolute path to executable
-        """
-        return find_executable(self.attributes['executable'])
 
     @property
     def execution_matrix(self):
         for category in self.attributes['categories']:
             yield dict(
                 category=category,
-                command=[self.executable, category],
+                command=['./' + IOSSD.SCRIPT_NAME, category],
             )
 
     @cached_property
@@ -121,3 +139,10 @@ class IOSSD(Benchmark):
             IOSSD.SSD_READ: IOSSDReadExtractor(),
             IOSSD.SSD_WRITE: IOSSDWriteExtractor(),
         }
+
+    def pre_execute(self, execution):
+        del execution  # unused
+        with open(IOSSD.SCRIPT_NAME, 'w') as ostr:
+            ostr.write(IOSSD.SCRIPT)
+        st = os.stat(IOSSD.SCRIPT_NAME)
+        os.chmod(IOSSD.SCRIPT_NAME, st.st_mode | stat.S_IEXEC)

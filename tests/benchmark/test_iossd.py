@@ -6,11 +6,11 @@ from . benchmark import AbstractBenchmarkTest
 
 class TestIossd(AbstractBenchmarkTest, unittest.TestCase):
     EXPECTED_METRICS = {
-        IOSSD.SSD_WRITE: dict(
-            bandwidth=494,
-        ),
         IOSSD.SSD_READ: dict(
             bandwidth=494,
+        ),
+        IOSSD.SSD_WRITE: dict(
+            bandwidth=398,
         ),
     }
 
