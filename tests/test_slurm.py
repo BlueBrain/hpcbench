@@ -13,7 +13,7 @@ from . import DriverTestCase
 class TestSlurm(DriverTestCase, unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.SRUN_UT_DIR = tempfile.mkdtemp()
+        cls.SRUN_UT_DIR = tempfile.mkdtemp(prefix='hpcbench-ut')
         srun_ut = osp.join(cls.SRUN_UT_DIR, 'srun-ut')
         with open(srun_ut, 'w') as ostr:
             ostr.write(textwrap.dedent("""\
@@ -41,7 +41,8 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
         self.assertTrue(osp.isfile(aggregated_metrics_f),
                         "Not file: " + aggregated_metrics_f)
         with open(aggregated_metrics_f) as istr:
-            json.load(istr)
+            data = json.load(istr)
+        self.assertEqual(data[0]['metrics']['performance'], 42.0)
 
     @classmethod
     def tearDownClass(cls):

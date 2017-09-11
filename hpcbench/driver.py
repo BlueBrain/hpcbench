@@ -5,6 +5,7 @@ from abc import (
     abstractmethod,
     abstractproperty,
 )
+import argparse
 from collections import (
     Mapping,
     namedtuple,
@@ -606,6 +607,9 @@ class ExecutionDriver(Leaf):
         super(ExecutionDriver, self).__init__(parent)
         self.benchmark = self.parent.benchmark
         self.execution = parent.execution
+        self.command_expansion_vars = dict(
+            process_count=1
+        )
 
     @cached_property
     def command(self):
@@ -617,7 +621,11 @@ class ExecutionDriver(Leaf):
         exec_prefix = benchmark_config.get('exec_prefix') or []
         if not isinstance(exec_prefix, list):
             exec_prefix = shlex.split(exec_prefix)
-        return list(exec_prefix) + self.execution['command']
+        command = list(exec_prefix) + self.execution['command']
+        return [
+            arg.format(**self.command_expansion_vars)
+            for arg in command
+        ]
 
     @cached_property
     def command_str(self):
@@ -687,7 +695,7 @@ class SlurmExecutionDriver(ExecutionDriver):
         :rtype: list of string
         """
         slurm_config = self.campaign.process.get('config', {})
-        return slurm_config.get('options') or []
+        return slurm_config.get('srun_options') or []
 
     @cached_property
     def command(self):
@@ -697,9 +705,16 @@ class SlurmExecutionDriver(ExecutionDriver):
         """
         srun_options = copy.copy(self.common_srun_options)
         srun_options += self.execution.get('srun_options') or []
+        self._parse_srun_options(srun_options)
         srun_options.append('--nodelist=' + ','.join(self.srun_nodes))
         command = super(SlurmExecutionDriver, self).command
         return [self.srun] + srun_options + command
+
+    def _parse_srun_options(self, options):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-n', '--ntasks', default=1)
+        args = parser.parse_known_args(options)
+        self.command_expansion_vars['process_count'] = args[0].ntasks
 
     @cached_property
     def srun_nodes(self):
