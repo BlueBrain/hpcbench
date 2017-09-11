@@ -4,7 +4,11 @@ process:
         srun: srun-ut
         srun_options:
             - --exclusive
+            - --ntasks=42
 benchmarks:
     '*':
         test-slurm:
             type: fake
+            attributes:
+                input:
+                - "{process_count}"

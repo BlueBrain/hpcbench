@@ -159,6 +159,9 @@ class IMB(Benchmark):
         ALL_TO_ALL,
         ALL_GATHER,
     ]
+    DEFAULT_ARGUMENTS = {
+        ALL_GATHER: ["-nmpmin", "{process_count}"]
+    }
 
     def __init__(self):
         super(IMB, self).__init__(
@@ -166,6 +169,7 @@ class IMB(Benchmark):
                 data="",
                 executable=IMB.DEFAULT_EXECUTABLE,
                 categories=IMB.DEFAULT_CATEGORIES,
+                arguments=IMB.DEFAULT_ARGUMENTS,
             )
         )
     name = 'imb'
@@ -181,9 +185,10 @@ class IMB(Benchmark):
     @property
     def execution_matrix(self):
         for category in self.attributes['categories']:
+            arguments = self.attributes['arguments'].get(category) or []
             yield dict(
                 category=category,
-                command=[self.executable, category],
+                command=[self.executable, category] + arguments,
             )
 
     @cached_property
