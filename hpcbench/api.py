@@ -121,6 +121,17 @@ class Benchmark(with_metaclass(ABCMeta, object)):
 
         * *command*:
             a list of string containing the command to execute.
+            Variable substitution is performed on every element
+            on the list, using the Python str.format
+            method.
+
+            Here is the list of available variables:
+                process_count: number of processes to run.
+                it provides the --ntasks value when using
+                the `srun` execution layer.
+
+            See https://docs.python.org/2/library/stdtypes.html#str.format
+
         * category*:
             a string used to group commands together.
             Most benchmark class may only need one category.
