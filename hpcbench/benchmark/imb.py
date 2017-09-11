@@ -169,17 +169,18 @@ class IMB(Benchmark):
     PING_PONG = 'PingPong'
     ALL_TO_ALL = 'Alltoallv'
     ALL_GATHER = 'Allgather'
+    DEFAULT_CATEGORIES = [
+        PING_PONG,
+        ALL_TO_ALL,
+        ALL_GATHER,
+    ]
 
     def __init__(self):
         super(IMB, self).__init__(
             attributes=dict(
                 data="",
                 executable=IMB.DEFAULT_EXECUTABLE,
-                categories=[
-                    IMB.PING_PONG,
-                    IMB.ALL_TO_ALL,
-                    IMB.ALL_GATHER,
-                ],
+                categories=IMB.DEFAULT_CATEGORIES,
             )
         )
     name = 'imb'

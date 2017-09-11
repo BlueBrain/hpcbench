@@ -27,7 +27,7 @@ class TestImb(AbstractBenchmarkTest, unittest.TestCase):
         return TestImb.EXPECTED_METRICS[category]
 
     def get_benchmark_categories(self):
-        return [self.get_benchmark_clazz().PING_PONG,self.get_benchmark_clazz().ALL_TO_ALL,self.get_benchmark_clazz().ALL_GATHER]
+        return IMB.DEFAULT_CATEGORIES
 
     @property
     def attributes(self):
