@@ -11,12 +11,12 @@ class TestImb(AbstractBenchmarkTest, unittest.TestCase):
             bandwidth=8344.45,
         ),
         IMB.ALL_TO_ALL: dict(
-            latency=0.20,
-            bandwidth=8344.45,
+            latency=0.38,
+            bandwidth=3124.05,
         ),
         IMB.ALL_GATHER: dict(
-            latency=0.20,
-            bandwidth=8344.45,
+            latency=0.65,
+            bandwidth=3959.58,
         ),
     }
 
