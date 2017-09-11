@@ -1,7 +1,7 @@
 """The Intel MPI Benchmarks
     https://software.intel.com/en-us/articles/intel-mpi-benchmarks
 """
-from abc import abstractmethod
+from abc import abstractmethod, abstractproperty
 import re
 
 from cached_property import cached_property
@@ -15,25 +15,35 @@ from hpcbench.toolbox.process import find_executable
 
 
 class IMBExtractor(MetricsExtractor):
-    @property
+    """Abstract class for IMB benchmark metrics extractor
+    """
+    @abstractproperty
     def metrics(self):
         """ The metrics to be extracted.
             This property can not be replaced, but can be mutated as required
         """
-        return self.METRICS
+
+    @abstractproperty
+    def stdout_ignore_prior(self):
+        """Ignore stdout until this line"""
+
+    @cached_property
+    def metrics_names(self):
+        """get metrics names"""
+        return set(self.metrics)
 
     def extract(self, outdir, metas):
         # parse stdout and extract desired metrics
         with open(self.stdout(outdir)) as istr:
             for line in istr:
-                if line.strip() == self.STDOUT_IGNORE_PRIOR:
+                if line.strip() == self.stdout_ignore_prior:
                     break
             for line in istr:
                 self.process_line(line.strip())
         return self.epilog()
 
     @abstractmethod
-    def process_line(self):
+    def process_line(self, line):
         """Process a line
         """
 
@@ -44,22 +54,27 @@ class IMBExtractor(MetricsExtractor):
 
 
 class IMBPingPongExtractor(IMBExtractor):
-    """Ignore stdout until this line"""
-    STDOUT_IGNORE_PRIOR = "# Benchmarking PingPong"
-    METRICS = dict(
-        latency=Metrics.Second,
-        bandwidth=Metrics.MegaBytesPerSecond,
-    )
-    METRICS_NAMES = set(METRICS)
+    """Metrics extractor for PingPong IMB benchmark"""
 
     LATENCY_BANDWIDTH = re.compile(
-        r'^\s*(\d)+\s+\d+\s+([0-9]*\.?[0-9]+)[\s]+([0-9]*\.?[0-9]+)'
+        r'^\s*(\d+)\s+\d+\s+(\d*\.?\d+)[\s]+(\d*\.?\d+)'
     )
 
     def __init__(self):
         super(IMBPingPongExtractor, self).__init__()
         self.s_latency = set()
         self.s_bandwidth = set()
+
+    @cached_property
+    def metrics(self):
+        return dict(
+            latency=Metrics.Second,
+            bandwidth=Metrics.MegaBytesPerSecond,
+        )
+
+    @cached_property
+    def stdout_ignore_prior(self):
+        return "# Benchmarking PingPong"
 
     def process_line(self, line):
         search = self.LATENCY_BANDWIDTH.search(line)
@@ -74,7 +89,7 @@ class IMBPingPongExtractor(IMBExtractor):
         metrics["latency"] = min(self.s_latency)
         metrics["bandwidth"] = max(self.s_bandwidth)
         # ensure all metrics have been extracted
-        unset_attributes = self.METRICS_NAMES - set(metrics)
+        unset_attributes = self.metrics_names - set(metrics)
         if any(unset_attributes):
             error = \
                 'Could not extract some metrics: %s\n' \
@@ -85,21 +100,26 @@ class IMBPingPongExtractor(IMBExtractor):
 
 
 class IMBAllToAllExtractor(IMBExtractor):
-    """Ignore stdout until this line"""
-    STDOUT_IGNORE_PRIOR = "# Benchmarking Alltoallv"
-    METRICS = dict(
-        latency=Metrics.Second,
-        bandwidth=Metrics.MegaBytesPerSecond,
-    )
-    METRICS_NAMES = set(METRICS)
+    """Metrics extractor for AllToAll IMB benchmark"""
 
     LATENCY_BANDWIDTH = re.compile(
-        r'^\s*(\d)+\s+\d+\s+[0-9]*\.?[0-9]+[\s]+[0-9]*\.?[0-9]+[\s]+([0-9]*\.?[0-9]+)'
+        r'^\s*(\d+)\s+\d+\s+\d*\.?\d+[\s]+\d*\.?\d+[\s]+(\d*\.?\d+)'
     )
 
     def __init__(self):
         super(IMBAllToAllExtractor, self).__init__()
         self.s_res = set()
+
+    @property
+    def metrics(self):
+        return dict(
+            latency=Metrics.Second,
+            bandwidth=Metrics.MegaBytesPerSecond,
+        )
+
+    @cached_property
+    def stdout_ignore_prior(self):
+        return "# Benchmarking Alltoallv"
 
     def process_line(self, line):
         search = self.LATENCY_BANDWIDTH.search(line)
@@ -113,7 +133,7 @@ class IMBAllToAllExtractor(IMBExtractor):
         metrics["latency"] = min(self.s_res)
         metrics["bandwidth"] = max(self.s_res)
         # ensure all metrics have been extracted
-        unset_attributes = self.METRICS_NAMES - set(metrics)
+        unset_attributes = self.metrics_names - set(metrics)
         if any(unset_attributes):
             error = \
                 'Could not extract some metrics: %s\n' \
@@ -124,24 +144,25 @@ class IMBAllToAllExtractor(IMBExtractor):
 
 
 class IMBAllGatherExtractor(IMBExtractor):
-    """Ignore stdout until this line"""
-    STDOUT_IGNORE_PRIOR = "# Benchmarking Allgather"
-    METRICS = dict(
-        latency=Metrics.Second,
-        bandwidth=Metrics.MegaBytesPerSecond,
-    )
-    METRICS_NAMES = set(METRICS)
-
-    LATENCY_BANDWIDTH = re.compile(
-        r'^\s*(\d)+\s+\d+\s+[0-9]*\.?[0-9]+[\s]+[0-9]*\.?[0-9]+[\s]+([0-9]*\.?[0-9]+)'
-    )
+    """Metrics extractor for AllGather IMB benchmark"""
 
     def __init__(self):
         super(IMBAllGatherExtractor, self).__init__()
         self.s_res = set()
 
+    @property
+    def metrics(self):
+        return dict(
+            latency=Metrics.Second,
+            bandwidth=Metrics.MegaBytesPerSecond,
+        )
+
+    @cached_property
+    def stdout_ignore_prior(self):
+        return "# Benchmarking Allgather"
+
     def process_line(self, line):
-        search = self.LATENCY_BANDWIDTH.search(line)
+        search = IMBAllToAllExtractor.LATENCY_BANDWIDTH.search(line)
         if search:
             byte = int(search.group(1))
             if byte != 0:
@@ -152,7 +173,7 @@ class IMBAllGatherExtractor(IMBExtractor):
         metrics["latency"] = min(self.s_res)
         metrics["bandwidth"] = max(self.s_res)
         # ensure all metrics have been extracted
-        unset_attributes = self.METRICS_NAMES - set(metrics)
+        unset_attributes = self.metrics_names - set(metrics)
         if any(unset_attributes):
             error = \
                 'Could not extract some metrics: %s\n' \
