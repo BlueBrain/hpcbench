@@ -18,6 +18,16 @@ from hpcbench.toolbox.process import find_executable
 
 
 class IOSSDExtractor(MetricsExtractor):
+    """Ignore stdout until this line"""
+    STDOUT_IGNORE_PRIOR = "1024+0 records out"
+    METRICS = dict(
+        bandwidth=Metrics.MegaBytesPerSecond,
+    )
+    METRICS_NAMES = set(METRICS)
+
+    BANDWIDTH = re.compile(
+        r'^\s*\d+\s\w+\s\w+\s\w+\s[0-9]*\.?[0-9]+\s\w+\s[(](\d+)'
+    )
     @property
     def metrics(self):
         """ The metrics to be extracted.
@@ -35,84 +45,34 @@ class IOSSDExtractor(MetricsExtractor):
                 self.process_line(line.strip())
         return self.epilog()
 
-    @abstractmethod
-    def process_line(self):
-        """Process a line
-        """
+    def process_line(self, line):
+        search = self.BANDWIDTH.search(line)
+        if search:
+            self.s_bandwidth.add(float(int(search.group(1))/(1024*1024)))
 
-    @abstractmethod
     def epilog(self):
-        """:return: extracted metrics as a dictionary
-        """
-
+        metrics = {}
+        metrics["bandwidth"] = max(self.s_bandwidth)
+        # ensure all metrics have been extracted
+        unset_attributes = self.METRICS_NAMES - set(metrics)
+        if any(unset_attributes):
+            error = \
+                'Could not extract some metrics: %s\n' \
+                'metrics setted are: %s'
+            raise Exception(error % (' ,'.join(unset_attributes),
+                                     ' ,'.join(set(metrics))))
+        return metrics
 
 class IOSSDWriteExtractor(IOSSDExtractor):
-    """Ignore stdout until this line"""
-    STDOUT_IGNORE_PRIOR = "1024+0 records out"
-    METRICS = dict(
-        bandwidth=Metrics.MegaBytesPerSecond,
-    )
-    METRICS_NAMES = set(METRICS)
-
-    BANDWIDTH = re.compile(
-        r'^\s*\d+\s\w+\s\w+\s\w+\s[0-9]*\.?[0-9]+\s\w+\s[(](\d+)'
-    )
-
     def __init__(self):
         super(IOSSDWriteExtractor, self).__init__()
         self.s_bandwidth = set()
 
-    def process_line(self, line):
-        search = self.BANDWIDTH.search(line)
-        if search:
-            self.s_bandwidth.add(float(int(search.group(1))/(1024*1024)))
-
-    def epilog(self):
-        metrics = {}
-        metrics["bandwidth"] = max(self.s_bandwidth)
-        # ensure all metrics have been extracted
-        unset_attributes = self.METRICS_NAMES - set(metrics)
-        if any(unset_attributes):
-            error = \
-                'Could not extract some metrics: %s\n' \
-                'metrics setted are: %s'
-            raise Exception(error % (' ,'.join(unset_attributes),
-                                     ' ,'.join(set(metrics))))
-        return metrics
 
 class IOSSDReadExtractor(IOSSDExtractor):
-    """Ignore stdout until this line"""
-    STDOUT_IGNORE_PRIOR = "1024+0 records out"
-    METRICS = dict(
-        bandwidth=Metrics.MegaBytesPerSecond,
-    )
-    METRICS_NAMES = set(METRICS)
-
-    BANDWIDTH = re.compile(
-        r'^\s*\d+\s\w+\s\w+\s\w+\s[0-9]*\.?[0-9]+\s\w+\s[(](\d+)'
-    )
-
     def __init__(self):
         super(IOSSDReadExtractor, self).__init__()
         self.s_bandwidth = set()
-
-    def process_line(self, line):
-        search = self.BANDWIDTH.search(line)
-        if search:
-            self.s_bandwidth.add(float(int(search.group(1))/(1024*1024)))
-
-    def epilog(self):
-        metrics = {}
-        metrics["bandwidth"] = max(self.s_bandwidth)
-        # ensure all metrics have been extracted
-        unset_attributes = self.METRICS_NAMES - set(metrics)
-        if any(unset_attributes):
-            error = \
-                'Could not extract some metrics: %s\n' \
-                'metrics setted are: %s'
-            raise Exception(error % (' ,'.join(unset_attributes),
-                                     ' ,'.join(set(metrics))))
-        return metrics
 
 
 class IOSSD(Benchmark):
