@@ -145,7 +145,6 @@ class IMBAllToAllExtractor(IMBExtractor):
 
 class IMBAllGatherExtractor(IMBExtractor):
     """Metrics extractor for AllGather IMB benchmark"""
-
     LATENCY_BANDWIDTH = re.compile(
         r'^\s*(\d)+\s+\d+\s+\d*\.?\d+[\s]+\d*\.?\d+[\s]+(\d*\.?\d+)'
     )
@@ -166,7 +165,7 @@ class IMBAllGatherExtractor(IMBExtractor):
         return "# Benchmarking Allgather"
 
     def process_line(self, line):
-        search = self.LATENCY_BANDWIDTH.search(line)
+        search = IMBAllToAllExtractor.LATENCY_BANDWIDTH.search(line)
         if search:
             byte = int(search.group(1))
             if byte != 0:
