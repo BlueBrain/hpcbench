@@ -43,12 +43,12 @@ class IMBExtractor(MetricsExtractor):
         """
 
 
-class IMBPingPongExtractor(MetricsExtractor):
+class IMBPingPongExtractor(IMBExtractor):
     """Ignore stdout until this line"""
     STDOUT_IGNORE_PRIOR = "# Benchmarking PingPong"
     METRICS = dict(
         latency=Metrics.Second,
-        bandwidth=Metrics.Flops,
+        bandwidth=Metrics.MegaBytesPerSecond,
     )
     METRICS_NAMES = set(METRICS)
 
@@ -69,7 +69,8 @@ class IMBPingPongExtractor(MetricsExtractor):
                 self.s_latency.add(float(search.group(2)))
                 self.s_bandwidth.add(float(search.group(3)))
 
-    def epilog(self, metrics):
+    def epilog(self):
+        metrics = {}
         metrics["latency"] = min(self.s_latency)
         metrics["bandwidth"] = max(self.s_bandwidth)
         # ensure all metrics have been extracted
@@ -83,46 +84,82 @@ class IMBPingPongExtractor(MetricsExtractor):
         return metrics
 
 
-class IMBAllToAllExtractor(MetricsExtractor):
+class IMBAllToAllExtractor(IMBExtractor):
     """Ignore stdout until this line"""
-    STDOUT_IGNORE_PRIOR = "# Benchmarking Allgather"
+    STDOUT_IGNORE_PRIOR = "# Benchmarking Alltoallv"
     METRICS = dict(
-        # FIXME
+        latency=Metrics.Second,
+        bandwidth=Metrics.MegaBytesPerSecond,
     )
     METRICS_NAMES = set(METRICS)
+
+    LATENCY_BANDWIDTH = re.compile(
+        r'^\s*(\d)+\s+\d+\s+[0-9]*\.?[0-9]+[\s]+[0-9]*\.?[0-9]+[\s]+([0-9]*\.?[0-9]+)'
+    )
 
     def __init__(self):
         super(IMBAllToAllExtractor, self).__init__()
-        # TODO TIM: define member variables if necessary
+        self.s_res = set()
 
     def process_line(self, line):
-        # TODO TIM: extract data from line
-        pass
+        search = self.LATENCY_BANDWIDTH.search(line)
+        if search:
+            byte = int(search.group(1))
+            if byte != 0:
+                self.s_res.add(float(search.group(2)))
 
     def epilog(self):
-        # TODO TIM: return the metrics
-        pass
+        metrics = {}
+        metrics["latency"] = min(self.s_res)
+        metrics["bandwidth"] = max(self.s_res)
+        # ensure all metrics have been extracted
+        unset_attributes = self.METRICS_NAMES - set(metrics)
+        if any(unset_attributes):
+            error = \
+                'Could not extract some metrics: %s\n' \
+                'metrics setted are: %s'
+            raise Exception(error % (' ,'.join(unset_attributes),
+                                     ' ,'.join(set(metrics))))
+        return metrics
 
 
-class IMBAllGatherExtractor(MetricsExtractor):
+class IMBAllGatherExtractor(IMBExtractor):
     """Ignore stdout until this line"""
     STDOUT_IGNORE_PRIOR = "# Benchmarking Allgather"
     METRICS = dict(
-        # FIXME
+        latency=Metrics.Second,
+        bandwidth=Metrics.MegaBytesPerSecond,
     )
     METRICS_NAMES = set(METRICS)
 
+    LATENCY_BANDWIDTH = re.compile(
+        r'^\s*(\d)+\s+\d+\s+[0-9]*\.?[0-9]+[\s]+[0-9]*\.?[0-9]+[\s]+([0-9]*\.?[0-9]+)'
+    )
+
     def __init__(self):
         super(IMBAllGatherExtractor, self).__init__()
-        # TODO TIM: define member variables if necessary
+        self.s_res = set()
 
     def process_line(self, line):
-        # TODO TIM: extract data from line
-        pass
+        search = self.LATENCY_BANDWIDTH.search(line)
+        if search:
+            byte = int(search.group(1))
+            if byte != 0:
+                self.s_res.add(float(search.group(2)))
 
     def epilog(self):
-        # TODO TIM: return the metrics
-        pass
+        metrics = {}
+        metrics["latency"] = min(self.s_res)
+        metrics["bandwidth"] = max(self.s_res)
+        # ensure all metrics have been extracted
+        unset_attributes = self.METRICS_NAMES - set(metrics)
+        if any(unset_attributes):
+            error = \
+                'Could not extract some metrics: %s\n' \
+                'metrics setted are: %s'
+            raise Exception(error % (' ,'.join(unset_attributes),
+                                     ' ,'.join(set(metrics))))
+        return metrics
 
 
 class IMB(Benchmark):
@@ -136,7 +173,6 @@ class IMB(Benchmark):
     def __init__(self):
         super(IMB, self).__init__(
             attributes=dict(
-                threads=IMB.DEFAULT_THREADS,
                 data="",
                 executable=IMB.DEFAULT_EXECUTABLE,
                 categories=[
