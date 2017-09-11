@@ -1,9 +1,12 @@
 from abc import ABCMeta, abstractmethod
 from collections import Mapping
 import inspect
+import logging
+import os
 import os.path as osp
 import shutil
 
+from cached_property import cached_property
 from six import with_metaclass
 import yaml
 
@@ -20,6 +23,8 @@ from hpcbench.toolbox.contextlib_ext import (
     mkdtemp,
     pushd,
 )
+
+LOGGER = logging.getLogger(__name__)
 
 
 class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
@@ -55,12 +60,21 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
         """
         return {}
 
+    @cached_property
+    def logger(self):
+        return LOGGER.getChild(self.get_benchmark_clazz().name)
+
     def create_sample_run(self, category):
         pyfile = inspect.getfile(self.__class__)
-        for output in ['stdout', 'stderr']:
-            out = osp.splitext(pyfile)[0] + '.' + category + '.' + output
-            if osp.isfile(out):
-                shutil.copy(out, output + '.txt')
+        prefix = osp.splitext(osp.basename(pyfile))[0] + '.' + category + '.'
+        test_dir = osp.dirname(pyfile)
+        for file_ in os.listdir(test_dir):
+            if file_.startswith(prefix):
+                src_file = osp.join(test_dir, file_)
+                dest = file_[len(prefix):] + '.txt'
+                if osp.isfile(src_file):
+                    self.logger.info('using file: %s', src_file)
+                    shutil.copy(src_file, dest)
 
     def test_class_has_name(self):
         clazz_name = self.get_benchmark_clazz().name
@@ -78,6 +92,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
             self.check_category_metrics(category)
 
     def check_category_metrics(self, category):
+        self.logger.info('testing metrics of category %s', category)
         self.maxDiff = None
         with mkdtemp() as top_dir, pushd(top_dir):
             with open(YAML_REPORT_FILE, 'w') as ostr:
