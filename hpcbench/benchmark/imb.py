@@ -129,9 +129,10 @@ class IMBAllToAllExtractor(IMBExtractor):
                 self.s_res.add(float(search.group(2)))
 
     def epilog(self):
-        metrics = {}
-        metrics["latency"] = min(self.s_res)
-        metrics["bandwidth"] = max(self.s_res)
+        metrics = dict(
+            latency=min(self.s_res),
+            bandwidth=max(self.s_res),
+        )
         # ensure all metrics have been extracted
         unset_attributes = self.metrics_names - set(metrics)
         if any(unset_attributes):
@@ -143,44 +144,15 @@ class IMBAllToAllExtractor(IMBExtractor):
         return metrics
 
 
-class IMBAllGatherExtractor(IMBExtractor):
+class IMBAllGatherExtractor(IMBAllToAllExtractor):
     """Metrics extractor for AllGather IMB benchmark"""
 
     def __init__(self):
         super(IMBAllGatherExtractor, self).__init__()
-        self.s_res = set()
-
-    @property
-    def metrics(self):
-        return dict(
-            latency=Metrics.Second,
-            bandwidth=Metrics.MegaBytesPerSecond,
-        )
 
     @cached_property
     def stdout_ignore_prior(self):
         return "# Benchmarking Allgather"
-
-    def process_line(self, line):
-        search = IMBAllToAllExtractor.LATENCY_BANDWIDTH.search(line)
-        if search:
-            byte = int(search.group(1))
-            if byte != 0:
-                self.s_res.add(float(search.group(2)))
-
-    def epilog(self):
-        metrics = {}
-        metrics["latency"] = min(self.s_res)
-        metrics["bandwidth"] = max(self.s_res)
-        # ensure all metrics have been extracted
-        unset_attributes = self.metrics_names - set(metrics)
-        if any(unset_attributes):
-            error = \
-                'Could not extract some metrics: %s\n' \
-                'metrics setted are: %s'
-            raise Exception(error % (' ,'.join(unset_attributes),
-                                     ' ,'.join(set(metrics))))
-        return metrics
 
 
 class IMB(Benchmark):
