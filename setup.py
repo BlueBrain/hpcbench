@@ -66,5 +66,6 @@ setup(
         sysbench = hpcbench.benchmark.sysbench
         stream = hpcbench.benchmark.stream
         hpl = hpcbench.benchmark.hpl
+        imb = hpcbench.benchmark.imb
     """
 )

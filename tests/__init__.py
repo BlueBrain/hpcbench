@@ -6,6 +6,7 @@ import tempfile
 from textwrap import dedent
 
 from cached_property import cached_property
+import six
 
 from hpcbench.api import (
     Benchmark,
@@ -64,7 +65,7 @@ class FakeBenchmark(Benchmark):
     def __init__(self):
         super(FakeBenchmark, self).__init__(
             attributes=dict(
-                input=FakeBenchmark.INPUTS
+                input=FakeBenchmark.INPUTS,
             )
         )
 
@@ -80,15 +81,15 @@ class FakeBenchmark(Benchmark):
 
     @cached_property
     def execution_matrix(self):
-        return [dict(
-            category='main',
-            command=[
-                sys.executable, 'test.py', str(value)
-            ],
-            metas=dict(
-                field=value / 10
+        return [
+            dict(
+                category='main',
+                command=[
+                    sys.executable, 'test.py', str(value)
+                ],
+                metas=dict(field=value / 10)
+                if not isinstance(value, six.string_types) else None
             )
-        )
             for value in self.attributes['input']
         ]
 
