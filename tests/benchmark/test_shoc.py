@@ -23,7 +23,7 @@ class TestShoc(AbstractBenchmarkTest, unittest.TestCase):
         return TestShoc.EXPECTED_METRICS
 
     def get_benchmark_categories(self):
-        return [self.get_benchmark_clazz().DEFAULT_DEVICE]
+        return [self.get_benchmark_clazz().CATEGORY]
 
     @property
     def attributes(self):

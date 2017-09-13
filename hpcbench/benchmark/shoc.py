@@ -1,28 +1,19 @@
 """The Scalable HeterOgeneous Computing (SHOC) Benchmark Suite
    https://github.com/vetter/shoc
 """
-import os.path as osp
 import re
-import shutil
 
 from cached_property import cached_property
 
 from hpcbench.api import (
     Benchmark,
-    Metric,
     Metrics,
     MetricsExtractor,
 )
 from hpcbench.toolbox.process import find_executable
 
-class SHOCExtractor(MetricsExtractor):
-    REGEX = dict(
-        # this regex extract flops/bandwidth
-        result=re.compile(
-            r'^\s+[\w]+\:\s+(\d*\.?\d+)'
-        ),
-    )
 
+class SHOCExtractor(MetricsExtractor):
     METRICS = dict(
         h2d_bw=Metrics.MegaBytesPerSecond,
         d2h_bw=Metrics.MegaBytesPerSecond,
@@ -33,8 +24,18 @@ class SHOCExtractor(MetricsExtractor):
         lmem_readbw=Metrics.MegaBytesPerSecond,
         lmem_writebw=Metrics.MegaBytesPerSecond,
     )
-
     METRICS_NAMES = set(METRICS)
+    EXPR = re.compile(r'[\w]+\:\s+(\d*\.?\d+)')
+    MATCHING_LINES = {
+        'result for bspeed_download:': 'h2d_bw',
+        'result for bspeed_readback:': 'd2h_bw',
+        'result for maxspflops:': 'flops_sp',
+        'result for maxdpflops:': 'flops_dp',
+        'result for gmem_readbw:': 'gmem_readbw',
+        'result for gmem_writebw:': 'gmem_writebw',
+        'result for lmem_readbw:': 'lmem_readbw',
+        'result for lmem_writebw:': 'lmem_writebw'
+    }
 
     @property
     def metrics(self):
@@ -43,9 +44,9 @@ class SHOCExtractor(MetricsExtractor):
         """
         return SHOCExtractor.METRICS
 
-    def extract_value(self, line):
-        expr = re.compile(r'[\w]+\:\s+(\d*\.?\d+)')
-        value = expr.search(line).group(1)
+    @classmethod
+    def extract_value(cls, line):
+        value = cls.EXPR.search(line).group(1)
         return float(value)
 
     def extract(self, outdir, metas):
@@ -53,26 +54,16 @@ class SHOCExtractor(MetricsExtractor):
         # parse stdout and extract desired metrics
         with open(self.stdout(outdir)) as istr:
             for line in istr:
-                line = line.strip()
-                if line.find('result for bspeed_download:') != -1:
-                    metrics["h2d_bw"] = self.extract_value(line)
-                elif line.find('result for bspeed_readback:') != -1:
-                    metrics["d2h_bw"] =  self.extract_value(line)
-                elif line.find('result for maxspflops:') != -1:
-                    metrics["flops_sp"] = self.extract_value(line)
-                elif line.find('result for maxdpflops:') != -1:
-                    metrics["flops_dp"] = self.extract_value(line)
-                elif line.find('result for gmem_readbw:') != -1:
-                    metrics["gmem_readbw"] = self.extract_value(line)
-                elif line.find('result for gmem_writebw:') != -1:
-                    metrics["gmem_writebw"] = self.extract_value(line)
-                elif line.find('result for lmem_readbw:') != -1:
-                    metrics["lmem_readbw"] = self.extract_value(line)
-                elif line.find('result for lmem_writebw:') != -1:
-                    metrics["lmem_writebw"] = self.extract_value(line)
+                for match, attr in SHOCExtractor.MATCHING_LINES.items():
+                    if line.find(match) != -1:
+                        metrics[attr] = self.extract_value(line)
+                        break
+        return self.check_metrics(metrics)
 
+    @classmethod
+    def check_metrics(cls, metrics):
         # ensure all metrics have been extracted
-        unset_attributes = SHOCExtractor.METRICS_NAMES - set(metrics)
+        unset_attributes = cls.METRICS_NAMES - set(metrics)
         if any(unset_attributes):
             error = \
                 'Could not extract some metrics: %s\n' \
@@ -85,14 +76,14 @@ class SHOCExtractor(MetricsExtractor):
 class SHOC(Benchmark):
     """Benchmark wrapper for the SHOCbench utility
     """
-    DEFAULT_DEVICE = 'gpu'
+    DEFAULT_DEVICE = '0'
     DEFAULT_EXECUTABLE = 'shocdriver'
+    CATEGORY = 'gpu'
 
     def __init__(self):
-        # locate `stream_c` executable
+        # locate `shocdriver` executable
         super(SHOC, self).__init__(
             attributes=dict(
-                data="",
                 device=SHOC.DEFAULT_DEVICE,
                 executable=SHOC.DEFAULT_EXECUTABLE
             )
@@ -110,21 +101,16 @@ class SHOC(Benchmark):
     @property
     def execution_matrix(self):
         yield dict(
-            category=SHOC.DEFAULT_DEVICE,
+            category=SHOC.CATEGORY,
             command=[
-                './' + osp.basename(self.executable),
+                self.executable,
+                '-cuda',
             ],
             environment=dict(
-                CUDA_VISIBLE_DEVICES=str(self.attributes['device'][0]),
+                CUDA_VISIBLE_DEVICES=str(self.attributes['device']),
             ),
         )
 
     @cached_property
     def metrics_extractors(self):
         return SHOCExtractor()
-
-    def pre_execute(self, execution):
-        data = self.attributes['data']
-        with open('SHOC.dat', 'w') as ostr:
-            ostr.write(data)
-        shutil.copy(self.executable, '.')
