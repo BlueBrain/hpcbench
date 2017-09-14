@@ -1,7 +1,5 @@
 """Test basic functionality of BBP5
 """
-import re
-
 from cached_property import cached_property
 
 from hpcbench.api import (
@@ -22,6 +20,7 @@ class BASICExtractor(MetricsExtractor):
     )
 
     METRICS_NAMES = set(METRICS)
+
     @property
     def metrics(self):
         """ The metrics to be extracted.
