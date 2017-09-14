@@ -12,7 +12,7 @@ class TestHpl(AbstractBenchmarkTest, unittest.TestCase):
         size_q=2,
         time=0.29,
         flops=2.098e+01,
-        validity="PASSED",
+        validity=True,
         precision=0.0051555,
     )
 

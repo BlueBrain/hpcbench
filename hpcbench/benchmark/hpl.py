@@ -50,7 +50,7 @@ class HPLExtractor(MetricsExtractor):
         size_q=Metrics.Cardinal,
         time=Metrics.Second,
         flops=Metrics.Flops,
-        validity=Metrics.Validity,
+        validity=Metrics.Bool,
         precision=Metric(unit='', type=float)
     )
 
@@ -85,7 +85,10 @@ class HPLExtractor(MetricsExtractor):
                             metrics["flops"] = float(search.group(6))
                         elif sect == 'precision':
                             metrics["precision"] = float(search.group(1))
-                            metrics["validity"] = str(search.group(2))
+                            if str(search.group(2)) == "PASSED":
+                                metrics["validity"] = True
+                            else:
+                                metrics["validity"] = False
 
         # ensure all metrics have been extracted
         unset_attributes = HPLExtractor.METRICS_NAMES - set(metrics)
