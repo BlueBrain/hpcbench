@@ -1,0 +1,19 @@
+Connecting to host bbpviz028, port 5201
+[  4] local 148.187.84.12 port 53604 connected to 148.187.84.48 port 5201
+[ ID] Interval           Transfer     Bandwidth       Retr  Cwnd
+[  4]   0.00-1.00   sec   281 MBytes  2.36 Gbits/sec   19    120 KBytes
+[  4]   1.00-2.00   sec   446 MBytes  3.74 Gbits/sec    0    156 KBytes
+[  4]   2.00-3.00   sec   457 MBytes  3.83 Gbits/sec    0    182 KBytes
+[  4]   3.00-4.00   sec   601 MBytes  5.04 Gbits/sec    0    219 KBytes
+[  4]   4.00-5.00   sec   716 MBytes  6.00 Gbits/sec    0    259 KBytes
+[  4]   5.00-6.00   sec   830 MBytes  6.96 Gbits/sec    0    293 KBytes
+[  4]   6.00-7.00   sec   843 MBytes  7.07 Gbits/sec    0    322 KBytes
+[  4]   7.00-8.00   sec   873 MBytes  7.32 Gbits/sec    0    346 KBytes
+[  4]   8.00-9.00   sec   890 MBytes  7.47 Gbits/sec    0    369 KBytes
+[  4]   9.00-10.00  sec   926 MBytes  7.77 Gbits/sec    0    393 KBytes
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  4]   0.00-10.00  sec  6.70 GBytes  5.76 Gbits/sec   19             sender
+[  4]   0.00-10.00  sec  6.70 GBytes  5.75 Gbits/sec                  receiver
+
+iperf Done.
