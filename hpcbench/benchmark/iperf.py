@@ -18,12 +18,6 @@ class IPERFExtractor(MetricsExtractor):
         "- - - - - - - - - - - - - - - - - - - - - - - - -"
     )
 
-    REGEX = dict(
-        bandwidth=re.compile(
-          r'^\[ \s\d\] \s \d*.\d*-\d*.\d*\s \w+\s+\d+\s\w+\s (\d+.\d+)'
-        ),
-    )
-
     METRICS = dict(
         bandwidth_receiver=Metrics.MegaBytesPerSecond,
     )
