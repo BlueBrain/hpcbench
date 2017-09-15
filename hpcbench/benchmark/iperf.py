@@ -1,7 +1,7 @@
 """Iperf benchmark
     https://github.com/esnet/iperf
 """
-import re
+import json
 
 from cached_property import cached_property
 
@@ -12,85 +12,76 @@ from hpcbench.api import (
 )
 from hpcbench.toolbox.process import find_executable
 
+
 class IPERFExtractor(MetricsExtractor):
-    """Ignore stdout until this line"""
-    STDOUT_IGNORE_PRIOR = (
-        "- - - - - - - - - - - - - - - - - - - - - - - - -"
-    )
-
-    METRICS = dict(
-        bandwidth_receiver=Metrics.MegaBytesPerSecond,
-    )
-
-    METRICS_NAMES = set(METRICS)
-
+    """Parse JSON file written by stream to extract interested metrics
+    """
     @property
     def metrics(self):
-        """ The metrics to be extracted.
-            This property can not be replaced, but can be mutated as required
-        """
-        return IPERFExtractor.METRICS
+        return dict(
+            bandwidth_receiver=Metrics.MegaBytesPerSecond,
+            bandwidth_sender=Metrics.MegaBytesPerSecond,
+            max_bandwidth=Metrics.MegaBytesPerSecond,
+            retransmits=Metrics.Cardinal,
+        )
 
     def extract(self, outdir, metas):
-        metrics = {}
-        # parse stdout and extract desired metrics
+        bits_in_mb = 8 * 1024 * 1024
         with open(self.stdout(outdir)) as istr:
-            for line in istr:
-                if line.strip() == IPERFExtractor.STDOUT_IGNORE_PRIOR:
-                    break
-            for line in istr:
-                line = line.strip()
-                if line.find("receiver") != -1:
-                    split = line.split()
-                    metrics["bandwidth_receiver"] = float(split[6])
-
-        # ensure all metrics have been extracted
-        unset_attributes = IPERFExtractor.METRICS_NAMES - set(metrics)
-        if any(unset_attributes):
-            error = \
-                'Could not extract some metrics: %s\n' \
-                'metrics setted are: %s'
-            raise Exception(error % (' ,'.join(unset_attributes),
-                                     ' ,'.join(set(metrics))))
-        return metrics
+            data = json.load(istr)
+        max_bits_per_second = max(
+            [
+                interval['sum']['bits_per_second']
+                for interval in data['intervals']
+            ]
+        )
+        sent = data['end']['sum_sent']
+        received = data['end']['sum_received']
+        return dict(
+            max_bandwidth=max_bits_per_second / bits_in_mb,
+            bandwidth_receiver=received['bits_per_second'] / bits_in_mb,
+            bandwidth_sender=sent['bits_per_second'] / bits_in_mb,
+            retransmits=sent['retransmits']
+        )
 
 
-class IPERF(Benchmark):
+class Iperf(Benchmark):
     """Benchmark wrapper for the HPLbench utility
     """
-    DEFAULT_DEVICE = 'cpu'
+    name = 'iperf'
+
+    description = "Provides TCP benchmark."
+
+    DEFAULT_DEVICE = 'network'
     DEFAULT_EXECUTABLE = 'iperf3'
-    DEFAULT_CLIENT = "todefine"
+    DEFAULT_SERVER = "localhost"
 
     def __init__(self):
         # locate `stream_c` executable
-        super(IPERF, self).__init__(
+        super(Iperf, self).__init__(
             attributes=dict(
-                device=IPERF.DEFAULT_DEVICE,
-                executable=IPERF.DEFAULT_EXECUTABLE
+                executable=Iperf.DEFAULT_EXECUTABLE,
+                server=Iperf.DEFAULT_SERVER,
+                options=['-w', '1024k'],
             )
         )
-    name = 'iperf3'
-
-    description = "Provides TCB benchmark."
 
     @cached_property
     def executable(self):
-        """Get absolute path to executable
+        """Get absolute path to iperf executable
         """
         return find_executable(self.attributes['executable'])
 
     @property
     def execution_matrix(self):
         yield dict(
-            category=IPERF.DEFAULT_DEVICE,
+            category=Iperf.DEFAULT_DEVICE,
             command=[
                 self.executable,
                 '-c',
-                IPERF.DEFAULT_CLIENT,
-                '-w',
-                '1024k',
-            ],
+                self.attributes['server'],
+                '-J',
+            ] + self.attributes['options'],
         )
 
     @cached_property

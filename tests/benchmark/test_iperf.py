@@ -1,22 +1,25 @@
 import unittest
 
-from hpcbench.benchmark.iperf import IPERF
+from hpcbench.benchmark.iperf import Iperf
 from . benchmark import AbstractBenchmarkTest
 
 
 class TestIperf(AbstractBenchmarkTest, unittest.TestCase):
     EXPECTED_METRICS = dict(
-        bandwidth_receiver=5.75,
+        bandwidth_receiver=13.488642581094329,
+        bandwidth_sender=13.803695281821934,
+        max_bandwidth=14.991833899605632,
+        retransmits=42,
     )
 
     def get_benchmark_clazz(self):
-        return IPERF
+        return Iperf
 
     def get_expected_metrics(self, category):
         return TestIperf.EXPECTED_METRICS
 
     def get_benchmark_categories(self):
-        return [self.get_benchmark_clazz().DEFAULT_DEVICE]
+        return [Iperf.DEFAULT_DEVICE]
 
     @property
     def attributes(self):
