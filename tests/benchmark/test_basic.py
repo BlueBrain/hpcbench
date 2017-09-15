@@ -1,28 +1,25 @@
 import unittest
 
-from hpcbench.benchmark.basic import BASIC
+from hpcbench.benchmark.basic import Basic
 from . benchmark import AbstractBenchmarkTest
 
 
 class TestBasic(AbstractBenchmarkTest, unittest.TestCase):
     EXPECTED_METRICS = {
-        'fs_local':True,
-        'fs_gpfs':True,
-        'in_network':True,
-        'out_network':True,
-        'hello':True,
+        'fs_local': True,
+        'fs_network': True,
+        'outside_network': True,
+        'hello_world': False,
     }
 
     def get_benchmark_clazz(self):
-        return BASIC
+        return Basic
 
     def get_expected_metrics(self, category):
         return TestBasic.EXPECTED_METRICS
-    def get_benchmark_categories(self):
-        return [self.get_benchmark_clazz().DEFAULT_DEVICE]
 
-    @property
-    def attributes(self):
-        return dict(
-            executable='/path/to/fake'
-        )
+    def get_benchmark_categories(self):
+        return [Basic.CATEGORY]
+
+    def check_executable_availability(self):
+        return True

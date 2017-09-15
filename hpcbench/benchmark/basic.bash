@@ -1,62 +1,68 @@
- #!/bin/bash
+#!/bin/bash
 
-LOCAL_PATH=$PWD
-#to define
-GPFS_PATH=/gpfs/bbp.cscs.ch/project/proj16/
+RUN_PATH="$PWD"
+LOCAL_PATH="${LOCAL_PATH:-$PWD}"
+NETWORK_PATH="${NETWORK_PATH:-/gpfs/bbp.cscs.ch/project/proj16/}"
 
-function check {
+# URL behind proxy
+# 200 bytes website, fastest of the world
+OUTSIDE_URL="${OUTSIDE_URL:-www.perdu.com}"
+
+INSIDE_URL="${INSIDE_URL:-}"
+
+check() {
     if [ $? -eq 0 ]; then
-        echo $1 $2 OK
+        echo "$1" "$2" OK
     else
-        echo $1 $2 OK
+        echo "$1" "$2" KO
     fi
 }
 
-function basic {
-    mkdir test  > /dev/null 2>&1
-    check $1 mkdir
-    cd test  > /dev/null 2>&1
-    check $1 cd
-    > test.txt  > /dev/null 2>&1
-    check $1 \>
-    find test.txt > /dev/null 2>&1
-    check $1 find
-    echo "Hello BBP5." > test.txt
-    check $1 echo
-    grep "Hello" test.txt > /dev/null 2>&1
-    check $1 grep
-    mv test.txt rename.txt  > /dev/null 2>&1
-    check $1 mv
-    cp rename.txt rename1.txt  > /dev/null 2>&1
-    check $1 cp
-    rm rename.txt rename1.txt  > /dev/null 2>&1
-    check $1 rm
-    cd ..  > /dev/null 2>&1
-    rm -r test  > /dev/null 2>&1
+basic() {
+    mkdir test >&2
+    check "$1" mkdir
+    cd test >&2
+    check "$1" cd
+    touch test.txt >&2
+    check "$1" touch
+    find test.txt >&2
+    check "$1" find
+    echo "Hello BB5." > test.txt
+    check "$1" write
+    grep "Hello" test.txt >&2
+    check "$1" grep
+    mv test.txt rename.txt >&2
+    check "$1" mv
+    cp rename.txt rename1.txt >&2
+    check "$1" cp
+    rm rename.txt rename1.txt >&2
+    check "$1" rm
+    cd .. >&2
+    rm -r test >&2
 }
 
-function local_read_write {
-    cd $LOCAL_PATH
+local_read_write() {
+    cd "$LOCAL_PATH"
     basic fs_local
 }
 
-function gpfs_read_write {
-    cd $GPFS_PATH
-    basic fs_gpfs
+gpfs_read_write() {
+    cd "$NETWORK_PATH"
+    basic fs_network
 }
 
-function hello_word_setup {
-    cd $LOCAL
+hello_word_setup() {
+    cd "$LOCAL_PATH"
     mkdir hello
     cd hello
 }
 
-function hello_word_clean {
-    cd $LOCAL
+hello_word_clean() {
+    cd "$LOCAL_PATH"
     rm -rf hello
 }
 
-function hello_word_file {
+hello_word_file() {
 cat <<EOM >main.c
 #include <stdio.h>
 #include "mpi.h"
@@ -85,43 +91,60 @@ int main(int argc, char *argv[]) {
 EOM
 }
 
-function hello_word_compilation {
-    mpicc -fopenmp main.c -o hello_word > /dev/null 2>&1
-    check hello compilation
+hello_word_compilation() {
+    mpicc -fopenmp main.c -o hello_word >&2
+    check hello_world compilation
 }
 
-function hello_word_execution {
-    mpirun -n 2 ./hello_word > /dev/null 2>&1
-    check hello execution
+hello_word_execution() {
+    mpirun -n 2 ./hello_word >&2
+    check hello_world execution
 }
 
-function ping_allnodes {
-    cat $LOCAL_PATH/list_ip.txt | while read output
-    do
-        ping -c 1 "$output" > /dev/null
-        check in_network "ping $output"
+ping_allnodes() {
+    if [ "x$PING_IPS" = x ] ; then
+      echo "Skip nodes ping test because PING_IPS is undefined" >&2
+      return
+    fi
+    if ! [ -f "$RUN_PATH/$PING_IPS" ] ; then
+      echo "Skip nodes ping test because $RUN_PATH/$PING_IPS does not exist" >&2
+      return
+    fi
+    result=0
+    cat "$RUN_PATH/PING_IPS" | while read ip; do
+        ping -c 1 "$ip" >&2
+        result=$(($result + $?))
     done
+    [ $result == 0 ]
+    check in_network "ping"
 }
 
-function ping_test {
-    #200 bytes website, fastest of the world
+ping_test() {
+    if [ "x$2" = x ] ; then
+      echo "Skip $1_network ping test because URL not set" >&2
+      return 0
+    fi
     #3 seconds wait else error
-    ping -c 1 www.perdu.com > /dev/null 2>&1
-    check out_network ping
+    ping -c 1 "$2" >&2
+    check "$1_network" ping
 }
 
-function wget_test {
-    #200 bytes website, fastest of the world
-    #3 seconds wait else error
-    wget -T 3 www.perdu.com > /dev/null 2>&1
-    check out_network wget
+wget_test() {
+    if [ "x$2" = x ] ; then
+      echo "Skip $1_network wget test because URL not set" >&2
+      return 0
+    fi
+    wget -T 3 "$2" >&2
+    check "$1_network" wget
     rm -f index.html
 }
 
 local_read_write
 gpfs_read_write
-ping_test
-wget_test
+ping_test inside "$INSIDE_URL"
+wget_test inside "$INSIDE_URL"
+ping_test outside "$OUTSIDE_URL"
+wget_test outside "$OUTSIDE_URL"
 hello_word_setup
 hello_word_file
 hello_word_compilation

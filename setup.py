@@ -51,7 +51,10 @@ setup(
     ),
     include_package_data=True,
     package_data={
-        'hpcbench': ['templates/*.jinja']
+        'hpcbench': [
+            'templates/*.jinja',
+            'benchmark/basic.bash',
+        ]
     },
     entry_points="""
         [console_scripts]

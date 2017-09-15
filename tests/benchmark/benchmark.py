@@ -60,6 +60,14 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
         """
         return {}
 
+    @property
+    def check_executable_availability(self):
+        """
+        :return: True if executables used in execution matrix should
+        be checked, False otherwise.
+        """
+        return False
+
     @cached_property
     def logger(self):
         return LOGGER.getChild(self.get_benchmark_clazz().name)
@@ -75,6 +83,16 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
                 if osp.isfile(src_file):
                     self.logger.info('using file: %s', src_file)
                     shutil.copy(src_file, dest)
+
+    def test_executable_availability(self):
+        if not self.check_executable_availability:
+            return
+        for execution in self.execution_matrix:
+            command = execution['command']
+            executable = command[0]
+            self.assertTrue(osp.isfile(executable), executable + ' is a file')
+            self.assertTrue(os.access(executable, os.X_OK),
+                            executable + ' is executable')
 
     def test_class_has_name(self):
         clazz_name = self.get_benchmark_clazz().name
@@ -119,15 +137,18 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
         clazz = self.get_benchmark_clazz()
         assert isinstance(clazz.description, str)
 
-    def test_execution_matrix(self):
+    @property
+    def execution_matrix(self):
         clazz = self.get_benchmark_clazz()
         benchmark = clazz()
         dict_merge(
             benchmark.attributes,
             self.attributes
         )
-        exec_matrix = benchmark.execution_matrix
-        exec_matrix = list(exec_matrix)
+        return list(benchmark.execution_matrix)
+
+    def test_execution_matrix(self):
+        exec_matrix = self.execution_matrix
         assert isinstance(exec_matrix, list)
 
         run_keys = {'category', 'command', 'metas', 'environment'}

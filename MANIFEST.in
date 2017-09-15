@@ -1,2 +1,3 @@
 include LICENSE
 include hpcbench/templates/*.jinja
+include hpcbench/benchmark/basic.bash
