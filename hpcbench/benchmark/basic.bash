@@ -111,11 +111,11 @@ ping_allnodes() {
       return
     fi
     result=0
-    cat "$RUN_PATH/PING_IPS" | while read ip; do
+    while read ip; do
         ping -c 1 "$ip" >&2
-        result=$(($result + $?))
-    done
-    [ $result == 0 ]
+        result=$((result + $?))
+    done <"$RUN_PATH/PING_IPS"
+    [ $result -eq 0 ]
     check in_network "ping"
 }
 
