@@ -33,7 +33,6 @@ class HPLExtractor(MetricsExtractor):
         "T/V                N    NB"
         "     P     Q               Time                 Gflops"
     )
-    SECTIONS = ['flops', 'precision']
 
     REGEX = dict(
         flops=re.compile(
@@ -56,6 +55,20 @@ class HPLExtractor(MetricsExtractor):
 
     METRICS_NAMES = set(METRICS)
 
+    REGEX_METRICS = dict(
+        flops=dict(
+            size_n=(int, 1),
+            size_nb=(int, 2),
+            size_p=(int, 3),
+            size_q=(int, 4),
+            time=(float, 5),
+            flops=(float, 6),
+        ),
+        precision=dict(
+            precision=(float, 1),
+        )
+    )
+
     @property
     def metrics(self):
         """ The metrics to be extracted.
@@ -72,24 +85,20 @@ class HPLExtractor(MetricsExtractor):
                     break
             for line in istr:
                 line = line.strip()
+                self._parse_line(line, metrics)
 
-                for sect in self.SECTIONS:
-                    search = HPLExtractor.REGEX[sect].search(line)
-                    if search:
-                        if sect == 'flops':
-                            metrics["size_n"] = int(search.group(1))
-                            metrics["size_nb"] = int(search.group(2))
-                            metrics["size_p"] = int(search.group(3))
-                            metrics["size_q"] = int(search.group(4))
-                            metrics["time"] = float(search.group(5))
-                            metrics["flops"] = float(search.group(6))
-                        elif sect == 'precision':
-                            metrics["precision"] = float(search.group(1))
-                            if str(search.group(2)) == "PASSED":
-                                metrics["validity"] = True
-                            else:
-                                metrics["validity"] = False
         return metrics
+
+    @classmethod
+    def _parse_line(cls, line, metrics):
+        for section, regex in cls.REGEX.items():
+            search = regex.search(line)
+            if search:
+                for metric, data in cls.REGEX_METRICS[section].items():
+                    metrics[metric] = data[0](search.group(data[1]))
+                if section == 'precision':
+                    metrics['validity'] = str(search.group(2)) == "PASSED"
+                return
 
 
 class HPL(Benchmark):
