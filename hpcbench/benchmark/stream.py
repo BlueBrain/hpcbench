@@ -60,7 +60,7 @@ class StreamExtractor(MetricsExtractor):
         """
         return StreamExtractor.METRICS
 
-    def extract(self, outdir, metas):
+    def extract_metrics(self, outdir, metas):
         metrics = {}
         # parse stdout and extract desired metrics
         with open(self.stdout(outdir)) as istr:
@@ -77,15 +77,6 @@ class StreamExtractor(MetricsExtractor):
                         metrics[sect + "_avg_time"] = float(search.group(2))
                         metrics[sect + "_min_time"] = float(search.group(3))
                         metrics[sect + "_max_time"] = float(search.group(4))
-
-        # ensure all metrics have been extracted
-        unset_attributes = StreamExtractor.METRICS_NAMES - set(metrics)
-        if any(unset_attributes):
-            error = \
-                'Could not extract some metrics: %s\n' \
-                'metrics setted are: %s'
-            raise Exception(error % (' ,'.join(unset_attributes),
-                                     ' ,'.join(set(metrics))))
         return metrics
 
 

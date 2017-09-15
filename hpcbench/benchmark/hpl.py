@@ -63,7 +63,7 @@ class HPLExtractor(MetricsExtractor):
         """
         return HPLExtractor.METRICS
 
-    def extract(self, outdir, metas):
+    def extract_metrics(self, outdir, metas):
         metrics = {}
         # parse stdout and extract desired metrics
         with open(self.stdout(outdir)) as istr:
@@ -89,15 +89,6 @@ class HPLExtractor(MetricsExtractor):
                                 metrics["validity"] = True
                             else:
                                 metrics["validity"] = False
-
-        # ensure all metrics have been extracted
-        unset_attributes = HPLExtractor.METRICS_NAMES - set(metrics)
-        if any(unset_attributes):
-            error = \
-                'Could not extract some metrics: %s\n' \
-                'metrics setted are: %s'
-            raise Exception(error % (' ,'.join(unset_attributes),
-                                     ' ,'.join(set(metrics))))
         return metrics
 
 

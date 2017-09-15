@@ -106,7 +106,7 @@ class Extractor(MetricsExtractor):
                 metrics[name] = desc['metric']
         return metrics
 
-    def extract(self, outdir, metas):
+    def extract_metrics(self, outdir, metas):
         columns = None
         metrics = {}
         with open(self.stdout(outdir)) as istr:

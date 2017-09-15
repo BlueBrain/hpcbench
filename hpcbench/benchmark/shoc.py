@@ -49,7 +49,7 @@ class SHOCExtractor(MetricsExtractor):
         value = cls.EXPR.search(line).group(1)
         return float(value)
 
-    def extract(self, outdir, metas):
+    def extract_metrics(self, outdir, metas):
         metrics = {}
         # parse stdout and extract desired metrics
         with open(self.stdout(outdir)) as istr:
@@ -58,18 +58,6 @@ class SHOCExtractor(MetricsExtractor):
                     if line.find(match) != -1:
                         metrics[attr] = self.extract_value(line)
                         break
-        return self.check_metrics(metrics)
-
-    @classmethod
-    def check_metrics(cls, metrics):
-        # ensure all metrics have been extracted
-        unset_attributes = cls.METRICS_NAMES - set(metrics)
-        if any(unset_attributes):
-            error = \
-                'Could not extract some metrics: %s\n' \
-                'metrics setted are: %s'
-            raise Exception(error % (' ,'.join(unset_attributes),
-                                     ' ,'.join(set(metrics))))
         return metrics
 
 

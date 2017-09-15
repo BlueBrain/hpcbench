@@ -37,7 +37,7 @@ class IOSSDExtractor(MetricsExtractor):
         """
         return self.METRICS
 
-    def extract(self, outdir, metas):
+    def extract_metrics(self, outdir, metas):
         # parse stdout and extract desired metrics
         with open(self.stdout(outdir)) as istr:
             for line in istr:
@@ -53,17 +53,7 @@ class IOSSDExtractor(MetricsExtractor):
             self.s_bandwidth.add(float(int(search.group(1)) / (1024 * 1024)))
 
     def epilog(self):
-        metrics = {}
-        metrics["bandwidth"] = max(self.s_bandwidth)
-        # ensure all metrics have been extracted
-        unset_attributes = self.METRICS_NAMES - set(metrics)
-        if any(unset_attributes):
-            error = \
-                'Could not extract some metrics: %s\n' \
-                'metrics setted are: %s'
-            raise Exception(error % (' ,'.join(unset_attributes),
-                                     ' ,'.join(set(metrics))))
-        return metrics
+        return dict(bandwidth=max(self.s_bandwidth))
 
 
 class IOSSDWriteExtractor(IOSSDExtractor):

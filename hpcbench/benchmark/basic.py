@@ -33,7 +33,7 @@ class BasicExtractor(MetricsExtractor):
         """
         return self._metrics
 
-    def extract(self, outdir, metas):
+    def extract_metrics(self, outdir, metas):
         metrics = {}
         # parse stdout and extract desired metrics
         with open(self.stdout(outdir)) as istr:
@@ -43,18 +43,6 @@ class BasicExtractor(MetricsExtractor):
                 value = list_word[-1]
                 metrics[key] = metrics.get(key, True) and (value == 'OK')
                 self._metrics[key] = Metrics.Bool
-        return self.check_metrics(metrics)
-
-    @classmethod
-    def check_metrics(cls, metrics):
-        # ensure all metrics have been extracted
-        unset_attributes = cls.MANDATORY_METRICS_NAMES - set(metrics)
-        if any(unset_attributes):
-            error = \
-                'Could not extract some metrics: %s\n' \
-                'metrics setted are: %s'
-            raise Exception(error % (' ,'.join(unset_attributes),
-                                     ' ,'.join(set(metrics))))
         return metrics
 
 

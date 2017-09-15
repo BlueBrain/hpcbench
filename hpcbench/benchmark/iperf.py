@@ -25,7 +25,7 @@ class IPERFExtractor(MetricsExtractor):
             retransmits=Metrics.Cardinal,
         )
 
-    def extract(self, outdir, metas):
+    def extract_metrics(self, outdir, metas):
         bits_in_mb = 8 * 1024 * 1024
         with open(self.stdout(outdir)) as istr:
             data = json.load(istr)

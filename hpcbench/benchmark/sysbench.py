@@ -34,7 +34,7 @@ class CpuExtractor(MetricsExtractor):
         """
         return self._metrics
 
-    def extract(self, outdir, metas):
+    def extract_metrics(self, outdir, metas):
         mapping = {
             'min': 'minimum',
             'avg': 'average',
@@ -55,11 +55,6 @@ class CpuExtractor(MetricsExtractor):
                         value = line[len(attr + ':'):].lstrip()
                         value = self.KEEP_NUMBERS.sub('', value)
                         metrics[metric] = float(value)
-        # ensure all metrics have been extracted
-        unset_attributes = set(mapping.values()) - set(metrics)
-        if any(unset_attributes):
-            raise Exception('Could not extract some metrics: %s',
-                            ' '.join(unset_attributes))
         return metrics
 
 
