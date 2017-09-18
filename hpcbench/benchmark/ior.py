@@ -106,25 +106,28 @@ class Extractor(MetricsExtractor):
                 metrics[name] = desc['metric']
         return metrics
 
-    def extract(self, outdir, metas):
+    def extract_metrics(self, outdir, metas):
         columns = None
         metrics = {}
         with open(self.stdout(outdir)) as istr:
-            awaits_summary = True
+            Extractor._skip_output_header(istr)
             for line in istr:
                 line = line.strip()
-                if awaits_summary:
-                    if line == Extractor.SUMMARY_HEADER:
-                        awaits_summary = False
+                if line.startswith(Extractor.RESULTS_HEADER_START):
+                    columns = Extractor.parse_results_header(line)
+                elif line == '':
+                    # end of results
+                    break
                 else:
-                    if line.startswith(Extractor.RESULTS_HEADER_START):
-                        columns = Extractor.parse_results_header(line)
-                    elif line == '':
-                        # end of results
-                        break
-                    else:
-                        Extractor.parse_result_line(columns, line, metrics)
+                    Extractor.parse_result_line(columns, line, metrics)
         return metrics
+
+    @classmethod
+    def _skip_output_header(cls, istr):
+        for line in istr:
+            line = line.strip()
+            if line == cls.SUMMARY_HEADER:
+                return
 
     @classmethod
     def get_meta_name(cls, operation, suffix):

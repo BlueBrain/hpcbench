@@ -1,0 +1,27 @@
+test.txt
+Hello BB5.
+/home/tcarel/src/github.com/tristan0x/hpcbench/hpcbench/benchmark/basic.bash: line 50: cd: /gpfs/bbp.cscs.ch/project/proj16/: No such file or directory
+test.txt
+Hello BB5.
+Skip inside_network ping test because URL not set
+Skip inside_network wget test because URL not set
+PING www.perdu.com (208.97.177.124) 56(84) bytes of data.
+64 bytes from apache2-argon.william-floyd.dreamhost.com (208.97.177.124): icmp_seq=1 ttl=44 time=101 ms
+
+--- www.perdu.com ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 101.640/101.640/101.640/0.000 ms
+--2017-09-15 12:16:18--  http://www.perdu.com/
+Resolving www.perdu.com (www.perdu.com)... 208.97.177.124
+Connecting to www.perdu.com (www.perdu.com)|208.97.177.124|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 204 [text/html]
+Saving to: ‘index.html’
+
+     0K                                                       100% 18.8M=0s
+
+2017-09-15 12:16:18 (18.8 MB/s) - ‘index.html’ saved [204/204]
+
+./hello_word: relocation error: /nix/store/7b82878b8l4d136i6pxmwcc12sfsda33-glibc-2.21/lib/libm.so.6: symbol __get_cpu_features, version GLIBC_PRIVATE not defined in file libc.so.6 with link time reference
+./hello_word: relocation error: /nix/store/7b82878b8l4d136i6pxmwcc12sfsda33-glibc-2.21/lib/libm.so.6: symbol __get_cpu_features, version GLIBC_PRIVATE not defined in file libc.so.6 with link time reference
+Skip nodes ping test because PING_IPS is undefined

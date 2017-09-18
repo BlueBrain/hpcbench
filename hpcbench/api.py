@@ -27,7 +27,7 @@ class Metrics(object):  # pragma pylint: disable=too-few-public-methods
     Cardinal = Metric('#', int)
     Byte = Metric('B', int)
     Flops = Metric('flop/s', float)
-    Validity = Metric('boolean', str)
+    Bool = Metric('bool', bool)
 
 
 class MetricsExtractor(with_metaclass(ABCMeta, object)):
@@ -54,7 +54,7 @@ class MetricsExtractor(with_metaclass(ABCMeta, object)):
         raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
-    def extract(self, outdir, metas):
+    def extract_metrics(self, outdir, metas):
         """Extract metrics from benchmark output
 
         :return: ``dict of metric_name: metric_value``
@@ -63,6 +63,28 @@ class MetricsExtractor(with_metaclass(ABCMeta, object)):
         the ``metrics`` member funtion.
         """
         raise NotImplementedError  # pragma: no cover
+
+    @property
+    def check_metrics(self):
+        """Ensures that metrics returned by ``extract`` member function
+        is exactly what was declared.
+        """
+        return True
+
+    def extract(self, outdir, metas):
+        metrics = self.extract_metrics(outdir, metas)
+        if self.check_metrics:
+            self._check_metrics(metrics)
+        return metrics
+
+    def _check_metrics(self, metrics):
+        unset_metrics = set(self.metrics) - set(metrics)
+        if any(unset_metrics):
+            error = \
+                'Could not extract some metrics: %s\n' \
+                'metrics set: %s'
+            raise Exception(error % (' ,'.join(unset_metrics),
+                                     ' ,'.join(set(metrics))))
 
     @classmethod
     def stdout(cls, outdir):

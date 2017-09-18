@@ -32,7 +32,7 @@ class IMBExtractor(MetricsExtractor):
         """get metrics names"""
         return set(self.metrics)
 
-    def extract(self, outdir, metas):
+    def extract_metrics(self, outdir, metas):
         # parse stdout and extract desired metrics
         with open(self.stdout(outdir)) as istr:
             for line in istr:
@@ -51,17 +51,6 @@ class IMBExtractor(MetricsExtractor):
     def epilog(self):
         """:return: extracted metrics as a dictionary
         """
-
-    def check_metrics(self, metrics):
-        # ensure all metrics have been extracted
-        unset_attributes = self.metrics_names - set(metrics)
-        if any(unset_attributes):
-            error = \
-                'Could not extract some metrics: %s\n' \
-                'metrics setted are: %s'
-            raise Exception(error % (' ,'.join(unset_attributes),
-                                     ' ,'.join(set(metrics))))
-        return metrics
 
 
 class IMBPingPongExtractor(IMBExtractor):
@@ -96,11 +85,10 @@ class IMBPingPongExtractor(IMBExtractor):
                 self.s_bandwidth.add(float(search.group(3)))
 
     def epilog(self):
-        metrics = dict(
+        return dict(
             latency=min(self.s_latency),
             bandwidth=max(self.s_bandwidth),
         )
-        return self.check_metrics(metrics)
 
 
 class IMBAllToAllExtractor(IMBExtractor):
@@ -130,10 +118,7 @@ class IMBAllToAllExtractor(IMBExtractor):
                 self.s_res.add(float(search.group(2)))
 
     def epilog(self):
-        metrics = dict(
-            latency=min(self.s_res),
-        )
-        return self.check_metrics(metrics)
+        return dict(latency=min(self.s_res))
 
 
 class IMBAllGatherExtractor(IMBAllToAllExtractor):

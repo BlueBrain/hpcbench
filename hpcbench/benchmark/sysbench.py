@@ -17,6 +17,13 @@ class CpuExtractor(MetricsExtractor):
     """Ignore stdout until this line"""
     STDOUT_IGNORE_PRIOR = 'Test execution summary:'
     KEEP_NUMBERS = re.compile('[^0-9.]')
+    TEXT_TO_METRIC = {
+        'min': 'minimum',
+        'avg': 'average',
+        'max': 'maximum',
+        'approx.  95 percentile': 'percentile95',
+        'total time': 'total_time',
+    }
 
     def __init__(self):
         self._metrics = dict(
@@ -34,14 +41,7 @@ class CpuExtractor(MetricsExtractor):
         """
         return self._metrics
 
-    def extract(self, outdir, metas):
-        mapping = {
-            'min': 'minimum',
-            'avg': 'average',
-            'max': 'maximum',
-            'approx.  95 percentile': 'percentile95',
-            'total time': 'total_time',
-        }
+    def extract_metrics(self, outdir, metas):
         metrics = {}
         # parse stdout and extract desired metrics
         with open(self.stdout(outdir)) as istr:
@@ -49,18 +49,18 @@ class CpuExtractor(MetricsExtractor):
                 if line.strip() == self.STDOUT_IGNORE_PRIOR:
                     break
             for line in istr:
-                line = line.strip()
-                for attr, metric in mapping.items():
-                    if line.startswith(attr + ':'):
-                        value = line[len(attr + ':'):].lstrip()
-                        value = self.KEEP_NUMBERS.sub('', value)
-                        metrics[metric] = float(value)
-        # ensure all metrics have been extracted
-        unset_attributes = set(mapping.values()) - set(metrics)
-        if any(unset_attributes):
-            raise Exception('Could not extract some metrics: %s',
-                            ' '.join(unset_attributes))
+                CpuExtractor._parse_line(line, metrics)
         return metrics
+
+    @classmethod
+    def _parse_line(cls, line, metrics):
+        line = line.strip()
+        for attr, metric in cls.TEXT_TO_METRIC.items():
+            if line.startswith(attr + ':'):
+                value = line[len(attr + ':'):].lstrip()
+                value = cls.KEEP_NUMBERS.sub('', value)
+                metrics[metric] = float(value)
+                return
 
 
 class Sysbench(Benchmark):

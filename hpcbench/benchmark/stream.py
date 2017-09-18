@@ -21,7 +21,7 @@ class StreamExtractor(MetricsExtractor):
     ])
     KEEP_NUMBERS = re.compile('[^0-9.]')
     SECTIONS = ['copy', 'scale', 'add', 'triad']
-    regex = dict(
+    REGEX = dict(
         copy=re.compile('^Copy:[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
                         '[ \t]*([\\d.]+)[ \t]*([\\d.]+)'),
         scale=re.compile('^Scale:[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
@@ -60,7 +60,7 @@ class StreamExtractor(MetricsExtractor):
         """
         return StreamExtractor.METRICS
 
-    def extract(self, outdir, metas):
+    def extract_metrics(self, outdir, metas):
         metrics = {}
         # parse stdout and extract desired metrics
         with open(self.stdout(outdir)) as istr:
@@ -69,24 +69,19 @@ class StreamExtractor(MetricsExtractor):
                     break
             for line in istr:
                 line = line.strip()
-
-                for sect in self.SECTIONS:
-                    search = self.regex[sect].search(line)
-                    if search:
-                        metrics[sect + "_bandwidth"] = float(search.group(1))
-                        metrics[sect + "_avg_time"] = float(search.group(2))
-                        metrics[sect + "_min_time"] = float(search.group(3))
-                        metrics[sect + "_max_time"] = float(search.group(4))
-
-        # ensure all metrics have been extracted
-        unset_attributes = StreamExtractor.METRICS_NAMES - set(metrics)
-        if any(unset_attributes):
-            error = \
-                'Could not extract some metrics: %s\n' \
-                'metrics setted are: %s'
-            raise Exception(error % (' ,'.join(unset_attributes),
-                                     ' ,'.join(set(metrics))))
+                StreamExtractor._parse_line(line, metrics)
         return metrics
+
+    @classmethod
+    def _parse_line(cls, line, metrics):
+        for sect in cls.SECTIONS:
+            search = cls.REGEX[sect].search(line)
+            if search:
+                metrics[sect + "_bandwidth"] = float(search.group(1))
+                metrics[sect + "_avg_time"] = float(search.group(2))
+                metrics[sect + "_min_time"] = float(search.group(3))
+                metrics[sect + "_max_time"] = float(search.group(4))
+                return
 
 
 class Stream(Benchmark):

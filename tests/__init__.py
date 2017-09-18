@@ -43,7 +43,7 @@ class FakeExtractor(MetricsExtractor):
             standard_error=Metric('m', float)
         )
 
-    def extract(self, outdir, metas):
+    def extract_metrics(self, outdir, metas):
         with open(self.stdout(outdir)) as istr:
             content = istr.readlines()
             return dict(
