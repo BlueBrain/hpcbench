@@ -209,42 +209,49 @@ class IOR(Benchmark):
         # FIXME: Design the real set of commands to execute
         for block_size in self.attributes['block_sizes']:
             for api in set(self.attributes['apis']) - set(['MPIIO']):
+                for command in self._non_mpi_execution_matrix(api, block_size):
+                    yield command
+                for command in self._mpi_execution_matrix(block_size):
+                    yield command
+
+    def _non_mpi_execution_matrix(self, api, block_size):
+        yield dict(
+            category=api,
+            command=[
+                self.executable,
+                '-a', api,
+                '-b', str(block_size),
+            ],
+            metas=dict(
+                api=api,
+                block_size=block_size
+            )
+        )
+
+    def _mpi_execution_matrix(self, block_size):
+        for i, nodes in enumerate(self.attributes['nodes']):
+            for processors in self.attributes['processors'][i]:
+                command = [
+                    self.executable,
+                    '-a', 'MPIIO',
+                    '-b', str(block_size)
+                ]
+                if nodes == 1:
+                    command = [
+                        'srun',
+                        '-n', str(nodes),
+                        '-N', str(processors),
+                    ] + command
                 yield dict(
-                    category=api,
-                    command=[
-                        self.executable,
-                        '-a', api,
-                        '-b', str(block_size),
-                    ],
+                    category='MPIIO',
+                    command=command,
                     metas=dict(
-                        api=api,
+                        api='MPIIO',
+                        nodes=nodes,
+                        processors=processors,
                         block_size=block_size
                     )
                 )
-
-            for i, nodes in enumerate(self.attributes['nodes']):
-                for processors in self.attributes['processors'][i]:
-                    command = [
-                        self.executable,
-                        '-a', 'MPIIO',
-                        '-b', str(block_size)
-                    ]
-                    if nodes == 1:
-                        command = [
-                            'srun',
-                            '-n', str(nodes),
-                            '-N', str(processors),
-                        ] + command
-                    yield dict(
-                        category='MPIIO',
-                        command=command,
-                        metas=dict(
-                            api='MPIIO',
-                            nodes=nodes,
-                            processors=processors,
-                            block_size=block_size
-                        )
-                    )
 
     @cached_property
     def metrics_extractors(self):

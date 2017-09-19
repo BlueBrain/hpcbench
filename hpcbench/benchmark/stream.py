@@ -98,7 +98,7 @@ class Stream(Benchmark):
     FEATURE_CPU = 'cpu'
 
     @cached_property
-    def features_config(self):
+    def physical_cpus(self):
         sockets = set()
         try:
             with open('/proc/cpuinfo') as istr:
@@ -107,6 +107,10 @@ class Stream(Benchmark):
                         sockets.add(line.split(':')[-1].strip())
         except IOError:
             sockets.add(0)
+        return sockets
+
+    @cached_property
+    def features_config(self):
         return dict(
             cache=[dict(args=["--all"], name="all")],
             mcdram=[
@@ -114,7 +118,7 @@ class Stream(Benchmark):
                     args=['-m', socket],
                     name='numa_' + socket
                 )
-                for socket in sockets
+                for socket in self.physical_cpus
             ],
             cpu=[
                 dict(
