@@ -136,11 +136,11 @@ class Sysbench(Benchmark):
         """Generate timings plot
         """
         del description  # unused
-        plt.plot(metas['threads'], metrics['cpu__minimum'],
+        plt.plot(metas['threads'], metrics['minimum'],
                  'r--', label='minimum')
-        plt.plot(metas['threads'], metrics['cpu__maximum'],
+        plt.plot(metas['threads'], metrics['maximum'],
                  'bs-', label='maximum')
-        plt.plot(metas['threads'], metrics['cpu__average'],
+        plt.plot(metas['threads'], metrics['average'],
                  'g^', label='average')
         plt.legend(loc='upper right', frameon=False)
         plt.xlabel('threads')
