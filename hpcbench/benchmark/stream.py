@@ -87,68 +87,88 @@ class StreamExtractor(MetricsExtractor):
 class Stream(Benchmark):
     """Benchmark wrapper for the streambench utility
     """
-    DEFAULT_THREADS = [1, 4, 16, 26, 52, 104]
-    DEFAULT_FEATURES = ["cache", "mcdram", "cpu"]
-
-    FEATURE_CPU = 'cpu'
-    FEATURES = dict(
-        cache=[dict(args=["--all"], name="all")],
-        mcdram=[
-            dict(
-                args=["-m", "0"],
-                name="numa_0"
-            ),
-            dict(
-                args=["-m", "1"],
-                name="numa_1"
-            )
-        ],
-        cpu=[
-            dict(
-                args=["--all"],
-                name="all"
-            )
-        ],
-    )
-
-    def __init__(self):
-        # locate `stream_c` executable
-        stream_c = find_executable('stream_c', required=False) or 'stream_c'
-        super(Stream, self).__init__(
-            attributes=dict(
-                features=Stream.DEFAULT_FEATURES,
-                threads=Stream.DEFAULT_THREADS,
-                stream_c=stream_c,
-            )
-        )
     name = 'stream'
 
     description = "Provides memory bandwidth benchmarking capabilities."
 
+    DEFAULT_EXECUTABLE = 'stream_c'
+    DEFAULT_THREADS = [1, 4, 16, 26, 52, 104]
+    DEFAULT_FEATURES = {"cache", "mcdram", "cpu"}
+
+    FEATURE_CPU = 'cpu'
+
+    @cached_property
+    def features_config(self):
+        sockets = set()
+        try:
+            with open('/proc/cpuinfo') as istr:
+                for line in istr:
+                    if line.startswith('physical id'):
+                        sockets.add(line.split(':')[-1].strip())
+        except IOError:
+            sockets.add(0)
+        return dict(
+            cache=[dict(args=["--all"], name="all")],
+            mcdram=[
+                dict(
+                    args=['-m', socket],
+                    name='numa_' + socket
+                )
+                for socket in sockets
+            ],
+            cpu=[
+                dict(
+                    args=["--all"],
+                    name="all"
+                )
+            ],
+        )
+
+    def __init__(self):
+        super(Stream, self).__init__(
+            attributes=dict(
+                features=Stream.DEFAULT_FEATURES,
+                threads=Stream.DEFAULT_THREADS,
+                executable=Stream.DEFAULT_EXECUTABLE,
+            )
+        )
+
+    @cached_property
+    def executable(self):
+        """Get absolute path to iperf executable
+        """
+        return find_executable(self.attributes['executable'])
+
+    @property
+    def features(self):
+        return Stream.DEFAULT_FEATURES & set(self.attributes['features'])
+
+    @property
+    def threads(self):
+        return self.attributes['threads']
+
     @property
     def execution_matrix(self):
-        stream_c = self.attributes['stream_c']
-        for feature in self.attributes['features']:
-            if feature in self.FEATURES.keys():
-                for numa_policy in self.FEATURES[feature]:
-                    for thread in self.attributes['threads']:
-                        yield dict(
-                            category=Stream.FEATURE_CPU,
-                            command=[
-                                'numactl',
-                                " ".join(numa_policy['args']),
-                                stream_c,
-                            ],
-                            metas=dict(
-                                threads=thread,
-                                numa_policy=numa_policy['name'],
-                                memory_type=feature,
-                            ),
-                            environment=dict(
-                                OMP_NUM_THREADS=str(thread),
-                                KMP_AFFINITY='scatter'
-                            ),
-                        )
+        for feature in self.features:
+            for numa_policy in self.features_config[feature]:
+                for thread in self.threads:
+                    yield dict(
+                        category=Stream.FEATURE_CPU,
+                        command=[
+                            'numactl',
+                            " ".join(numa_policy['args']),
+                            self.executable,
+                        ],
+                        metas=dict(
+                            threads=thread,
+                            numa_policy=numa_policy['name'],
+                            memory_type=feature,
+                        ),
+                        environment=dict(
+                            OMP_NUM_THREADS=str(thread),
+                            KMP_AFFINITY='scatter'
+                        ),
+                    )
 
     @cached_property
     def metrics_extractors(self):
