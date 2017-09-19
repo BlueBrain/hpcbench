@@ -70,5 +70,6 @@ setup(
         stream = hpcbench.benchmark.stream
         hpl = hpcbench.benchmark.hpl
         imb = hpcbench.benchmark.imb
+        ior = hpcbench.benchmark.ior
     """
 )

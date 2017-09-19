@@ -12,6 +12,7 @@ from hpcbench.api import (
     MetricsExtractor,
 )
 from hpcbench.toolbox.functools_ext import listify
+from hpcbench.toolbox.process import find_executable
 
 
 class Extractor(MetricsExtractor):
@@ -183,6 +184,7 @@ class IOR(Benchmark):
     NODES = [1, 4, 8]
     PROCESSORS = [[1, 4], [4, 16], [8, 32]]
     BLOCK_SIZES = ['1M', '10M', '100M']
+    DEFAULT_EXECUTABLE = 'ior'
 
     def __init__(self):
         super(IOR, self).__init__(
@@ -191,19 +193,26 @@ class IOR(Benchmark):
                 block_sizes=IOR.BLOCK_SIZES,
                 nodes=IOR.NODES,
                 processors=IOR.PROCESSORS,
+                executable=IOR.DEFAULT_EXECUTABLE,
             )
         )
+
+    @cached_property
+    def executable(self):
+        """Get absolute path to iperf executable
+        """
+        return find_executable(self.attributes['executable'])
 
     @cached_property
     @listify
     def execution_matrix(self):
         # FIXME: Design the real set of commands to execute
         for block_size in self.attributes['block_sizes']:
-            for api in set(['POSIX', 'HDF5']) - set(self.attributes['apis']):
+            for api in set(self.attributes['apis']) - set(['MPIIO']):
                 yield dict(
                     category=api,
                     command=[
-                        'ior',
+                        self.executable,
                         '-a', api,
                         '-b', str(block_size),
                     ],
@@ -215,16 +224,20 @@ class IOR(Benchmark):
 
             for i, nodes in enumerate(self.attributes['nodes']):
                 for processors in self.attributes['processors'][i]:
-                    yield dict(
-                        category='MPIIO',
-                        command=[
+                    command = [
+                        self.executable,
+                        '-a', 'MPIIO',
+                        '-b', str(block_size)
+                    ]
+                    if nodes == 1:
+                        command = [
                             'srun',
                             '-n', str(nodes),
                             '-N', str(processors),
-                            'ior',
-                            '-a', 'MPIIO',
-                            '-b', str(block_size),
-                        ],
+                        ] + command
+                    yield dict(
+                        category='MPIIO',
+                        command=command,
                         metas=dict(
                             api='MPIIO',
                             nodes=nodes,
