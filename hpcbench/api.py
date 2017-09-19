@@ -18,6 +18,19 @@ __all__ = [
 Metric = namedtuple("Metric", "unit type")
 
 
+class UnexpectedMetricsException(Exception):
+    def __init__(self, unset_metrics, metrics):
+        self.unset_metrics = unset_metrics
+        self.metrics = metrics
+
+    def __str__(self):
+        error = \
+            'Could not extract some metrics: %s\n' \
+            'metrics set: %s'
+        return error % (', '.join(self.unset_metrics),
+                        ', '.join(set(self.metrics)))
+
+
 class Metrics(object):  # pragma pylint: disable=too-few-public-methods
     """List of common metrics
     """
@@ -80,11 +93,7 @@ class MetricsExtractor(with_metaclass(ABCMeta, object)):
     def _check_metrics(self, metrics):
         unset_metrics = set(self.metrics) - set(metrics)
         if any(unset_metrics):
-            error = \
-                'Could not extract some metrics: %s\n' \
-                'metrics set: %s'
-            raise Exception(error % (' ,'.join(unset_metrics),
-                                     ' ,'.join(set(metrics))))
+            raise UnexpectedMetricsException(unset_metrics, metrics)
 
     @classmethod
     def stdout(cls, outdir):
