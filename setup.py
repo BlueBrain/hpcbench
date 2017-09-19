@@ -71,5 +71,6 @@ setup(
         hpl = hpcbench.benchmark.hpl
         imb = hpcbench.benchmark.imb
         ior = hpcbench.benchmark.ior
+        iossd = hpcbench.benchmark.iossd
     """
 )

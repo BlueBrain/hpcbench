@@ -28,7 +28,8 @@ class IOSSDExtractor(MetricsExtractor):
     )
     METRICS_NAMES = set(METRICS)
 
-    BANDWIDTH = re.compile(r'^\s*\d+\s\w+\s\w+\s\w+\s\d*\.?\d+\s\w+\s[(](\d+)')
+    BANDWIDTH_OSX_RE = \
+        re.compile(r'^\s*\d+\s\w+\s\w+\s\w+\s\d*\.?\d+\s\w+\s[(](\d+)')
 
     @property
     def metrics(self):
@@ -39,7 +40,7 @@ class IOSSDExtractor(MetricsExtractor):
 
     def extract_metrics(self, outdir, metas):
         # parse stdout and extract desired metrics
-        with open(self.stdout(outdir)) as istr:
+        with open(self.stderr(outdir)) as istr:
             for line in istr:
                 if line.strip() == self.STDOUT_IGNORE_PRIOR:
                     break
@@ -48,9 +49,33 @@ class IOSSDExtractor(MetricsExtractor):
         return self.epilog()
 
     def process_line(self, line):
-        search = self.BANDWIDTH.search(line)
+        search = self.BANDWIDTH_OSX_RE.search(line)
         if search:
             self.s_bandwidth.add(float(int(search.group(1)) / (1024 * 1024)))
+        else:
+            # Linux?
+            tokens = line.rsplit('s, ', 2)
+            if len(tokens) == 2:
+                value, unit = tokens[1].split(' ', 2)
+                value = float(value)
+                bandwidth = IOSSDExtractor.parse_bandwidth_linux(
+                    value, unit
+                )
+                self.s_bandwidth.add(bandwidth)
+
+    @classmethod
+    def parse_bandwidth_linux(cls, value, unit):
+        if unit == 'bytes/s':
+            value /= 1024
+            unit = 'KB/s'
+        if unit == 'KB/s':
+            value /= 1024
+            unit = 'MB/s'
+        if unit == 'MB/s':
+            return value
+        if unit == 'GB/s':
+            return value * 1024
+        raise Exception('Unexpected unit: "{}"'.format(unit))
 
     def epilog(self):
         return dict(bandwidth=max(self.s_bandwidth))
@@ -85,34 +110,47 @@ class IOSSD(Benchmark):
 
     SCRIPT_NAME = 'iossd.sh'
     SCRIPT = textwrap.dedent("""\
-    #!/bin/bash
+    #!/bin/bash -e
     #mac: 1m, linux 1M
+
+    case `uname -s` in
+        Darwin)
+            MB=m
+            WCONV=sync
+            ;;
+        *)
+            MB=M
+            WCONV=fdatasync
+    esac
 
     function benchmark_write {
         echo "Writing benchmark"
-        sync; dd if=/dev/zero of=tempfile bs=1m count=1024; sync
+        sync; dd conv=$WCONV if=/dev/zero of=tempfile bs=1$MB count=1024; sync
     }
 
     function benchmark_read {
         echo "Reading benchmark"
         # flash the ddr to be sure we are using the IO
         # /sbin/sysctl -w vm.drop_caches=3;
-        dd if=/dev/zero of=tempfile bs=1m count=1024
+        dd if=tempfile of=/dev/null bs=1$MB count=1024
     }
 
     if [ $1 = "Write" ]; then
         benchmark_write
     else
+        benchmark_write >/dev/null 2>&1
+        sudo sysctl vm.drop_caches=3 >/dev/null 2>&1
         benchmark_read
     fi
+    rm -f tempfile
     """)
 
     def __init__(self):
         super(IOSSD, self).__init__(
             attributes=dict(
                 categories=[
-                    IOSSD.SSD_READ,
                     IOSSD.SSD_WRITE,
+                    IOSSD.SSD_READ,
                 ],
             )
         )
