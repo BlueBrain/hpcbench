@@ -90,14 +90,14 @@ class IOSSD(Benchmark):
 
     function benchmark_write {
         echo "Writing benchmark"
-        sync; dd if=/dev/zero of=tempfile bs=1m count=1024; sync
+        sync; dd if=/dev/zero of=tempfile bs=1M count=1024; sync
     }
 
     function benchmark_read {
         echo "Reading benchmark"
         # flash the ddr to be sure we are using the IO
         # /sbin/sysctl -w vm.drop_caches=3;
-        dd if=/dev/zero of=tempfile bs=1m count=1024
+        dd if=tempfile of=/dev/null bs=1M count=1024
     }
 
     if [ $1 = "Write" ]; then
