@@ -1,6 +1,8 @@
 """Iperf benchmark
     https://github.com/esnet/iperf
 """
+from __future__ import division
+
 import json
 
 from cached_property import cached_property
@@ -26,9 +28,11 @@ class IPERFExtractor(MetricsExtractor):
         )
 
     def extract_metrics(self, outdir, metas):
-        bits_in_mb = 8 * 1024 * 1024
+        bits_in_mb = float(8 * 1024 * 1024)
         with open(self.stdout(outdir)) as istr:
             data = json.load(istr)
+        if not data['intervals']:
+            raise Exception('Missing "intervals" in JSON: ')
         max_bits_per_second = max(
             [
                 interval['sum']['bits_per_second']
@@ -62,7 +66,7 @@ class Iperf(Benchmark):
             attributes=dict(
                 executable=Iperf.DEFAULT_EXECUTABLE,
                 server=Iperf.DEFAULT_SERVER,
-                options=['-w', '1024k'],
+                options=[],
             )
         )
 
