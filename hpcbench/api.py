@@ -106,7 +106,7 @@ class MetricsExtractor(with_metaclass(ABCMeta, object)):
         :return: path to error output file
         :rtype: string
         """
-        return osp.join(outdir, 'sterrr.txt')
+        return osp.join(outdir, 'stderr.txt')
 
 
 class Benchmark(with_metaclass(ABCMeta, object)):
