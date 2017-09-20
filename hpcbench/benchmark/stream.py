@@ -97,8 +97,10 @@ class Stream(Benchmark):
 
     FEATURE_CPU = 'cpu'
 
-    @cached_property
-    def physical_cpus(self):
+    @classmethod
+    def physical_cpus(cls):
+        """get number of physical CPU
+        """
         sockets = set()
         try:
             with open('/proc/cpuinfo') as istr:
@@ -118,7 +120,7 @@ class Stream(Benchmark):
                     args=['-m', socket],
                     name='numa_' + socket
                 )
-                for socket in self.physical_cpus
+                for socket in Stream.physical_cpus()
             ],
             cpu=[
                 dict(
