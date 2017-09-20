@@ -28,6 +28,7 @@ class Metrics(object):  # pragma pylint: disable=too-few-public-methods
     Byte = Metric('B', int)
     Flops = Metric('flop/s', float)
     Bool = Metric('bool', bool)
+    Ops = Metric('op/s', float)
 
 
 class MetricsExtractor(with_metaclass(ABCMeta, object)):
