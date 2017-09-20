@@ -73,5 +73,6 @@ setup(
         ior = hpcbench.benchmark.ior
         iperf = hpcbench.benchmark.iperf
         iossd = hpcbench.benchmark.iossd
+        mdtest = hpcbench.benchmark.mdtest
     """
 )
