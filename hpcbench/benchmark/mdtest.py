@@ -97,7 +97,7 @@ class MDTest(Benchmark):
 
     DEFAULT_ATTRIBUTES = dict(
         executable='mdtest',
-        options=['-N', '100000', '-i', 3],
+        options=['-N', '100000', '-i', '3'],
     )
 
     def __init__(self):
