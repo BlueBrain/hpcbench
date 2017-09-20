@@ -48,3 +48,9 @@ class TestIORBenchmark(AbstractBenchmarkTest, unittest.TestCase):
 
     def get_benchmark_categories(self):
         return ['POSIX']
+
+    @property
+    def attributes(self):
+        return dict(
+            executable='/path/to/fake'
+        )

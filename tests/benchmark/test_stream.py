@@ -35,3 +35,9 @@ class TestStream(AbstractBenchmarkTest, unittest.TestCase):
 
     def get_benchmark_categories(self):
         return [self.get_benchmark_clazz().FEATURE_CPU]
+
+    @property
+    def attributes(self):
+        return dict(
+            executable='/path/to/fake'
+        )
