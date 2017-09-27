@@ -5,7 +5,6 @@ import sys
 import tempfile
 from textwrap import dedent
 
-from cached_property import cached_property
 import six
 
 from hpcbench.api import (
@@ -79,8 +78,8 @@ class FakeBenchmark(Benchmark):
             print(float(sys.argv[1]) / 10)
             """))
 
-    @cached_property
-    def execution_matrix(self):
+    def execution_matrix(self, ctx):
+        del ctx  # unused
         return [
             dict(
                 category='main',

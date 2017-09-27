@@ -18,6 +18,17 @@ __all__ = [
 Metric = namedtuple("Metric", "unit type")
 
 
+ExecutionContext = namedtuple(
+    "ExecutionContext",
+    [
+        "node",
+        "tag",
+        "nodes",
+        "logger",
+    ]
+)
+
+
 class UnexpectedMetricsException(Exception):
     def __init__(self, unset_metrics, metrics):
         self.unset_metrics = unset_metrics
@@ -144,9 +155,11 @@ class Benchmark(with_metaclass(ABCMeta, object)):
     def __init__(self, attributes=None):
         self.attributes = attributes or {}
 
-    @abstractproperty
-    def execution_matrix(self):
+    @abstractmethod
+    def execution_matrix(self, context):
         """Describe benchmark commands
+
+        :param context: `ExecutionContext` instance
 
         Provides list of commands to perform. Every returned command
         is a dictionary containing the following keys:

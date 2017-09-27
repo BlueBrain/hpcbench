@@ -28,7 +28,10 @@ from cached_property import cached_property
 import six
 import yaml
 
-from . api import Benchmark
+from . api import (
+    Benchmark,
+    ExecutionContext,
+)
 from . campaign import from_file
 from . plot import Plotter
 from . toolbox.collections_ext import (
@@ -288,12 +291,25 @@ class BenchmarkDriver(Enumerator):
     @cached_property
     def children(self):
         categories = set()
-        for execution in self.benchmark.execution_matrix:
+        for execution in self.execution_matrix:
             categories.add(execution['category'])
         return categories
 
     def child_builder(self, child):
         return BenchmarkCategoryDriver(self, child)
+
+    @cached_property
+    def exec_context(self):
+        return ExecutionContext(
+            node=self.node,
+            tag=self.parent.name,
+            nodes=self.parent.parent.nodes(self.parent.name),
+            logger=self.logger,
+        )
+
+    @property
+    def execution_matrix(self):
+        return self.benchmark.execution_matrix(self.exec_context)
 
 
 class BenchmarkCategoryDriver(Enumerator):
@@ -325,7 +341,7 @@ class BenchmarkCategoryDriver(Enumerator):
     @cached_property
     @listify
     def children(self):
-        for execution in self.benchmark.execution_matrix:
+        for execution in self.parent.execution_matrix:
             category = execution.get('category')
             if category != self.category:
                 continue
@@ -745,5 +761,5 @@ class SlurmExecutionDriver(ExecutionDriver):
     def _filter_srun_nodes(self, nodes, count):
         assert count <= len(nodes)
         pos = nodes.index(self.node)
-        nodes = nodes + nodes
+        nodes = nodes * 2
         return nodes[pos:pos + count]

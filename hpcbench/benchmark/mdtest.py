@@ -117,8 +117,8 @@ class MDTest(Benchmark):
         cmd += self.attributes['options']
         return cmd
 
-    @property
-    def execution_matrix(self):
+    def execution_matrix(self, context):
+        del context  # unused
         yield dict(
             category='disk',
             command=self.command,

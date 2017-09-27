@@ -128,8 +128,8 @@ class HPL(Benchmark):
         """
         return find_executable(self.attributes['executable'])
 
-    @property
-    def execution_matrix(self):
+    def execution_matrix(self, context):
+        del context  # unused
         yield dict(
             category=HPL.DEFAULT_DEVICE,
             command=[

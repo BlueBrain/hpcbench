@@ -167,8 +167,7 @@ class IMB(Benchmark):
         """
         return find_executable(self.attributes['executable'])
 
-    @property
-    def execution_matrix(self):
+    def execution_matrix(self, context):
         for category in self.attributes['categories']:
             arguments = self.attributes['arguments'].get(category) or []
             yield dict(

@@ -12,6 +12,7 @@ import yaml
 
 from hpcbench.api import (
     Benchmark,
+    ExecutionContext,
     MetricsExtractor,
 )
 from hpcbench.driver import (
@@ -145,13 +146,32 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
             benchmark.attributes,
             self.attributes
         )
-        return list(benchmark.execution_matrix)
+        return list(benchmark.execution_matrix(self.exec_context))
+
+    @property
+    def exec_context(self):
+        return ExecutionContext(
+            node='localhost',
+            tag='*',
+            nodes=['localhost'],
+            logger=self.logger,
+        )
+
+    @property
+    def expected_execution_matrix(self):
+        pass
 
     def test_execution_matrix(self):
         exec_matrix = self.execution_matrix
         assert isinstance(exec_matrix, list)
 
-        run_keys = {'category', 'command', 'metas', 'environment'}
+        expected_exec_matrix = self.expected_execution_matrix
+        if expected_exec_matrix is not None:
+            self.assertItemsEqual(exec_matrix, expected_exec_matrix)
+
+        run_keys = {
+            'category', 'command', 'metas', 'environment', 'srun_nodes'
+        }
         for runs in exec_matrix:
             assert isinstance(runs, dict)
             assert 'category' in runs

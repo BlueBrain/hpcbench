@@ -155,8 +155,8 @@ class IOSSD(Benchmark):
             )
         )
 
-    @property
-    def execution_matrix(self):
+    def execution_matrix(self, context):
+        del context  # unused
         for category in self.attributes['categories']:
             yield dict(
                 category=category,
