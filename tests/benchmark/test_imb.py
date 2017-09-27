@@ -1,5 +1,6 @@
 import unittest
 
+from hpcbench.api import ExecutionContext
 from hpcbench.benchmark.imb import IMB
 from . benchmark import AbstractBenchmarkTest
 
@@ -32,3 +33,46 @@ class TestImb(AbstractBenchmarkTest, unittest.TestCase):
         return dict(
             executable='/path/to/fake'
         )
+
+    @property
+    def exec_context(self):
+        return ExecutionContext(
+            node='node03',
+            tag='*',
+            nodes=[
+                'node01',
+                'node02',
+                'node03',
+                'node04',
+                'node05',
+            ],
+            logger=self.logger
+        )
+
+    @property
+    def expected_execution_matrix(self):
+        return [
+            dict(
+                command=['/path/to/fake', 'PingPong'],
+                srun_nodes=['node03', 'node04'],
+                category='PingPong'
+            ),
+            dict(
+                command=['/path/to/fake', 'PingPong'],
+                srun_nodes=['node03', 'node05'],
+                category='PingPong'
+            ),
+            dict(
+                command=[
+                    '/path/to/fake', 'Allgather',
+                    '-nmpmin', '{process_count}'
+                ],
+                srun_nodes=2,
+                category='Allgather'
+            ),
+            dict(
+                command=['/path/to/fake', 'Alltoallv'],
+                srun_nodes=2,
+                category='Alltoallv'
+            ),
+        ]
