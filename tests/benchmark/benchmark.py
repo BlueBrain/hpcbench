@@ -7,7 +7,10 @@ import os.path as osp
 import shutil
 
 from cached_property import cached_property
-from six import with_metaclass
+from six import (
+    assertCountEqual,
+    with_metaclass,
+)
 import yaml
 
 from hpcbench.api import (
@@ -167,7 +170,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
 
         expected_exec_matrix = self.expected_execution_matrix
         if expected_exec_matrix is not None:
-            self.assertItemsEqual(exec_matrix, expected_exec_matrix)
+            assertCountEqual(self, exec_matrix, expected_exec_matrix)
 
         run_keys = {
             'category', 'command', 'metas', 'environment', 'srun_nodes'
