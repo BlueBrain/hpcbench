@@ -139,6 +139,7 @@ class HPL(Benchmark):
                 OMP_NUM_THREADS=str(self.attributes['threads'][0]),
                 KMP_AFFINITY='scatter'
             ),
+            srun_nodes=2,
         )
 
     @cached_property
