@@ -78,8 +78,8 @@ class FakeBenchmark(Benchmark):
             print(float(sys.argv[1]) / 10)
             """))
 
-    def execution_matrix(self, ctx):
-        del ctx  # unused
+    def execution_matrix(self, context):
+        del context  # unused
         return [
             dict(
                 category='main',

@@ -171,7 +171,7 @@ class IMB(Benchmark):
         for category in self.attributes['categories']:
             arguments = self.attributes['arguments'].get(category) or []
             if category == IMB.PING_PONG:
-                for pair in self.host_pairs(context):
+                for pair in IMB.host_pairs(context):
                     yield dict(
                         category=category,
                         command=[self.executable, category] + arguments,
@@ -184,7 +184,8 @@ class IMB(Benchmark):
                     srun_nodes=2,
                 )
 
-    def host_pairs(self, context):
+    @staticmethod
+    def host_pairs(context):
         try:
             pos = context.nodes.index(context.node)
         except ValueError:
