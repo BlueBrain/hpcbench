@@ -339,6 +339,6 @@ The ``srun`` layer accepts the following keys:
   process:
     type: srun
     config:
-      options:
+      srun_options:
         - --account=project42
         - --partition=über-cluster
