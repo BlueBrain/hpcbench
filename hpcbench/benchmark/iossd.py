@@ -31,6 +31,9 @@ class IOSSDExtractor(MetricsExtractor):
     BANDWIDTH_OSX_RE = \
         re.compile(r'^\s*\d+\s\w+\s\w+\s\w+\s\d*\.?\d+\s\w+\s[(](\d+)')
 
+    def __init__(self):
+        self.s_bandwidth = set()
+
     @property
     def metrics(self):
         """ The metrics to be extracted.
@@ -82,15 +85,11 @@ class IOSSDExtractor(MetricsExtractor):
 
 
 class IOSSDWriteExtractor(IOSSDExtractor):
-    def __init__(self):
-        super(IOSSDWriteExtractor, self).__init__()
-        self.s_bandwidth = set()
+    pass
 
 
 class IOSSDReadExtractor(IOSSDExtractor):
-    def __init__(self):
-        super(IOSSDReadExtractor, self).__init__()
-        self.s_bandwidth = set()
+    pass
 
 
 class IOSSD(Benchmark):
