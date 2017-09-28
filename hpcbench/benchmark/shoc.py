@@ -86,8 +86,8 @@ class SHOC(Benchmark):
         """
         return find_executable(self.attributes['executable'])
 
-    @property
-    def execution_matrix(self):
+    def execution_matrix(self, context):
+        del context  # unused
         yield dict(
             category=SHOC.CATEGORY,
             command=[

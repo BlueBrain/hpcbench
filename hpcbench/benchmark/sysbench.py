@@ -87,8 +87,8 @@ class Sysbench(Benchmark):
         performance, and even MySQL benchmarking.
         """
 
-    @property
-    def execution_matrix(self):
+    def execution_matrix(self, context):
+        del context  # unused
         if Sysbench.FEATURE_CPU in self.attributes['features']:
             for thread in self.attributes['threads']:
                 for max_prime in self.attributes['max_primes']:

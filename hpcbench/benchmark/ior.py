@@ -203,9 +203,9 @@ class IOR(Benchmark):
         """
         return find_executable(self.attributes['executable'])
 
-    @cached_property
     @listify
-    def execution_matrix(self):
+    def execution_matrix(self, context):
+        del context  # unused
         # FIXME: Design the real set of commands to execute
         for block_size in self.attributes['block_sizes']:
             for api in set(self.attributes['apis']) - set(['MPIIO']):

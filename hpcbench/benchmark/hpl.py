@@ -128,8 +128,8 @@ class HPL(Benchmark):
         """
         return find_executable(self.attributes['executable'])
 
-    @property
-    def execution_matrix(self):
+    def execution_matrix(self, context):
+        del context  # unused
         yield dict(
             category=HPL.DEFAULT_DEVICE,
             command=[
@@ -139,6 +139,7 @@ class HPL(Benchmark):
                 OMP_NUM_THREADS=str(self.attributes['threads'][0]),
                 KMP_AFFINITY='scatter'
             ),
+            srun_nodes=2,
         )
 
     @cached_property

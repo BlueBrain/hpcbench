@@ -167,14 +167,39 @@ class IMB(Benchmark):
         """
         return find_executable(self.attributes['executable'])
 
-    @property
-    def execution_matrix(self):
+    def execution_matrix(self, context):
         for category in self.attributes['categories']:
             arguments = self.attributes['arguments'].get(category) or []
-            yield dict(
-                category=category,
-                command=[self.executable, category] + arguments,
+            if category == IMB.PING_PONG:
+                for pair in IMB.host_pairs(context):
+                    yield dict(
+                        category=category,
+                        command=[self.executable, category] + arguments,
+                        srun_nodes=pair,
+                    )
+            else:
+                yield dict(
+                    category=category,
+                    command=[self.executable, category] + arguments,
+                    srun_nodes=2,
+                )
+
+    @staticmethod
+    def host_pairs(context):
+        try:
+            pos = context.nodes.index(context.node)
+        except ValueError:
+            context.logger.error(
+                'Could not find current node %s in nodes %s',
+                context.node,
+                ', '.join(context.nodes)
             )
+            return []
+        else:
+            return [
+                [context.node, context.nodes[i]]
+                for i in range(pos + 1, len(context.nodes))
+            ]
 
     @cached_property
     def metrics_extractors(self):

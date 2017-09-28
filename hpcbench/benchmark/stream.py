@@ -153,8 +153,8 @@ class Stream(Benchmark):
     def threads(self):
         return self.attributes['threads']
 
-    @property
-    def execution_matrix(self):
+    def execution_matrix(self, context):
+        del context  # unused
         for feature in self.features:
             for numa_policy in self.features_config[feature]:
                 for thread in self.threads:

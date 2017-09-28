@@ -97,7 +97,8 @@ class MDTest(Benchmark):
 
     DEFAULT_ATTRIBUTES = dict(
         executable='mdtest',
-        options=['-N', '100000', '-i', '3'],
+        path=None,
+        options=['-n', '100000', '-i', '3'],
     )
 
     def __init__(self):
@@ -117,8 +118,8 @@ class MDTest(Benchmark):
         cmd += self.attributes['options']
         return cmd
 
-    @property
-    def execution_matrix(self):
+    def execution_matrix(self, context):
+        del context  # unused
         yield dict(
             category='disk',
             command=self.command,
