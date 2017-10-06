@@ -42,6 +42,10 @@ class SHOCExtractor(MetricsExtractor):
     }
 
     @property
+    def check_metrics(self):
+        return False  # all metrics are not mandatory
+
+    @property
     def metrics(self):
         """ The metrics to be extracted.
             This property can not be replaced, but can be mutated as required
@@ -70,14 +74,18 @@ class SHOC(Benchmark):
     """
     DEFAULT_DEVICE = '0'
     DEFAULT_EXECUTABLE = 'shocdriver'
+    DEFAULT_OPTIONS = ['-s', '3']
+    DEFAULT_BENCHMARK = "all"
     CATEGORY = 'gpu'
 
     def __init__(self):
         # locate `shocdriver` executable
         super(SHOC, self).__init__(
             attributes=dict(
+                benchmark=SHOC.DEFAULT_BENCHMARK,
                 device=SHOC.DEFAULT_DEVICE,
-                executable=SHOC.DEFAULT_EXECUTABLE
+                executable=SHOC.DEFAULT_EXECUTABLE,
+                options=SHOC.DEFAULT_OPTIONS,
             )
         )
     name = 'shoc'
@@ -94,10 +102,10 @@ class SHOC(Benchmark):
         del context  # unused
         yield dict(
             category=SHOC.CATEGORY,
-            command=[
-                self.executable,
-                '-cuda -s 3',
-            ],
+            command=[self.executable, '-cuda'] + self.attributes['options'],
+            metas=dict(
+                benchmark=self.attributes['benchmark']
+            ),
             environment=dict(
                 CUDA_VISIBLE_DEVICES=str(self.attributes['device']),
             ),
