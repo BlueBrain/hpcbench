@@ -23,6 +23,8 @@ class SHOCExtractor(MetricsExtractor):
         gmem_writebw=Metrics.MegaBytesPerSecond,
         lmem_readbw=Metrics.MegaBytesPerSecond,
         lmem_writebw=Metrics.MegaBytesPerSecond,
+        sgemm_n=Metrics.Flops,
+        dgemm_n=Metrics.Flops,
     )
     METRICS_NAMES = set(METRICS)
     EXPR = re.compile(r'[\w]+\:\s+(\d*\.?\d+)')
@@ -34,7 +36,9 @@ class SHOCExtractor(MetricsExtractor):
         'result for gmem_readbw:': 'gmem_readbw',
         'result for gmem_writebw:': 'gmem_writebw',
         'result for lmem_readbw:': 'lmem_readbw',
-        'result for lmem_writebw:': 'lmem_writebw'
+        'result for lmem_writebw:': 'lmem_writebw',
+        'result for sgemm_n:': 'sgemm_n',
+        'result for dgemm_n:': 'dgemm_n',
     }
 
     @property
@@ -92,7 +96,7 @@ class SHOC(Benchmark):
             category=SHOC.CATEGORY,
             command=[
                 self.executable,
-                '-cuda',
+                '-cuda -s 3',
             ],
             environment=dict(
                 CUDA_VISIBLE_DEVICES=str(self.attributes['device']),
