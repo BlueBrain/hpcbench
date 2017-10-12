@@ -23,6 +23,8 @@ class SHOCExtractor(MetricsExtractor):
         gmem_writebw=Metrics.MegaBytesPerSecond,
         lmem_readbw=Metrics.MegaBytesPerSecond,
         lmem_writebw=Metrics.MegaBytesPerSecond,
+        sgemm_n=Metrics.Flops,
+        dgemm_n=Metrics.Flops,
     )
     METRICS_NAMES = set(METRICS)
     EXPR = re.compile(r'[\w]+\:\s+(\d*\.?\d+)')
@@ -34,8 +36,14 @@ class SHOCExtractor(MetricsExtractor):
         'result for gmem_readbw:': 'gmem_readbw',
         'result for gmem_writebw:': 'gmem_writebw',
         'result for lmem_readbw:': 'lmem_readbw',
-        'result for lmem_writebw:': 'lmem_writebw'
+        'result for lmem_writebw:': 'lmem_writebw',
+        'result for sgemm_n:': 'sgemm_n',
+        'result for dgemm_n:': 'dgemm_n',
     }
+
+    @property
+    def check_metrics(self):
+        return False  # all metrics are not mandatory
 
     @property
     def metrics(self):
@@ -66,14 +74,18 @@ class SHOC(Benchmark):
     """
     DEFAULT_DEVICE = '0'
     DEFAULT_EXECUTABLE = 'shocdriver'
+    DEFAULT_OPTIONS = ['-s', '3']
+    DEFAULT_BENCHMARK = "all"
     CATEGORY = 'gpu'
 
     def __init__(self):
         # locate `shocdriver` executable
         super(SHOC, self).__init__(
             attributes=dict(
+                benchmark=SHOC.DEFAULT_BENCHMARK,
                 device=SHOC.DEFAULT_DEVICE,
-                executable=SHOC.DEFAULT_EXECUTABLE
+                executable=SHOC.DEFAULT_EXECUTABLE,
+                options=SHOC.DEFAULT_OPTIONS,
             )
         )
     name = 'shoc'
@@ -90,10 +102,10 @@ class SHOC(Benchmark):
         del context  # unused
         yield dict(
             category=SHOC.CATEGORY,
-            command=[
-                self.executable,
-                '-cuda',
-            ],
+            command=[self.executable, '-cuda'] + self.attributes['options'],
+            metas=dict(
+                benchmark=self.attributes['benchmark']
+            ),
             environment=dict(
                 CUDA_VISIBLE_DEVICES=str(self.attributes['device']),
             ),

@@ -14,6 +14,8 @@ class TestShoc(AbstractBenchmarkTest, unittest.TestCase):
         gmem_writebw=139.5960,
         lmem_readbw=1042.4400,
         lmem_writebw=925.3470,
+        sgemm_n=579.3240,
+        dgemm_n=75.6221,
     )
 
     def get_benchmark_clazz(self):
