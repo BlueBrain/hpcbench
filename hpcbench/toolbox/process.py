@@ -42,3 +42,17 @@ def find_executable(name, names=None, required=True):
             return eax
     if required:
         raise NameError('Could not find %s executable' % name)
+
+
+def physical_cpus():
+    """Get cpus identifiers, for instance set(["0", "1", "2", "3"])
+
+    :return get physical CPU identifiers as a set
+    :rtype: set of strings
+    """
+    sockets = set()
+    with open('/proc/cpuinfo') as istr:
+        for line in istr:
+            if line.startswith('physical id'):
+                sockets.add(line.split(':')[-1].strip())
+    return sockets
