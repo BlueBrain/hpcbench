@@ -10,7 +10,10 @@ from hpcbench.api import (
     Metrics,
     MetricsExtractor,
 )
-from hpcbench.toolbox.process import find_executable
+from hpcbench.toolbox.process import (
+    find_executable,
+    physical_cpus,
+)
 
 
 class StreamExtractor(MetricsExtractor):
@@ -97,20 +100,6 @@ class Stream(Benchmark):
 
     FEATURE_CPU = 'cpu'
 
-    @classmethod
-    def physical_cpus(cls):
-        """get number of physical CPU
-        """
-        sockets = set()
-        try:
-            with open('/proc/cpuinfo') as istr:
-                for line in istr:
-                    if line.startswith('physical id'):
-                        sockets.add(line.split(':')[-1].strip())
-        except IOError:
-            sockets.add(0)
-        return sockets
-
     @cached_property
     def features_config(self):
         return dict(
@@ -120,7 +109,7 @@ class Stream(Benchmark):
                     args=['-m', socket],
                     name='numa_' + socket
                 )
-                for socket in Stream.physical_cpus()
+                for socket in physical_cpus()
             ],
             cpu=[
                 dict(

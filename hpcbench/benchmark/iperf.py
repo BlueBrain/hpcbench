@@ -12,7 +12,10 @@ from hpcbench.api import (
     Metrics,
     MetricsExtractor,
 )
-from hpcbench.toolbox.process import find_executable
+from hpcbench.toolbox.process import (
+    find_executable,
+    physical_cpus,
+)
 
 
 class IPERFExtractor(MetricsExtractor):
@@ -66,7 +69,7 @@ class Iperf(Benchmark):
             attributes=dict(
                 executable=Iperf.DEFAULT_EXECUTABLE,
                 server=Iperf.DEFAULT_SERVER,
-                options=[],
+                options=["-P", str(len(physical_cpus()))],
             )
         )
 
