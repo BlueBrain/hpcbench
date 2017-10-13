@@ -1,5 +1,7 @@
 """Campaign execution and post-processing
 """
+from __future__ import print_function
+
 from abc import (
     ABCMeta,
     abstractmethod,
@@ -20,7 +22,9 @@ import os.path as osp
 import shlex
 import shutil
 import socket
+import stat
 import subprocess
+import tempfile
 import types
 import uuid
 
@@ -637,6 +641,20 @@ class ExecutionDriver(Leaf):
             process_count=1
         )
 
+    def _wrap_in_bash_script(self, commands):
+        fd, path = tempfile.mkstemp(suffix='.bash', dir=os.getcwd())
+        os.close(fd)
+        with open(path, 'w') as ostr:
+            print("#!/bin/bash", file=ostr)
+            for command in commands:
+                if isinstance(command, list):
+                    print(' '.join(command), file=ostr)
+                else:
+                    print(command, file=ostr)
+
+            os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC)
+        return [path]
+
     @cached_property
     def command(self):
         """get command to execute
@@ -644,10 +662,20 @@ class ExecutionDriver(Leaf):
         :return: list of string
         """
         benchmark_config = self.parent.parent.parent.config
+        if self.execution.get('shell', False):
+            exec_prefix = benchmark_config.get('exec_prefix') or ""
+            if exec_prefix:
+                self.execution['command'][-1].insert(0, exec_prefix)
+            return self._wrap_in_bash_script(self.execution['command'])
+
         exec_prefix = benchmark_config.get('exec_prefix') or []
         if not isinstance(exec_prefix, list):
             exec_prefix = shlex.split(exec_prefix)
-        command = list(exec_prefix) + self.execution['command']
+        if not isinstance(self.execution['command'], list):
+            command = shlex.split(self.execution['command'])
+        else:
+            command = self.execution['command']
+        command = list(exec_prefix) + command
         return [
             arg.format(**self.command_expansion_vars)
             for arg in command
@@ -659,6 +687,8 @@ class ExecutionDriver(Leaf):
 
         :return: string
         """
+        if isinstance(self.command, six.string_types):
+            return self.command
         return ' '.join(map(
             six.moves.shlex_quote,
             self.command
@@ -670,6 +700,7 @@ class ExecutionDriver(Leaf):
             env = copy.deepcopy(os.environ)
             env.update(custom_env)
             kwargs.update(env=env)
+        kwargs.update(shell=self.execution.get('shell', False))
 
     def popen(self, stdout, stderr):
         """Build popen object to run
