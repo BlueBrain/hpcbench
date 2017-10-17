@@ -62,7 +62,7 @@ class HPLExtractor(MetricsExtractor):
             size_p=(int, 3),
             size_q=(int, 4),
             time=(float, 5),
-            flops=(float, 6),
+            flops=(float, 6, 1e+9),
         ),
         precision=dict(
             precision=(float, 1),
@@ -95,7 +95,12 @@ class HPLExtractor(MetricsExtractor):
             search = regex.search(line)
             if search:
                 for metric, data in cls.REGEX_METRICS[section].items():
-                    metrics[metric] = data[0](search.group(data[1]))
+                    mtype = data[0]
+                    mfield = data[1]
+                    mvalue = mtype(search.group(mfield))
+                    if len(data) == 3:
+                        mvalue *= data[2]
+                    metrics[metric] = mvalue
                 if section == 'precision':
                     metrics['validity'] = str(search.group(2)) == "PASSED"
                 return
