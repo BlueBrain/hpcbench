@@ -114,10 +114,12 @@ class IOSSD(Benchmark):
 
     case `uname -s` in
         Darwin)
+            NAME=Darwin
             MB=m
             WCONV=sync
             ;;
         *)
+            NAME=Linux
             MB=M
             WCONV=fdatasync
     esac
@@ -138,7 +140,11 @@ class IOSSD(Benchmark):
         benchmark_write
     else
         benchmark_write >/dev/null 2>&1
-        sudo sysctl vm.drop_caches=3 >/dev/null 2>&1
+        if [ $NAME = "Linux" ]; then
+            sudo sysctl vm.drop_caches=3 >/dev/null 2>&1
+        else
+            sync && sudo purge 2>&1
+        fi
         benchmark_read
     fi
     rm -f tempfile
