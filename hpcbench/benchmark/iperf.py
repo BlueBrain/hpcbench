@@ -70,6 +70,8 @@ class Iperf(Benchmark):
                 executable=Iperf.DEFAULT_EXECUTABLE,
                 server=Iperf.DEFAULT_SERVER,
                 options=["-P", str(len(physical_cpus()))],
+                mpirun=[],
+                nodes='*',
             )
         )
 
@@ -83,7 +85,7 @@ class Iperf(Benchmark):
         del context  # unused
         yield dict(
             category=Iperf.DEFAULT_DEVICE,
-            command=[
+            command=self.attributes['mpirun'] + [
                 self.executable,
                 '-c',
                 self.attributes['server'],

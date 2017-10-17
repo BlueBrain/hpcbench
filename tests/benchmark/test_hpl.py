@@ -28,5 +28,59 @@ class TestHpl(AbstractBenchmarkTest, unittest.TestCase):
     @property
     def attributes(self):
         return dict(
-            executable='/path/to/fake'
+            executable='/path/to/fake',
+            mpirun=['-n', 21],
+            srun_nodes=42,
+        )
+
+    def test_attributes(self):
+        self.assertExecutionMatrix(
+            dict(
+                executable='/path/to/fake',
+                srun_nodes='tag-name'
+            ),
+            [
+                dict(
+                    category='cpu',
+                    environment=dict(
+                        KMP_AFFINITY='scatter',
+                        OMP_NUM_THREADS='1'
+                    ),
+                    command=['./fake'],
+                    srun_nodes='tag-name',
+                )
+            ]
+        )
+        self.assertExecutionMatrix(
+            dict(
+                executable='/path/to/fake',
+                srun_nodes=None
+            ),
+            [
+                dict(
+                    category='cpu',
+                    environment=dict(
+                        KMP_AFFINITY='scatter',
+                        OMP_NUM_THREADS='1'
+                    ),
+                    command=['./fake'],
+                )
+            ]
+        )
+        self.assertExecutionMatrix(
+            dict(
+                executable='/path/to/fake',
+                srun_nodes=None,
+                mpirun=['mpirun', '-n', 21],
+            ),
+            [
+                dict(
+                    category='cpu',
+                    environment=dict(
+                        KMP_AFFINITY='scatter',
+                        OMP_NUM_THREADS='1'
+                    ),
+                    command=['mpirun', '-n', '21', './fake'],
+                )
+            ]
         )
