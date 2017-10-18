@@ -126,7 +126,7 @@ class HPL(Benchmark):
                 device=HPL.DEFAULT_DEVICE,
                 executable=HPL.DEFAULT_EXECUTABLE,
                 mpirun=[],
-                srun_nodes='*',
+                srun_nodes=0,
             )
         )
     name = 'hpl'

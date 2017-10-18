@@ -286,7 +286,16 @@ class BenchmarkDriver(Enumerator):
     def __init__(self, parent, benchmark, config):
         super(BenchmarkDriver, self).__init__(parent, benchmark.name)
         self.benchmark = benchmark
-        self.config = config
+        self.config = BenchmarkDriver._prepare_config(config)
+
+    @classmethod
+    def _prepare_config(cls, config):
+        config.setdefault('srun_options', [])
+        config['srun_options'] = [
+            str(e)
+            for e in config['srun_options']
+        ]
+        return config
 
     @cached_property
     def children(self):
@@ -305,6 +314,7 @@ class BenchmarkDriver(Enumerator):
             tag=self.parent.name,
             nodes=self.parent.parent.nodes(self.parent.name),
             logger=self.logger,
+            srun_options=self.config['srun_options']
         )
 
     @property
@@ -720,7 +730,7 @@ class SlurmExecutionDriver(ExecutionDriver):
         :return: list of string
         """
         srun_options = copy.copy(self.common_srun_options)
-        srun_options += self.execution.get('srun_options') or []
+        srun_options += self.parent.parent.parent.config['srun_options']
         self._parse_srun_options(srun_options)
         srun_options.append('--nodelist=' + ','.join(self.srun_nodes))
         command = super(SlurmExecutionDriver, self).command

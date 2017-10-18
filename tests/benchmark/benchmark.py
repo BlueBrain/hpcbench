@@ -158,6 +158,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
             tag='*',
             nodes=['localhost'],
             logger=self.logger,
+            srun_options=[],
         )
 
     @property

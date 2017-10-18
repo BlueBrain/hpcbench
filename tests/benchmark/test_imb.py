@@ -46,7 +46,8 @@ class TestImb(AbstractBenchmarkTest, unittest.TestCase):
                 'node04',
                 'node05',
             ],
-            logger=self.logger
+            logger=self.logger,
+            srun_options=[],
         )
 
     @property
