@@ -112,6 +112,8 @@ class IOSSD(Benchmark):
     #!/bin/bash -e
     #mac: 1m, linux 1M
 
+    TEMPFILE=${FILE_PATH:-$PWD}/tempfile
+
     case `uname -s` in
         Darwin)
             NAME=Darwin
@@ -126,14 +128,16 @@ class IOSSD(Benchmark):
 
     function benchmark_write {
         echo "Writing benchmark"
-        sync; dd conv=$WCONV if=/dev/zero of=tempfile bs=1$MB count=1024; sync
+        sync
+        dd conv=$WCONV if=/dev/zero of="$TEMPFILE" bs=1$MB count=1024
+        sync
     }
 
     function benchmark_read {
         echo "Reading benchmark"
         # flash the ddr to be sure we are using the IO
         # /sbin/sysctl -w vm.drop_caches=3;
-        dd if=tempfile of=/dev/null bs=1$MB count=1024
+        dd if="$TEMPFILE" of=/dev/null bs=1$MB count=1024
     }
 
     if [ $1 = "Write" ]; then
@@ -147,7 +151,7 @@ class IOSSD(Benchmark):
         fi
         benchmark_read
     fi
-    rm -f tempfile
+    rm -f "$TEMPFILE"
     """)
 
     def __init__(self):
@@ -157,16 +161,25 @@ class IOSSD(Benchmark):
                     IOSSD.SSD_WRITE,
                     IOSSD.SSD_READ,
                 ],
+                path=None,
             )
         )
 
     def execution_matrix(self, context):
         del context  # unused
         for category in self.attributes['categories']:
-            yield dict(
+            cmd = dict(
                 category=category,
                 command=['./' + IOSSD.SCRIPT_NAME, category],
             )
+            if self.path:
+                cmd.setdefault('environment', {})['FILE_PATH'] = self.path
+                cmd.setdefault('metas', {})['path'] = self.path
+            yield cmd
+
+    @cached_property
+    def path(self):
+        return self.attributes['path']
 
     @cached_property
     def metrics_extractors(self):

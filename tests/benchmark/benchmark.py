@@ -207,3 +207,19 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
                 _check_extractor(extractors)
         else:
             _check_extractor(all_extractors)
+
+    def assertExecutionMatrix(self, attributes, exec_matrix):
+        """Helper function to test execution matrix of a benchmark
+        initialized with the given attributes
+        """
+        clazz = self.get_benchmark_clazz()
+        benchmark = clazz()
+        dict_merge(
+            benchmark.attributes,
+            attributes
+        )
+        assertCountEqual(
+            self,
+            list(benchmark.execution_matrix(self.exec_context)),
+            exec_matrix
+        )

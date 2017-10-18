@@ -62,7 +62,7 @@ class HPLExtractor(MetricsExtractor):
             size_p=(int, 3),
             size_q=(int, 4),
             time=(float, 5),
-            flops=(float, 6),
+            flops=(float, 6, 1e+9),
         ),
         precision=dict(
             precision=(float, 1),
@@ -94,17 +94,26 @@ class HPLExtractor(MetricsExtractor):
         for section, regex in cls.REGEX.items():
             search = regex.search(line)
             if search:
-                for metric, data in cls.REGEX_METRICS[section].items():
-                    metrics[metric] = data[0](search.group(data[1]))
-                if section == 'precision':
-                    metrics['validity'] = str(search.group(2)) == "PASSED"
+                cls._extract_metric(section, search, metrics)
                 return
+
+    @classmethod
+    def _extract_metric(cls, section, search, metrics):
+        for metric, data in cls.REGEX_METRICS[section].items():
+            mtype = data[0]
+            mfield = data[1]
+            mvalue = mtype(search.group(mfield))
+            if len(data) == 3:
+                mvalue *= data[2]
+            metrics[metric] = mvalue
+        if section == 'precision':
+            metrics['validity'] = str(search.group(2)) == "PASSED"
 
 
 class HPL(Benchmark):
     """Benchmark wrapper for the HPLbench utility
     """
-    DEFAULT_THREADS = [1]
+    DEFAULT_THREADS = 1
     DEFAULT_DEVICE = 'cpu'
     DEFAULT_EXECUTABLE = 'xhpl'
 
@@ -115,7 +124,9 @@ class HPL(Benchmark):
                 threads=HPL.DEFAULT_THREADS,
                 data="",
                 device=HPL.DEFAULT_DEVICE,
-                executable=HPL.DEFAULT_EXECUTABLE
+                executable=HPL.DEFAULT_EXECUTABLE,
+                mpirun=[],
+                srun_nodes='*',
             )
         )
     name = 'hpl'
@@ -130,17 +141,33 @@ class HPL(Benchmark):
 
     def execution_matrix(self, context):
         del context  # unused
-        yield dict(
+        cmd = dict(
             category=HPL.DEFAULT_DEVICE,
-            command=[
+            command=self.mpirun + [
                 './' + osp.basename(self.executable),
             ],
             environment=dict(
-                OMP_NUM_THREADS=str(self.attributes['threads'][0]),
+                OMP_NUM_THREADS=str(self.attributes['threads']),
                 KMP_AFFINITY='scatter'
             ),
-            srun_nodes=2,
         )
+        if self.srun_nodes:
+            cmd['srun_nodes'] = self.srun_nodes
+        yield cmd
+
+    @cached_property
+    def mpirun(self):
+        cmd = self.attributes['mpirun']
+        if cmd and cmd[0] != 'mpirun':
+            cmd = ['mpirun']
+        return [str(e) for e in cmd]
+
+    @cached_property
+    def srun_nodes(self):
+        nodes = self.attributes['srun_nodes']
+        if nodes:
+            return str(nodes)
+        return nodes
 
     @cached_property
     def metrics_extractors(self):
