@@ -207,6 +207,12 @@ be either a string or a list of string, for instance:
         exec_prefix: numactl -m 1
         type: stream
 
+srun_options
+~~~~~~~~~~~~
+
+When the `srun` execution layer is enabled, a list of providing additional
+options given to the `srun` command.
+
 attempts (optional)
 ~~~~~~~~~~~~~~~~~~~
 Dictionary to specify the number of times a command must be executed before
