@@ -134,6 +134,8 @@ class IMBAllGatherExtractor(IMBAllToAllExtractor):
 
 class IMB(Benchmark):
     """Benchmark wrapper for the IMBbench utility
+
+    the `srun_nodes` does not apply to the PingPong benchmark.
     """
     DEFAULT_EXECUTABLE = 'IMB-MPI1'
     PING_PONG = 'PingPong'
@@ -156,6 +158,7 @@ class IMB(Benchmark):
                 executable=IMB.DEFAULT_EXECUTABLE,
                 categories=IMB.DEFAULT_CATEGORIES,
                 arguments=IMB.DEFAULT_ARGUMENTS,
+                srun_nodes=0,
             )
         )
     name = 'imb'
@@ -182,7 +185,7 @@ class IMB(Benchmark):
                 yield dict(
                     category=category,
                     command=[self.executable, category] + arguments,
-                    srun_nodes=2,
+                    srun_nodes=self.attributes['srun_nodes']
                 )
 
     @staticmethod

@@ -229,7 +229,7 @@ class HostDriver(Enumerator):
         :rtype: list of string
         """
         if tag == '*':
-            return set(self.campaign.network.nodes)
+            return sorted(list(set(self.campaign.network.nodes)))
         definitions = self.campaign.network.tags.get(tag)
         if definitions is None:
             return []
