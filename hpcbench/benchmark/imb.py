@@ -145,7 +145,8 @@ class IMB(Benchmark):
         ALL_GATHER,
     ]
     DEFAULT_ARGUMENTS = {
-        ALL_GATHER: ["-nmpmin", "{process_count}"]
+        ALL_GATHER: ["-npmin", "{process_count}"],
+        ALL_TO_ALL: ["-npmin", "{process_count}"],
     }
 
     def __init__(self):
