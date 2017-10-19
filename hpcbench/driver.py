@@ -244,7 +244,7 @@ class HostDriver(Enumerator):
             else:
                 assert mode == 'nodes'
                 nodes = nodes.union(set(value))
-        return nodes
+        return sorted(list(nodes))
 
 
 class BenchmarkTagDriver(Enumerator):
@@ -750,6 +750,8 @@ class SlurmExecutionDriver(ExecutionDriver):
         if isinstance(count, six.string_types):
             tag = count
             count = 0
+        elif isinstance(count, list):
+            return count
         else:
             assert isinstance(count, int)
             tag = self.parent.parent.parent.parent.name
