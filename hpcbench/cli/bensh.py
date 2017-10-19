@@ -1,15 +1,15 @@
-"""ben-sh
+"""ben-sh - Execute a campaign
 
 Usage:
-  ben-sh [-v | -vv ] [-n HOST] CAMPAIGN_FILE
+  ben-sh [-v | -vv] [-n HOST] CAMPAIGN_FILE
   ben-sh (-h | --help)
   ben-sh --version
 
 Options:
-  -n HOST     Specify node name. Default is localhost
-  -h --help   Show this screen
-  --version   Show version
-  -v -vv -vvv Increase program verbosity
+  -n HOST    Specify node name. Default is localhost
+  -h --help  Show this screen
+  --version  Show version
+  -v -vv     Increase program verbosity
 """
 
 from hpcbench.driver import CampaignDriver

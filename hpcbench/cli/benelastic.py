@@ -6,10 +6,10 @@ Usage:
   ben-elastic --version
 
 Options:
-  --es=<host> Elasticsearch host [default: localhost]
-  -h, --help  Show this screen
-  --version   Show version
-  -v -vv -vvv Increase program verbosity
+  --es=<host>  Elasticsearch host [default: localhost]
+  -h, --help   Show this screen
+  --version    Show version
+  -v -vv       Increase program verbosity
 """
 
 from hpcbench.driver import CampaignDriver
@@ -25,7 +25,7 @@ def main(argv=None):
     driver = CampaignDriver(campaign_path=campaign_path)
     es_host = arguments['--es']
     if es_host:
-        es_conf = driver.campaign.campaign.export.elasticsearch
+        es_conf = driver.campaign.export.elasticsearch
         es_conf.host = es_host
     driver.campaign.export.elasticsearch.hosts = es_host
     es_export = ESExporter(driver)
