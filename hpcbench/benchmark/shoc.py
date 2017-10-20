@@ -103,8 +103,8 @@ class SHOC(Benchmark):
         yield dict(
             category=SHOC.CATEGORY,
             command=[self.executable, '-cuda']
-                    + ["-s", str(self.attributes['size'])]
-                    + ["-d", str(self.attributes['device'])],
+                     + ["-s", str(self.attributes['size'])]
+                     + ["-d", str(self.attributes['device'])],
             metas=dict(
                 benchmark=self.attributes['benchmark']
             ),
