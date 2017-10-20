@@ -6,12 +6,12 @@ Usage:
   ben-doc --version
 
 Options:
-  -o, --output FILE  Write report to specified file
-                     instead of standard output
-  -t, --template FILE Specify a custom Jinja template
-  -h, --help   Show this screen
-  --version   Show version
-  -v -vv -vvv Increase program verbosity
+  -o, --output FILE       Write report to specified file
+                          instead of standard output
+  -t, --template TEMPLATE Specify a custom Jinja template
+  -h, --help              Show this screen
+  --version               Show version
+  -v -vv                  Increase program verbosity
 """
 
 from hpcbench.driver import CampaignDriver

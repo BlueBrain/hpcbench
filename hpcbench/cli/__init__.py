@@ -16,7 +16,7 @@ def setup_logger(verbose):
     if verbose == 1:
         level = logging.INFO
     elif verbose > 1:
-        verbose = logging.DEBUG
+        level = logging.DEBUG
     logging.basicConfig(level=level)
 
 

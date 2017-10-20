@@ -6,9 +6,9 @@ Usage:
   ben-merge --version
 
 Options:
-  -h --help   Show this screen
-  --version   Show version
-  -v -vv -vvv Increase program verbosity
+  -h --help  Show this screen
+  --version  Show version
+  -v -vv     Increase program verbosity
 """
 
 from hpcbench.campaign import merge_campaigns
