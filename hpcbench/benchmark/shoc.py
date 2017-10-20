@@ -74,7 +74,7 @@ class SHOC(Benchmark):
     """
     DEFAULT_DEVICE = '0'
     DEFAULT_EXECUTABLE = 'shocdriver'
-    DEFAULT_OPTIONS = ['-s', '3']
+    DEFAULT_SIZE = '1'
     DEFAULT_BENCHMARK = "all"
     CATEGORY = 'gpu'
 
@@ -85,7 +85,7 @@ class SHOC(Benchmark):
                 benchmark=SHOC.DEFAULT_BENCHMARK,
                 device=SHOC.DEFAULT_DEVICE,
                 executable=SHOC.DEFAULT_EXECUTABLE,
-                options=SHOC.DEFAULT_OPTIONS,
+                size=SHOC.DEFAULT_SIZE,
             )
         )
     name = 'shoc'
@@ -102,12 +102,9 @@ class SHOC(Benchmark):
         del context  # unused
         yield dict(
             category=SHOC.CATEGORY,
-            command=[self.executable, '-cuda'] + self.attributes['options'],
+            command=[self.executable, '-cuda'] + ["-s", str(self.attributes['size'])] + ["-d", str(self.attributes['device'])],
             metas=dict(
                 benchmark=self.attributes['benchmark']
-            ),
-            environment=dict(
-                CUDA_VISIBLE_DEVICES=str(self.attributes['device']),
             ),
         )
 
