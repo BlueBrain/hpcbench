@@ -291,29 +291,29 @@ class TestHostDriver(unittest.TestCase):
     def test_nodes_method(self):
         self.assertEqual(
             self.network.nodes('group_nodes'),
-            set([
+            [
                 'node01',
                 'node02',
                 'node03'
-            ])
+            ]
         )
         self.assertEqual(
             self.network.nodes('group_match'),
-            set([
+            [
                 'node10',
-            ])
+            ]
         )
         self.assertEqual(
             self.network.nodes('n01'),
-            set([
+            [
                 'node01',
-            ])
+            ]
         )
         self.assertEqual(
             self.network.nodes('*'),
-            set([
+            [
                 'node{0:02}'.format(id_)
                 for id_ in range(1, 11)
-            ])
+            ]
         )
         self.assertEqual(self.network.nodes('unknown_group'), [])

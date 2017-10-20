@@ -66,14 +66,17 @@ class TestImb(AbstractBenchmarkTest, unittest.TestCase):
             dict(
                 command=[
                     '/path/to/fake', 'Allgather',
-                    '-nmpmin', '{process_count}'
+                    '-npmin', '{process_count}'
                 ],
-                srun_nodes=2,
+                srun_nodes=0,
                 category='Allgather'
             ),
             dict(
-                command=['/path/to/fake', 'Alltoallv'],
-                srun_nodes=2,
+                command=[
+                    '/path/to/fake', 'Alltoallv',
+                    '-npmin', '{process_count}',
+                ],
+                srun_nodes=0,
                 category='Alltoallv'
             ),
         ]
