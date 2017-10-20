@@ -74,5 +74,6 @@ setup(
         iperf = hpcbench.benchmark.iperf
         iossd = hpcbench.benchmark.iossd
         mdtest = hpcbench.benchmark.mdtest
+        shoc = hpcbench.benchmark.shoc
     """
 )
