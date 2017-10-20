@@ -2,8 +2,10 @@
    https://github.com/vetter/shoc
 """
 import re
+import shlex
 
 from cached_property import cached_property
+import six
 
 from hpcbench.api import (
     Benchmark,
@@ -72,9 +74,9 @@ class SHOCExtractor(MetricsExtractor):
 class SHOC(Benchmark):
     """Benchmark wrapper for the SHOCbench utility
     """
-    DEFAULT_DEVICE = '0'
+    DEFAULT_DEVICE = 0
     DEFAULT_EXECUTABLE = 'shocdriver'
-    DEFAULT_OPTIONS = ['-s', '3']
+    DEFAULT_SIZE = 1
     DEFAULT_BENCHMARK = "all"
     CATEGORY = 'gpu'
 
@@ -85,7 +87,8 @@ class SHOC(Benchmark):
                 benchmark=SHOC.DEFAULT_BENCHMARK,
                 device=SHOC.DEFAULT_DEVICE,
                 executable=SHOC.DEFAULT_EXECUTABLE,
-                options=SHOC.DEFAULT_OPTIONS,
+                size=SHOC.DEFAULT_SIZE,
+                options=[],
             )
         )
     name = 'shoc'
@@ -102,14 +105,44 @@ class SHOC(Benchmark):
         del context  # unused
         yield dict(
             category=SHOC.CATEGORY,
-            command=[self.executable, '-cuda'] + self.attributes['options'],
+            command=self.command,
             metas=dict(
                 benchmark=self.attributes['benchmark']
             ),
-            environment=dict(
-                CUDA_VISIBLE_DEVICES=str(self.attributes['device']),
-            ),
         )
+
+    @property
+    def command(self):
+        return [
+            self.executable, '-cuda',
+            '-d', self.device,
+            '-s', self.size,
+        ] + self.options
+
+    @property
+    def device(self):
+        """
+        GPU Device identifier the benchmark must be executed on
+        """
+        return str(self.attributes['device'])
+
+    @property
+    def size(self):
+        """
+        Problem size to resolve
+        """
+        return str(self.attributes['size'])
+
+    @property
+    def options(self):
+        """
+        additional options passed to the shoc executable
+        default: []
+        """
+        options = self.attributes['options'] or []
+        if isinstance(options, six.string_types):
+            options = shlex.split(options)
+        return options
 
     @cached_property
     def metrics_extractors(self):
