@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from collections import Mapping
 import inspect
+import itertools
 import logging
 import os
 import os.path as osp
@@ -9,6 +10,7 @@ import shutil
 from cached_property import cached_property
 from six import (
     assertCountEqual,
+    string_types,
     with_metaclass,
 )
 import yaml
@@ -129,17 +131,33 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
                 self.create_sample_run(category)
                 clazz = self.get_benchmark_clazz()
                 benchmark = clazz()
-                with open(YAML_REPORT_FILE, 'w') as ostr:
-                    yaml.dump(dict(category=category), ostr)
-                md = MetricsDriver('test-category', benchmark)
-                report = md()
-                parsed_metrics = report.get('metrics', {})
+                dict_merge(
+                    benchmark.attributes,
+                    self.attributes
+                )
                 expected_metrics = self.get_expected_metrics(category)
-                self.assertEqual(parsed_metrics, expected_metrics)
+                if not isinstance(expected_metrics, list):
+                    expected_metrics = itertools.repeat(expected_metrics)
+                else:
+                    expected_metrics = iter(expected_metrics)
+                for metas in self.execution_metrics_set(category):
+                    with open(YAML_REPORT_FILE, 'w') as ostr:
+                        yaml.dump(dict(
+                            category=category,
+                            metas=metas
+                        ), ostr)
+                    md = MetricsDriver('test-category', benchmark)
+                    report = md()
+                    parsed_metrics = report.get('metrics', {})
+                    self.assertEqual(parsed_metrics, next(expected_metrics))
 
     def test_has_description(self):
         clazz = self.get_benchmark_clazz()
         assert isinstance(clazz.description, str)
+
+    def execution_metrics_set(self, category):
+        del category  # unused
+        return [{}]
 
     @property
     def execution_matrix(self):
@@ -166,6 +184,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
         pass
 
     def test_execution_matrix(self):
+        self.maxDiff = None
         exec_matrix = self.execution_matrix
         assert isinstance(exec_matrix, list)
 
@@ -174,24 +193,39 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
             assertCountEqual(self, exec_matrix, expected_exec_matrix)
 
         run_keys = {
-            'category', 'command', 'metas', 'environment', 'srun_nodes'
+            'category',
+            'command',
+            'environment',
+            'metas',
+            'shell',
+            'srun_nodes',
         }
         for runs in exec_matrix:
-            assert isinstance(runs, dict)
-            assert 'category' in runs
-            assert isinstance(runs['category'], str)
+            self.assertIsInstance(runs, dict)
+            self.assertIn('category', runs)
+            self.assertIsInstance(runs['category'], string_types)
             assert runs['category']
-            assert 'command' in runs
-            assert isinstance(runs['command'], list)
+            self.assertIn('command', runs)
+            self.assertIsInstance(runs['command'], list)
             assert runs['command']
-            for arg in runs['command']:
-                assert isinstance(arg, str)
+            if runs.get('shell', False):
+                for cmd in runs['command']:
+                    self.assertIsInstance(cmd, list)
+                    for arg in cmd:
+                        self.assertIsInstance(arg, string_types)
+            else:
+                for arg in runs['command']:
+                    assert isinstance(arg, str)
             keys = set(runs.keys())
             assert keys.issubset(run_keys)
 
     def test_metrics_extractors(self):
         clazz = self.get_benchmark_clazz()
         benchmark = clazz()
+        dict_merge(
+            benchmark.attributes,
+            self.attributes
+        )
         all_extractors = benchmark.metrics_extractors
         assert isinstance(all_extractors, (Mapping, list, MetricsExtractor))
 

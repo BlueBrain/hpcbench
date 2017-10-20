@@ -197,6 +197,9 @@ class Benchmark(with_metaclass(ABCMeta, object)):
             benchmark is part of.
             If a string is provided, then all nodes of the given tag will
             be used.
+        * *shell* (optional boolean):
+          when `shell` parameter is `True`, then the given command
+          is considered as a shell command.
 
         Execution context: for every command, a dedicated output directory
         is created and the current working directory changed to this directory

@@ -67,13 +67,14 @@ setup(
         ben-merge = hpcbench.cli.benmerge:main
         [hpcbench.benchmarks]
         sysbench = hpcbench.benchmark.sysbench
-        stream = hpcbench.benchmark.stream
         hpl = hpcbench.benchmark.hpl
         imb = hpcbench.benchmark.imb
         ior = hpcbench.benchmark.ior
-        iperf = hpcbench.benchmark.iperf
         iossd = hpcbench.benchmark.iossd
+        iperf = hpcbench.benchmark.iperf
         mdtest = hpcbench.benchmark.mdtest
         shoc = hpcbench.benchmark.shoc
+        standard = hpcbench.benchmark.standard
+        stream = hpcbench.benchmark.stream
     """
 )
