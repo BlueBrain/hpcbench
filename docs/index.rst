@@ -64,6 +64,16 @@ CLI
 **ben-sh** and **ben-nett** expect a YAML file describing the campaign to execute.
 Structure of this YAML file is detailled in the :doc:`campaign file reference <campaign>`.
 
+Campaign YAML description
+-------------------------
+
+.. toctree::
+   :maxdepth: 2
+   :numbered:
+
+   campaign.rst
+   standard_benchmark.rst
+
 API
 ---
 
@@ -278,11 +288,6 @@ LICENSE
 =======
 
 This software is released under MIT License.
-
-Contents:
-
-.. toctree::
-   :maxdepth: 2
 
 Indices and tables
 ==================

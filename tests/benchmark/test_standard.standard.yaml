@@ -1,0 +1,35 @@
+metrics:
+  simulation_time:
+    match: "\\s+total compute time:\\s(\\d*\\.?\\d+) \\[ms\\]"
+    type: Second
+    multiply_by: 0.001
+    when:
+    -
+      conditions:
+        compiler: [gcc, icc]
+        branch: branch42
+      match: "\\s+total pool clone time:\\s(\\d*\\.?\\d+) \\[ms\\]"
+      multiply_by: 1.0
+
+shells:
+- commands:
+    - spack install lengine@{branch} +syn2 %gcc
+    - spack load lengine@{branch} +syn2 %gcc
+  metas:
+    compiler: gcc
+    branch: [master, branch42]
+
+- commands:
+    - spack install lengine@{branch} +syn2 %icc
+    - spack load lengine@{branch} +syn2 %icc
+  metas:
+    compiler: gcc
+    branch: master
+
+executables:
+- command: ["bench_brunel", "--partition", "{partition}", "1", "1", "{file}"]
+  metas:
+  - partition: [1, 2]
+    file: "1.syn2"
+  - partition: 3
+    file: "3.syn2"

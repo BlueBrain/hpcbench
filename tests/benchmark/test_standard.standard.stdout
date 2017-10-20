@@ -1,0 +1,77 @@
+[setting] partition: 1
+[setting] thread: 1
+[setting] executor: pfor
+[setting] compression: false
+[LearnEngine] init
+[LearnEngine] cycle: 0.1 [ms]
+[LearnEngine] resolution: 0.1 [ms]
+[LearnEngine] precision: 64 bits floating point precision
+[Syn2NetworkBuilder] load cell from: /gpfs/bbp.cscs.ch/scratch/gss/bgq/schumann/simplification/gif_params_22f9d61_nest.h5
+[Syn2NetworkBuilder] load synapses from: /gpfs/bbp.cscs.ch/scratch/gss/bgq/schumann/simplification/dict_km3_mdtc_filters_N1_traces_bg_dt1_ttxall_setdet_allmean_both.syn2
+
+0%   10   20   30   40   50   60   70   80   90   100%
+|----|----|----|----|----|----|----|----|----|----|
+***************************************************
+[Syn2NetworkBuilder] neurons: 31346
+[Syn2NetworkBuilder] synapses: 38319505
+[Syn2NetworkBuilder] max_delay: 11.6145 [ms]
+[Syn2NetworkBuilder] min_delay: 0.116708 [ms]
+[LearnEngine] total memory allocated for the neurons: 98.0084 [MByte]
+[LearnEngine] total memory allocated for the synapses: 2020.66 [MByte]
+[clock-driven algorithm] using simd solver for rossert_et_al neurons
+[LearnEngine] finalize
+[LearnEngine] computation progress:
+
+0%   10   20   30   40   50   60   70   80   90   100%
+|----|----|----|----|----|----|----|----|----|----|
+***************************************************
+[LearnEngine] total memory allocated for the binq: 91.1671 [MByte]
+  total build time: 184899 [ms]
+  total pool clone time: 380.444 [ms]
+  total compute time: 40863 [ms]
+   instance 0 total spikes: 11644
+   instance 0 memory consumption: 18446744071783543280
+[LearnEngine] finalize
+[setting] partition: 1
+[setting] thread: 1
+[setting] executor: pfor
+[setting] compression: false
+[LearnEngine] init
+[LearnEngine] cycle: 0.1 [ms]
+[LearnEngine] resolution: 0.1 [ms]
+[LearnEngine] precision: 64 bits floating point precision
+[Syn2NetworkBuilder] load cell from: /gpfs/bbp.cscs.ch/scratch/gss/bgq/schumann/simplification/gif_params_22f9d61_nest.h5
+[Syn2NetworkBuilder] load synapses from: /gpfs/bbp.cscs.ch/scratch/gss/bgq/schumann/simplification/dict_km3_mdtc_filters_N1_traces_bg_dt1_ttxall_setdet_allmean_both.syn2
+
+0%   10   20   30   40   50   60   70   80   90   100%
+|----|----|----|----|----|----|----|----|----|----|
+***************************************************
+[Syn2NetworkBuilder] neurons: 31346
+[Syn2NetworkBuilder] synapses: 38319505
+[Syn2NetworkBuilder] max_delay: 11.6145 [ms]
+[Syn2NetworkBuilder] min_delay: 0.116708 [ms]
+[LearnEngine] total memory allocated for the neurons: 98.0084 [MByte]
+[LearnEngine] total memory allocated for the synapses: 2020.66 [MByte]
+[clock-driven algorithm] using simd solver for rossert_et_al neurons
+[LearnEngine] finalize
+[LearnEngine] computation progress:
+
+0%   10   20   30   40   50   60   70   80   90   100%
+|----|----|----|----|----|----|----|----|----|----|
+***************************************************
+[LearnEngine] total memory allocated for the binq: 91.1671 [MByte]
+[LearnEngine] computation progress:
+
+0%   10   20   30   40   50   60   70   80   90   100%
+|----|----|----|----|----|----|----|----|----|----|
+***************************************************
+[LearnEngine] total memory allocated for the binq: 91.1671 [MByte]
+  total build time: 115313 [ms]
+  total pool clone time: 760.517 [ms]
+  total compute time: 79372.9 [ms]
+   instance 0 total spikes: 11644
+   instance 0 memory consumption: 1563840144
+   instance 1 total spikes: 11644
+   instance 1 memory consumption: 1563840144
+[LearnEngine] finalize
+[LearnEngine] finalize
