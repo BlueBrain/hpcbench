@@ -3,8 +3,10 @@
     https://github.com/LLNL/ior
 """
 import re
+import shlex
 
 from cached_property import cached_property
+import six
 
 from hpcbench.api import (
     Benchmark,
@@ -181,19 +183,19 @@ class IOR(Benchmark):
     description = "Parallel filesystem I/O benchmark"
 
     APIS = ['POSIX', 'MPIIO', 'HDF5']
-    NODES = [1, 4, 8]
-    PROCESSORS = [[1, 4], [4, 16], [8, 32]]
-    BLOCK_SIZES = ['1M', '10M', '100M']
+    DEFAULT_BLOCK_SIZE = "1G"
     DEFAULT_EXECUTABLE = 'ior'
+    DEFAULT_SRUN_NODES = 1
+    DEFAULT_OPTIONS = []
 
     def __init__(self):
         super(IOR, self).__init__(
             attributes=dict(
                 apis=IOR.APIS,
-                block_sizes=IOR.BLOCK_SIZES,
-                nodes=IOR.NODES,
-                processors=IOR.PROCESSORS,
+                block_size=IOR.DEFAULT_BLOCK_SIZE,
+                srun_nodes=IOR.DEFAULT_SRUN_NODES,
                 executable=IOR.DEFAULT_EXECUTABLE,
+                options=IOR.DEFAULT_OPTIONS,
             )
         )
 
@@ -207,51 +209,45 @@ class IOR(Benchmark):
     def execution_matrix(self, context):
         del context  # unused
         # FIXME: Design the real set of commands to execute
-        for block_size in self.attributes['block_sizes']:
-            for api in set(self.attributes['apis']) - set(['MPIIO']):
-                for command in self._non_mpi_execution_matrix(api, block_size):
-                    yield command
-                for command in self._mpi_execution_matrix(block_size):
-                    yield command
+        for api in set(self.attributes['apis']) & set(IOR.APIS):
+            for command in self._execution_matrix(api):
+                yield command
 
-    def _non_mpi_execution_matrix(self, api, block_size):
+    def _execution_matrix(self, api):
         yield dict(
             category=api,
             command=[
                 self.executable,
                 '-a', api,
-                '-b', str(block_size),
-            ],
+                '-b', str(self.block_size),
+            ] + self.options,
             metas=dict(
                 api=api,
-                block_size=block_size
-            )
+                block_size=self.block_size
+            ),
+            srun_nodes=self.srun_nodes
         )
 
-    def _mpi_execution_matrix(self, block_size):
-        for i, nodes in enumerate(self.attributes['nodes']):
-            for processors in self.attributes['processors'][i]:
-                command = [
-                    self.executable,
-                    '-a', 'MPIIO',
-                    '-b', str(block_size)
-                ]
-                if nodes == 1:
-                    command = [
-                        'srun',
-                        '-n', str(nodes),
-                        '-N', str(processors),
-                    ] + command
-                yield dict(
-                    category='MPIIO',
-                    command=command,
-                    metas=dict(
-                        api='MPIIO',
-                        nodes=nodes,
-                        processors=processors,
-                        block_size=block_size
-                    )
-                )
+    @property
+    def options(self):
+        """Additional options appended to the ior command
+        type: either string or a list of string
+        """
+        options = self.attributes['options']
+        if isinstance(options, six.string_types):
+            options = shlex.split(options)
+        options = [str(e) for e in options]
+        return options
+
+    @property
+    def block_size(self):
+        return self.attributes['block_size']
+
+    @property
+    def srun_nodes(self):
+        """Number of nodes the command must be executed on
+        """
+        return self.attributes['srun_nodes']
 
     @cached_property
     def metrics_extractors(self):
