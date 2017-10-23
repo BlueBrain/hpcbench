@@ -151,12 +151,15 @@ class HPL(Benchmark):
                 KMP_AFFINITY='scatter'
             ),
         )
-        if self.srun_nodes:
-            cmd['srun_nodes'] = self.srun_nodes
+        if self.srun_nodes is not None:
+            cmd.update(srun_nodes=self.srun_nodes)
         yield cmd
 
     @cached_property
     def mpirun(self):
+        """Additional options passed as a list to the ``mpirun`` command
+        default: []
+        """
         cmd = self.attributes['mpirun']
         if cmd and cmd[0] != 'mpirun':
             cmd = ['mpirun']
@@ -164,10 +167,10 @@ class HPL(Benchmark):
 
     @cached_property
     def srun_nodes(self):
-        nodes = self.attributes['srun_nodes']
-        if nodes:
-            return str(nodes)
-        return nodes
+        """Number of nodes the command must be executed on.
+        Default: all nodes of the tag.
+        """
+        return self.attributes['srun_nodes']
 
     @cached_property
     def metrics_extractors(self):
