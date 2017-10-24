@@ -295,6 +295,8 @@ class BenchmarkDriver(Enumerator):
     @classmethod
     def _prepare_config(cls, config):
         config.setdefault('srun_options', [])
+        if isinstance(config['srun_options'], six.string_types):
+            config['srun_options'] = shlex.split(config['srun_options'])
         config['srun_options'] = [
             str(e)
             for e in config['srun_options']
