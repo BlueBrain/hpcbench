@@ -98,7 +98,8 @@ class MDTest(Benchmark):
     DEFAULT_ATTRIBUTES = dict(
         executable='mdtest',
         path=None,
-        options=['-n', '100000', '-i', '3'],
+        options=['-n', '10000', '-i', '3'],
+        srun_nodes=1,
     )
 
     def __init__(self):
@@ -123,8 +124,15 @@ class MDTest(Benchmark):
         yield dict(
             category='disk',
             command=self.command,
+            srun_nodes=self.srun_nodes,
         )
 
     @property
     def metrics_extractors(self):
         return MDTestExtractor()
+
+    @property
+    def srun_nodes(self):
+        """Number of nodes the command is executed on.
+        """
+        return self.attributes['srun_nodes']
