@@ -5,6 +5,7 @@ import unittest
 
 from hpcbench.toolbox.collections_ext import (
     Configuration,
+    dict_map_kv,
     dict_merge,
     flatten_dict,
     nameddict,
@@ -153,6 +154,59 @@ class TestDictMerge(unittest.TestCase):
         self.assertEqual(d1, dict(foo=dict(bar=42, foo=44)))
         dict_merge(d1, dict(foo=dict(foo=42)))
         self.assertEqual(d1, dict(foo=dict(bar=42, foo=42)))
+
+
+class TestDictMapKV(unittest.TestCase):
+    def test_empty_dict(self):
+        self.assertMapKVEquals({}, str, {})
+
+    def test_none(self):
+        self.assertMapKVEquals(None, str, 'None')
+
+    def test_list(self):
+        self.assertMapKVEquals([1, 2], str, ["1", "2"])
+
+    def test_simple_dict(self):
+        self.assertMapKVEquals(
+            {'foo': 42, 1: 'bar'},
+            str,
+            {'foo': '42', '1': 'bar'}
+        )
+
+    def test_nested_dict(self):
+        self.assertMapKVEquals(
+            {
+                42: {
+                    1: [
+                        43,
+                        {
+                            2: 44,
+                            3: [45, 46],
+                        }
+                    ]
+                },
+                43: 47,
+            },
+            str,
+            {
+                '42': {
+                    '1': [
+                        '43',
+                        {
+                            '2': '44',
+                            '3': ['45', '46'],
+                        }
+                    ]
+                },
+                '43': '47',
+            },
+        )
+
+    def assertMapKVEquals(self, obj, func, result):
+        self.assertEqual(
+            dict_map_kv(obj, func),
+            result
+        )
 
 
 if __name__ == '__main__':
