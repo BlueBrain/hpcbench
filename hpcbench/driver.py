@@ -211,6 +211,7 @@ class CampaignDriver(Enumerator):
             self.existing_campaign = False
             now = datetime.datetime.now()
             self.campaign_path = now.strftime(self.campaign.output_dir)
+            self.campaign_path = self.campaign_path.format(node=node)
 
     def child_builder(self, child):
         return HostDriver(self, name=child)
