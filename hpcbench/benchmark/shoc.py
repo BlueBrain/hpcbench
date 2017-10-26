@@ -77,14 +77,12 @@ class SHOC(Benchmark):
     DEFAULT_DEVICE = 0
     DEFAULT_EXECUTABLE = 'shocdriver'
     DEFAULT_SIZE = 1
-    DEFAULT_BENCHMARK = "all"
     CATEGORY = 'gpu'
 
     def __init__(self):
         # locate `shocdriver` executable
         super(SHOC, self).__init__(
             attributes=dict(
-                benchmark=SHOC.DEFAULT_BENCHMARK,
                 device=SHOC.DEFAULT_DEVICE,
                 executable=SHOC.DEFAULT_EXECUTABLE,
                 size=SHOC.DEFAULT_SIZE,
@@ -106,9 +104,6 @@ class SHOC(Benchmark):
         yield dict(
             category=SHOC.CATEGORY,
             command=self.command,
-            metas=dict(
-                benchmark=self.attributes['benchmark']
-            ),
         )
 
     @property
@@ -137,7 +132,6 @@ class SHOC(Benchmark):
     def options(self):
         """
         additional options passed to the shoc executable
-        default: []
         """
         options = self.attributes['options'] or []
         if isinstance(options, six.string_types):

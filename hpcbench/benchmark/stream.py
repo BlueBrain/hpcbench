@@ -130,17 +130,23 @@ class Stream(Benchmark):
 
     @cached_property
     def executable(self):
-        """Get absolute path to iperf executable
+        """Get path to iperf executable
         """
         return find_executable(self.attributes['executable'])
 
     @property
     def features(self):
+        """List of tested features among "cache", "mcdram", and "cpu"
+        """
         return Stream.DEFAULT_FEATURES & set(self.attributes['features'])
 
     @property
     def threads(self):
-        return self.attributes['threads']
+        """List of possible threads the command is executed with"""
+        return [
+            str(e)
+            for e in self.attributes['threads']
+        ]
 
     def execution_matrix(self, context):
         del context  # unused
@@ -160,7 +166,7 @@ class Stream(Benchmark):
                             memory_type=feature,
                         ),
                         environment=dict(
-                            OMP_NUM_THREADS=str(thread),
+                            OMP_NUM_THREADS=thread,
                             KMP_AFFINITY='scatter'
                         ),
                     )

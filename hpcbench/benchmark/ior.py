@@ -201,7 +201,7 @@ class IOR(Benchmark):
 
     @cached_property
     def executable(self):
-        """Get absolute path to iperf executable
+        """Get path to iperf executable
         """
         return find_executable(self.attributes['executable'])
 

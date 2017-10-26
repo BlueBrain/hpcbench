@@ -154,7 +154,6 @@ class IMB(Benchmark):
     def __init__(self):
         super(IMB, self).__init__(
             attributes=dict(
-                data="",
                 executable=IMB.DEFAULT_EXECUTABLE,
                 categories=IMB.DEFAULT_CATEGORIES,
                 arguments=IMB.DEFAULT_ARGUMENTS,
@@ -167,13 +166,30 @@ class IMB(Benchmark):
 
     @cached_property
     def executable(self):
-        """Get absolute path to executable
+        """Get path to Intel MPI Benchmark executable
         """
         return find_executable(self.attributes['executable'])
 
+    @property
+    def categories(self):
+        """List of IMB benchmarks to test"""
+        return self.attributes['categories']
+
+    @property
+    def arguments(self):
+        """Dictionary providing the list of arguments for every
+        benchmark"""
+        return self.attributes['arguments']
+
+    @property
+    def srun_nodes(self):
+        """Number of nodes the benchmark (other than PingPong)
+        must be executed on"""
+        return self.attributes['srun_nodes']
+
     def execution_matrix(self, context):
-        for category in self.attributes['categories']:
-            arguments = self.attributes['arguments'].get(category) or []
+        for category in self.categories:
+            arguments = self.arguments.get(category) or []
             if category == IMB.PING_PONG:
                 for pair in IMB.host_pairs(context):
                     yield dict(
@@ -185,7 +201,7 @@ class IMB(Benchmark):
                 yield dict(
                     category=category,
                     command=[self.executable, category] + arguments,
-                    srun_nodes=self.attributes['srun_nodes']
+                    srun_nodes=self.srun_nodes
                 )
 
     @staticmethod

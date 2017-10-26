@@ -123,7 +123,6 @@ class HPL(Benchmark):
             attributes=dict(
                 threads=HPL.DEFAULT_THREADS,
                 data="",
-                device=HPL.DEFAULT_DEVICE,
                 executable=HPL.DEFAULT_EXECUTABLE,
                 mpirun=[],
                 srun_nodes=0,
@@ -135,7 +134,7 @@ class HPL(Benchmark):
 
     @cached_property
     def executable(self):
-        """Get absolute path to executable
+        """Path to HPL executable
         """
         return find_executable(self.attributes['executable'])
 
@@ -147,13 +146,34 @@ class HPL(Benchmark):
                 './' + osp.basename(self.executable),
             ],
             environment=dict(
-                OMP_NUM_THREADS=str(self.attributes['threads']),
+                OMP_NUM_THREADS=self.threads,
                 KMP_AFFINITY='scatter'
             ),
         )
         if self.srun_nodes is not None:
             cmd.update(srun_nodes=self.srun_nodes)
         yield cmd
+
+    @property
+    def data(self):
+        """HPL input file
+        HPL.DATA Generator utility available here: https://goo.gl/RKGnrR
+        Then the file can specified using the | YAML keyword, for instance:
+
+        data: |
+          HPLinpack benchmark input file
+            Innovative Computing Laboratory, University of Tennessee
+            HPL.out      output file name (if any)
+            6            device out (6=stdout,7=stderr,file)
+            1            # of problems sizes (N)
+            ...
+        """
+        return self.attributes['data']
+
+    @property
+    def threads(self):
+        """Number of threads per process"""
+        return str(self.attributes['threads'])
 
     @cached_property
     def mpirun(self):
@@ -177,7 +197,6 @@ class HPL(Benchmark):
         return HPLExtractor()
 
     def pre_execute(self, execution):
-        data = self.attributes['data']
         with open('HPL.dat', 'w') as ostr:
-            ostr.write(data)
+            ostr.write(self.data)
         shutil.copy(self.executable, '.')

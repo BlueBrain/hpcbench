@@ -71,7 +71,6 @@ class Iperf(Benchmark):
                 server=Iperf.DEFAULT_SERVER,
                 options=["-P", str(physical_cpus())],
                 mpirun=[],
-                nodes='*',
             )
         )
 
@@ -81,16 +80,41 @@ class Iperf(Benchmark):
         """
         return find_executable(self.attributes['executable'])
 
+    @property
+    def server(self):
+        """Specifies the Iperf server to connect to"""
+        return self.attributes['server']
+
+    @property
+    def mpirun(self):
+        """List of mpirun options (prepended to the command)
+        "mpirun" is added if attribute is not empty and
+        do not start by mpirun
+        """
+        return [
+            str(e)
+            for e in self.attributes['mpirun']
+        ]
+
+    @property
+    def options(self):
+        """List of additional arguments appended
+        to the command line"""
+        return [
+            str(e)
+            for e in self.attributes['options']
+        ]
+
     def execution_matrix(self, context):
         del context  # unused
         yield dict(
             category=Iperf.DEFAULT_DEVICE,
-            command=self.attributes['mpirun'] + [
+            command=self.mpirun + [
                 self.executable,
                 '-c',
-                self.attributes['server'],
+                self.server,
                 '-J',
-            ] + self.attributes['options'],
+            ] + self.options,
         )
 
     @cached_property

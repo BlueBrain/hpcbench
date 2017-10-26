@@ -87,11 +87,23 @@ class Sysbench(Benchmark):
         performance, and even MySQL benchmarking.
         """
 
+    @property
+    def max_primes(self):
+        """List of complexities of the CPU benchmark to test
+        """
+        return self.attributes['max_primes']
+
+    @property
+    def threads(self):
+        """List of threads sysbench is tested against
+        """
+        def self.attributes['threads']
+
     def execution_matrix(self, context):
         del context  # unused
         if Sysbench.FEATURE_CPU in self.attributes['features']:
-            for thread in self.attributes['threads']:
-                for max_prime in self.attributes['max_primes']:
+            for thread in self.threads:
+                for max_prime in self.max_primes:
                     yield dict(
                         category=Sysbench.FEATURE_CPU,
                         command=[

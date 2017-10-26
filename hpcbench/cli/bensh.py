@@ -19,9 +19,16 @@ from . import cli_common
 def main(argv=None):
     """ben-sh entry point"""
     arguments = cli_common(__doc__, argv=argv)
-    node = arguments.get('-n')
-    driver = CampaignDriver(campaign_file=arguments['CAMPAIGN_FILE'],
-                            node=node)
-    driver()
-    if argv is not None:
-        return driver
+    campaign_file = arguments['CAMPAIGN_FILE']
+    if arguments['-g']:
+        if osp.exists(campaign_file):
+            raise Exception('Campaign file already exists')
+        with open(campaign_file, 'w') as ostr:
+            Generator().write(ostr)
+    else:
+        node = arguments.get('-n')
+        driver = CampaignDriver(campaign_file=campaign_file,
+                                node=node)
+        driver()
+        if argv is not None:
+            return driver

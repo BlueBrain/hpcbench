@@ -77,6 +77,68 @@ DEFAULT_CAMPAIGN = dict(
 )
 
 
+class Generator(object):
+    """Generate default campaign file"""
+    DEFAULT_TEMPLATE = 'hpcbench.yaml.jinja'
+
+    def __init__(self, template=None):
+        """Jinja template to use (in hpcbench/templates/ directory)
+        """
+        self.template = template or Generator.DEFAULT_TEMPLATE
+
+    def write(self, file):
+        """Write YAML campaign template to the given open file
+        """
+        render(self.template, file,
+            benchmarks=self.benchmarks,
+            hostname=socket.gethostname()
+        )
+
+    @property
+    def benchmarks(self):
+        # instantiate all benchmarks
+        benches = [b() for b in Benchmark.__subclasses__()]
+        # filter benchmark whose API says they should be included
+        # in the template
+        benches = [b for b in benches if b.in_campaign_template]
+        # sort by name
+        benches = sorted(benches, key=lambda b: b.name)
+        # return payload for Jinja template
+        return [
+            dict(
+                name=b.name,
+                description=self._description(b.description),
+                attributes={
+                    attr: dict(
+                        doc=self._format_attrdoc(b.__class__, attr),
+                        value=self._format_attrvalue(b.attributes[attr])
+                    )
+                    for attr in b.attributes
+                }
+            )
+            for b in benches
+        ]
+
+    def _format_attrdoc(self, clazz, attr):
+        doc = (getattr(clazz, attr).__doc__ or '')
+        doc = doc.strip()
+        doc = '# ' + doc
+        return doc.replace('\n        ', '\n          # ').strip()
+
+    def _format_attrvalue(self, value):
+        if isinstance(value, list):
+            return yaml.dump(value).rstrip()
+        if isinstance(value, collections.Mapping):
+            s = '\n          '
+            s += yaml.dump(value).replace('\n', '\n            ')
+        return value
+
+    def _description(self, s):
+        s = s.strip()
+        s = '# ' + s
+        return s.replace('\n        ', '\n      # ').strip()
+
+
 def from_file(campaign_file):
     """Load campaign from YAML file
 

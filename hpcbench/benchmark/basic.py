@@ -79,9 +79,15 @@ class Basic(Benchmark):
     def pre_execute(self, execution):
         del execution  # unused
         with open(Basic.PING_IPS_FILE, 'w') as ostr:
-            for ip in self.attributes['ping_ips']:
+            for ip in self.ping_ips:
                 print(ip, file=ostr)
 
     @cached_property
     def metrics_extractors(self):
         return BasicExtractor()
+
+    @property
+    def ping_ips(self):
+        """list of machine to ping
+        """
+        return self.attributes['ping_ips']
