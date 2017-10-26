@@ -260,6 +260,10 @@ class StdBenchmark(Benchmark):
     def __init__(self):
         super(StdBenchmark, self).__init__()
 
+    @property
+    def in_campaign_template(self):
+        return False
+
     @cached_property
     def config(self):
         return StdBenchmark._load_config(self.attributes)

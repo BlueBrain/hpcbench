@@ -168,7 +168,7 @@ class IMB(Benchmark):
     def executable(self):
         """Get path to Intel MPI Benchmark executable
         """
-        return find_executable(self.attributes['executable'])
+        return self.attributes['executable']
 
     @property
     def categories(self):
@@ -194,7 +194,10 @@ class IMB(Benchmark):
                 for pair in IMB.host_pairs(context):
                     yield dict(
                         category=category,
-                        command=[self.executable, category] + arguments,
+                        command=[
+                            find_executable(self.executable),
+                            category
+                        ] + arguments,
                         srun_nodes=pair,
                     )
             else:

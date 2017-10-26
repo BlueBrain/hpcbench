@@ -26,8 +26,8 @@ def main(argv=None):
     campaign_path = arguments['CAMPAIGN-DIR']
     driver = CampaignDriver(campaign_path=campaign_path)
     with pushd(campaign_path):
-        render(driver,
-               template=arguments['--template'],
-               ostr=arguments['--output'])
+        render(template=arguments['--template'],
+               ostr=arguments['--output'],
+               campaign=driver)
     if argv is not None:
         return driver

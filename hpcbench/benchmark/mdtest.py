@@ -106,6 +106,11 @@ class MDTest(Benchmark):
         super(MDTest, self).__init__(attributes=MDTest.DEFAULT_ATTRIBUTES)
 
     @property
+    def path(self):
+        """Overwrite directory files are created in"""
+        return self.attributes['path']
+
+    @property
     def options(self):
         """List of arguments given to the mdtest command"""
         return [
@@ -117,15 +122,13 @@ class MDTest(Benchmark):
     def executable(self):
         """get absolute path to mdtest utility
         """
-        return find_executable(self.attributes['executable'])
+        return self.attributes['executable']
 
     @property
     def command(self):
         """get command line to execute
         """
-        cmd = [self.executable]
-        cmd += self.options
-        return cmd
+        return [find_executable(self.executable)] + self.options
 
     @property
     def srun_nodes(self):

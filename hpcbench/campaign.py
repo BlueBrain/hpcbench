@@ -15,7 +15,9 @@ import six
 import yaml
 
 import hpcbench
+from hpcbench.api import Benchmark
 from hpcbench.ext.ClusterShell.NodeSet import NodeSet
+from hpcbench.report import render
 
 from . toolbox.collections_ext import (
     Configuration,
@@ -89,7 +91,8 @@ class Generator(object):
     def write(self, file):
         """Write YAML campaign template to the given open file
         """
-        render(self.template, file,
+        render(
+            self.template, file,
             benchmarks=self.benchmarks,
             hostname=socket.gethostname()
         )
@@ -107,11 +110,11 @@ class Generator(object):
         return [
             dict(
                 name=b.name,
-                description=self._description(b.description),
+                description=Generator._description(b.description),
                 attributes={
                     attr: dict(
-                        doc=self._format_attrdoc(b.__class__, attr),
-                        value=self._format_attrvalue(b.attributes[attr])
+                        doc=Generator._format_attrdoc(b.__class__, attr),
+                        value=Generator._format_attrvalue(b.attributes[attr])
                     )
                     for attr in b.attributes
                 }
@@ -119,24 +122,26 @@ class Generator(object):
             for b in benches
         ]
 
-    def _format_attrdoc(self, clazz, attr):
+    @classmethod
+    def _format_attrdoc(cls, clazz, attr):
         doc = (getattr(clazz, attr).__doc__ or '')
         doc = doc.strip()
         doc = '# ' + doc
         return doc.replace('\n        ', '\n          # ').strip()
 
-    def _format_attrvalue(self, value):
+    @classmethod
+    def _format_attrvalue(cls, value):
+        if isinstance(value, set):
+            value = list(value)
         if isinstance(value, list):
             return yaml.dump(value).rstrip()
-        if isinstance(value, collections.Mapping):
-            s = '\n          '
-            s += yaml.dump(value).replace('\n', '\n            ')
         return value
 
-    def _description(self, s):
-        s = s.strip()
-        s = '# ' + s
-        return s.replace('\n        ', '\n      # ').strip()
+    @classmethod
+    def _description(cls, desc):
+        desc = desc.strip()
+        desc = '# ' + desc
+        return desc.replace('\n        ', '\n      # ').strip()
 
 
 def from_file(campaign_file):

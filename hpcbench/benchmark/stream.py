@@ -132,7 +132,7 @@ class Stream(Benchmark):
     def executable(self):
         """Get path to iperf executable
         """
-        return find_executable(self.attributes['executable'])
+        return self.attributes['executable']
 
     @property
     def features(self):
@@ -158,7 +158,7 @@ class Stream(Benchmark):
                         command=[
                             'numactl',
                             " ".join(numa_policy['args']),
-                            self.executable,
+                            find_executable(self.executable),
                         ],
                         metas=dict(
                             threads=thread,

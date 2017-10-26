@@ -156,6 +156,10 @@ class Benchmark(with_metaclass(ABCMeta, object)):
     def __init__(self, attributes=None):
         self.attributes = attributes or {}
 
+    @property
+    def in_campaign_template(self):
+        return True
+
     @abstractmethod
     def execution_matrix(self, context):
         """Describe benchmark commands

@@ -136,14 +136,14 @@ class HPL(Benchmark):
     def executable(self):
         """Path to HPL executable
         """
-        return find_executable(self.attributes['executable'])
+        return self.attributes['executable']
 
     def execution_matrix(self, context):
         del context  # unused
         cmd = dict(
             category=HPL.DEFAULT_DEVICE,
             command=self.mpirun + [
-                './' + osp.basename(self.executable),
+                './' + osp.basename(find_executable(self.executable)),
             ],
             environment=dict(
                 OMP_NUM_THREADS=self.threads,
@@ -177,9 +177,7 @@ class HPL(Benchmark):
 
     @cached_property
     def mpirun(self):
-        """Additional options passed as a list to the ``mpirun`` command
-        default: []
-        """
+        """Additional options passed as a list to the ``mpirun`` command"""
         cmd = self.attributes['mpirun']
         if cmd and cmd[0] != 'mpirun':
             cmd = ['mpirun']

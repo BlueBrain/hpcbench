@@ -61,6 +61,10 @@ class FakeBenchmark(Benchmark):
 
     INPUTS = [10, 20, 100]
 
+    @property
+    def in_campaign_template(self):
+        return False
+
     def __init__(self):
         super(FakeBenchmark, self).__init__(
             attributes=dict(

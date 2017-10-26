@@ -78,7 +78,7 @@ class Iperf(Benchmark):
     def executable(self):
         """Get absolute path to iperf executable
         """
-        return find_executable(self.attributes['executable'])
+        return self.attributes['executable']
 
     @property
     def server(self):
@@ -110,7 +110,7 @@ class Iperf(Benchmark):
         yield dict(
             category=Iperf.DEFAULT_DEVICE,
             command=self.mpirun + [
-                self.executable,
+                find_executable(self.executable),
                 '-c',
                 self.server,
                 '-J',

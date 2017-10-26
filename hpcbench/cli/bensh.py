@@ -1,17 +1,21 @@
 """ben-sh - Execute a campaign
 
 Usage:
-  ben-sh [-v | -vv] [-n HOST] CAMPAIGN_FILE
+  ben-sh [-v | -vv] [-n HOST] [-g] CAMPAIGN_FILE
   ben-sh (-h | --help)
   ben-sh --version
 
 Options:
   -n HOST    Specify node name. Default is localhost
   -h --help  Show this screen
+  -g         Generate a default YAML campaign file
   --version  Show version
   -v -vv     Increase program verbosity
 """
 
+import os.path as osp
+
+from hpcbench.campaign import Generator
 from hpcbench.driver import CampaignDriver
 from . import cli_common
 

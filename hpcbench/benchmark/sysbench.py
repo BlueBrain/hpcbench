@@ -88,6 +88,11 @@ class Sysbench(Benchmark):
         """
 
     @property
+    def features(self):
+        """List of features to test"""
+        return self.attributes['features']
+
+    @property
     def max_primes(self):
         """List of complexities of the CPU benchmark to test
         """
@@ -97,7 +102,7 @@ class Sysbench(Benchmark):
     def threads(self):
         """List of threads sysbench is tested against
         """
-        def self.attributes['threads']
+        return self.attributes['threads']
 
     def execution_matrix(self, context):
         del context  # unused

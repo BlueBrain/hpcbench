@@ -97,7 +97,7 @@ class SHOC(Benchmark):
     def executable(self):
         """Get absolute path to executable
         """
-        return find_executable(self.attributes['executable'])
+        return self.attributes['executable']
 
     def execution_matrix(self, context):
         del context  # unused
@@ -109,7 +109,7 @@ class SHOC(Benchmark):
     @property
     def command(self):
         return [
-            self.executable, '-cuda',
+            find_executable(self.executable), '-cuda',
             '-d', self.device,
             '-s', self.size,
         ] + self.options
