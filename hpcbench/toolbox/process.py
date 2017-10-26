@@ -2,6 +2,8 @@
 """
 import os
 import os.path as osp
+import platform
+import subprocess
 
 
 def find_in_paths(name, paths):
@@ -47,12 +49,19 @@ def find_executable(name, names=None, required=True):
 def physical_cpus():
     """Get cpus identifiers, for instance set(["0", "1", "2", "3"])
 
-    :return get physical CPU identifiers as a set
-    :rtype: set of strings
+    :return Number of physical CPUs available
+    :rtype: int
     """
+    if platform.system() == 'Darwin':
+        ncores = subprocess.check_output(
+            ['/usr/sbin/sysctl', '-n', 'hw.ncpu'],
+            shell=False
+        )
+        return int(ncores.strip())
+
     sockets = set()
     with open('/proc/cpuinfo') as istr:
         for line in istr:
             if line.startswith('physical id'):
                 sockets.add(line.split(':')[-1].strip())
-    return sockets
+    return len(sockets)

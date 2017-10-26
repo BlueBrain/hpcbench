@@ -69,7 +69,7 @@ class Iperf(Benchmark):
             attributes=dict(
                 executable=Iperf.DEFAULT_EXECUTABLE,
                 server=Iperf.DEFAULT_SERVER,
-                options=["-P", str(len(physical_cpus()))],
+                options=["-P", str(physical_cpus())],
                 mpirun=[],
                 nodes='*',
             )
