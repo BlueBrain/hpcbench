@@ -348,3 +348,36 @@ The ``srun`` layer accepts the following keys:
       srun_options:
         - --account=project42
         - --partition=über-cluster
+
+Environment variable expansion
+------------------------------
+
+Your configuration options can contain environment variables. HPCBench uses the
+variable values from the shell environment in which `ben-sh` is run. 
+For example, suppose the shell contains EMAIL=root@cscs.ch and you supply this configuration:
+
+.. code-block:: yaml
+
+  process:
+    type: srun
+    config:
+      srun_options:
+        - --email=$EMAIL
+        - --partition=über-cluster
+
+
+When you run ben-sh with this configuration, the program looks for the EMAIL
+environment variable in the shell and substitutes its value in.
+
+If an environment variable is not set, substitution fails and an exception is raised.
+
+Both $VARIABLE and ${VARIABLE} syntax are supported. Additionally,  it is possible to provide inline default values using typical shell syntax:
+
+${VARIABLE:-default} will evaluate to default if VARIABLE is unset or empty in the environment.
+${VARIABLE-default} will evaluate to default only if VARIABLE is unset in the environment.
+${#VARIABLE} will evaluate to the length of the environment variable.
+Other extended shell-style features, such as ${VARIABLE/foo/bar}, are not supported.
+
+You can use a $$ (double-dollar sign) when your configuration needs a literal dollar sign.
+This also prevents HPCBench from interpolating a value, so a $$ allows you to
+refer to environment variables that you don’t want processed by HPCBench.

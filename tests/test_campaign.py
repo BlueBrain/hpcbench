@@ -1,5 +1,6 @@
 from collections import namedtuple
 import logging
+import os
 import re
 import unittest
 
@@ -60,16 +61,14 @@ class TestCampaign(unittest.TestCase):
 
     def test_tags_re_conversion(self):
         RE_TYPE = type(re.compile('foo'))
-        config = self.new_config
-        fill_default_campaign_values(config)
+        config = fill_default_campaign_values(self.new_config)
         self.assertIsInstance(
             config['network']['tags']['by_regex'][0]['match'],
             RE_TYPE
         )
 
     def test_nodeset(self):
-        config = self.new_config
-        fill_default_campaign_values(config)
+        config = fill_default_campaign_values(self.new_config)
         self.assertEqual(
             config['network']['tags']['by_nodeset'][0]['nodes'],
             [
@@ -85,6 +84,21 @@ class TestCampaign(unittest.TestCase):
         )
         with self.assertRaises(Exception):
             fill_default_campaign_values(config)
+
+    def test_envvars_expansion(self):
+        with self.assertRaises(KeyError):
+            config = self.new_config
+            config['output_dir'] = "$OUTPUT_DIR"
+            fill_default_campaign_values(config)
+
+        os.environ['OUTPUT_DIR'] = 'output-dir'
+        try:
+            config = self.new_config
+            config['output_dir'] = "$OUTPUT_DIR"
+            config = fill_default_campaign_values(config)
+            self.assertEqual(config['output_dir'], 'output-dir')
+        finally:
+            os.environ.pop('OUTPUT_DIR')
 
 
 class TestBenchmark(unittest.TestCase):
