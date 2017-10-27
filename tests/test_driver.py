@@ -230,9 +230,7 @@ class TestHostDriver(unittest.TestCase):
 
     @cached_property
     def network(self):
-        network = list(TestHostDriver.DRIVER.children_objects())
-        self.assertEqual(len(network), 1)
-        return network[0]
+        return TestHostDriver.DRIVER.network
 
     def test_srun_nodes_method(self):
         self.assertEqual(

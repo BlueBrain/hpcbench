@@ -106,10 +106,10 @@ class Stream(Benchmark):
             cache=[dict(args=["--all"], name="all")],
             mcdram=[
                 dict(
-                    args=['-m', socket],
-                    name='numa_' + socket
+                    args=['-m', str(socket)],
+                    name='numa_' + str(socket)
                 )
-                for socket in physical_cpus()
+                for socket in range(physical_cpus())
             ],
             cpu=[
                 dict(

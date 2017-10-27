@@ -83,6 +83,7 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
     def __init__(self, parent, name=None, logger=None):
         self.parent = parent
         self.campaign = parent.campaign
+        self.root = parent.root
         self.node = parent.node
         self.name = name
         if logger:
@@ -150,8 +151,38 @@ class Leaf(Enumerator):
         return []
 
 
-Top = namedtuple('top', ['campaign', 'node', 'logger'])
+Top = namedtuple('top', ['campaign', 'node', 'logger', 'root'])
 Top.__new__.__defaults__ = (None, ) * len(Top._fields)
+
+
+class Network(object):
+    def __init__(self, campaign):
+        self.campaign = campaign
+
+    def has_tag(self, tag):
+        return tag in self.campaign.network.tags
+
+    def nodes(self, tag):
+        """get list of nodes that belong to a tag
+        :rtype: list of string
+        """
+        if tag == '*':
+            return sorted(list(set(self.campaign.network.nodes)))
+        definitions = self.campaign.network.tags.get(tag)
+        if definitions is None:
+            return []
+        nodes = set()
+        for definition in definitions:
+            mode, value = list(definition.items())[0]
+            if mode == 'match':
+                nodes = nodes.union(set([
+                    node for node in self.campaign.network.nodes
+                    if value.match(node)
+                ]))
+            else:
+                assert mode == 'nodes'
+                nodes = nodes.union(set(value))
+        return sorted(list(nodes))
 
 
 class CampaignDriver(Enumerator):
@@ -168,9 +199,11 @@ class CampaignDriver(Enumerator):
             Top(
                 campaign=from_file(campaign_file),
                 node=node,
-                logger=logger or LOGGER
+                logger=logger or LOGGER,
+                root=self
             ),
         )
+        self.network = Network(self.campaign)
         if campaign_path:
             self.existing_campaign = True
             self.campaign_path = campaign_path
@@ -224,31 +257,6 @@ class HostDriver(Enumerator):
 
     def child_builder(self, child):
         return BenchmarkTagDriver(self, child)
-
-    def has_tag(self, tag):
-        return tag in self.campaign.network.tags
-
-    def nodes(self, tag):
-        """get list of nodes that belong to a tag
-        :rtype: list of string
-        """
-        if tag == '*':
-            return sorted(list(set(self.campaign.network.nodes)))
-        definitions = self.campaign.network.tags.get(tag)
-        if definitions is None:
-            return []
-        nodes = set()
-        for definition in definitions:
-            mode, value = list(definition.items())[0]
-            if mode == 'match':
-                nodes = nodes.union(set([
-                    node for node in self.campaign.network.nodes
-                    if value.match(node)
-                ]))
-            else:
-                assert mode == 'nodes'
-                nodes = nodes.union(set(value))
-        return sorted(list(nodes))
 
 
 class BenchmarkTagDriver(Enumerator):
@@ -318,7 +326,7 @@ class BenchmarkDriver(Enumerator):
         return ExecutionContext(
             node=self.node,
             tag=self.parent.name,
-            nodes=self.parent.parent.nodes(self.parent.name),
+            nodes=self.root.network.nodes(self.parent.name),
             logger=self.logger,
             srun_options=self.config['srun_options']
         )
@@ -790,15 +798,11 @@ class SlurmExecutionDriver(ExecutionDriver):
             tag = self.parent.parent.parent.parent.name
         return self._srun_nodes(tag, count)
 
-    @cached_property
-    def network(self):
-        return self.parent.parent.parent.parent.parent
-
     def _srun_nodes(self, tag, count):
         assert count >= 0
-        if tag != '*' and not self.network.has_tag(tag):
+        if tag != '*' and not self.root.network.has_tag(tag):
             raise ValueError('Unknown tag: {}'.format(tag))
-        nodes = sorted(list(self.network.nodes(tag)))
+        nodes = sorted(list(self.root.network.nodes(tag)))
         if count > 0:
             return self._filter_srun_nodes(nodes, count)
         return nodes
