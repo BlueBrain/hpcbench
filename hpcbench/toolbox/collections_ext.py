@@ -122,3 +122,15 @@ def dict_merge(dct, merge_dct):
             dict_merge(dct[key], merge_dct[key])
         else:
             dct[key] = merge_dct[key]
+
+
+def dict_map_kv(obj, func):
+    if isinstance(obj, collections.Mapping):
+        return {
+            func(k): dict_map_kv(v, func)
+            for k, v in six.iteritems(obj)
+        }
+    elif isinstance(obj, list):
+        return [dict_map_kv(e, func) for e in obj]
+    else:
+        return func(obj)

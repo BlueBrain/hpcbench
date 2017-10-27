@@ -17,7 +17,12 @@ import yaml
 import hpcbench
 from hpcbench.ext.ClusterShell.NodeSet import NodeSet
 
-from . toolbox.collections_ext import Configuration
+from . toolbox.collections_ext import (
+    Configuration,
+    dict_map_kv,
+    nameddict,
+)
+from . toolbox.env import expandvars
 
 
 def pip_installer_url(version=None):
@@ -98,6 +103,7 @@ def fill_default_campaign_values(campaign):
                 _merger(_camp[key], _deft[key])
             elif key not in _camp:
                 _camp[key] = _deft[key]
+
     _merger(campaign, DEFAULT_CAMPAIGN)
     campaign.setdefault('campaign_id', str(uuid.uuid4()))
 
@@ -105,6 +111,12 @@ def fill_default_campaign_values(campaign):
         config = campaign.precondition[precondition]
         if not isinstance(config, list):
             campaign.precondition[precondition] = [config]
+
+    def _expandvars(value):
+        if isinstance(value, six.string_types):
+            return expandvars(value)
+        return value
+    campaign = nameddict(dict_map_kv(campaign, _expandvars))
 
     NetworkConfig(campaign).expand()
     return campaign
