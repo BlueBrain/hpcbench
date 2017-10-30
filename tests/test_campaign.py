@@ -1,13 +1,18 @@
 from collections import namedtuple
 import logging
 import os
+import os.path as osp
 import re
+import tempfile
 import unittest
+
+import yaml
 
 from hpcbench.campaign import (
     fill_default_campaign_values,
     pip_installer_url,
 )
+from hpcbench.cli import bensh
 from hpcbench.driver import (
     BenchmarkCategoryDriver,
     BenchmarkDriver,
@@ -130,3 +135,22 @@ class TestBenchmark(unittest.TestCase):
             ['numactl', '--all', 'ls', '-la'],
             ed.command
         )
+
+
+class TestGenerator(unittest.TestCase):
+    def setUp(self):
+        fd, self.output_file = tempfile.mkstemp(prefix='hpcbench-ut',
+                                                suffix='.yaml')
+        os.close(fd)
+        os.remove(self.output_file)
+
+    def tearDown(self):
+        if osp.exists(self.output_file):
+            os.remove(self.output_file)
+
+    def test_generator(self):
+        bensh.main(argv=['-g', self.output_file])
+        self.assertTrue(osp.isfile(self.output_file))
+        with open(self.output_file) as istr:
+            template = yaml.safe_load(istr)
+        self.assertIsInstance(template, dict)

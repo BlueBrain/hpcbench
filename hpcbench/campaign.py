@@ -15,7 +15,9 @@ import six
 import yaml
 
 import hpcbench
+from hpcbench.api import Benchmark
 from hpcbench.ext.ClusterShell.NodeSet import NodeSet
+from hpcbench.report import render
 
 from . toolbox.collections_ext import (
     Configuration,
@@ -75,6 +77,71 @@ DEFAULT_CAMPAIGN = dict(
     ),
     precondition=dict(),
 )
+
+
+class Generator(object):
+    """Generate default campaign file"""
+    DEFAULT_TEMPLATE = 'hpcbench.yaml.jinja'
+
+    def __init__(self, template=None):
+        """Jinja template to use (in hpcbench/templates/ directory)
+        """
+        self.template = template or Generator.DEFAULT_TEMPLATE
+
+    def write(self, file):
+        """Write YAML campaign template to the given open file
+        """
+        render(
+            self.template, file,
+            benchmarks=self.benchmarks,
+            hostname=socket.gethostname()
+        )
+
+    @property
+    def benchmarks(self):
+        # instantiate all benchmarks
+        benches = [b() for b in Benchmark.__subclasses__()]
+        # filter benchmark whose API says they should be included
+        # in the template
+        benches = [b for b in benches if b.in_campaign_template]
+        # sort by name
+        benches = sorted(benches, key=lambda b: b.name)
+        # return payload for Jinja template
+        return [
+            dict(
+                name=b.name,
+                description=Generator._description(b.description),
+                attributes={
+                    attr: dict(
+                        doc=Generator._format_attrdoc(b.__class__, attr),
+                        value=Generator._format_attrvalue(b.attributes[attr])
+                    )
+                    for attr in b.attributes
+                }
+            )
+            for b in benches
+        ]
+
+    @classmethod
+    def _format_attrdoc(cls, clazz, attr):
+        doc = (getattr(clazz, attr).__doc__ or '')
+        doc = doc.strip()
+        doc = '# ' + doc
+        return doc.replace('\n        ', '\n          # ').strip()
+
+    @classmethod
+    def _format_attrvalue(cls, value):
+        if isinstance(value, set):
+            value = list(value)
+        if isinstance(value, list):
+            return yaml.dump(value).rstrip()
+        return value
+
+    @classmethod
+    def _description(cls, desc):
+        desc = desc.strip()
+        desc = '# ' + desc
+        return desc.replace('\n        ', '\n      # ').strip()
 
 
 def from_file(campaign_file):

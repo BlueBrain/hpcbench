@@ -1,0 +1,49 @@
+# HPCBench default configuration file
+#
+# Usage: ben-sh {{ campaign_file }}
+
+# Report output directory
+output_dir: "hpcbench-%Y%m%d-%H:%M:%S"
+
+# Describe cluster topology
+network:
+  # Explicit list of all nodes
+    nodes:
+    - {{ hostname }}
+    # Aliases to nodes subsets.
+    # There are 2 ways to declare them:
+    # - nodes: explicit list of nodes
+    #          expansion of node number available though
+    # - match: provides a regular expression
+    # See below declaration of `gpu` and `skylake` tags
+    # using both methods.
+    tags:
+      # gpu:
+      #     nodes:
+      #         - node-gpu[01-10]
+      #         - node-supergpu[01-10]
+      # skylake:
+      #     match: node-sky.*
+
+
+# describe the benchmarks to execute per tags.
+benchmarks:
+  # * is an implicit tag, including all nodes
+  '*':
+    # arbitrary name
+    default:
+{%- for b in benchmarks %}
+
+      {{ b.description }}
+      {{ b.name }}:
+{%- if b.attributes %}
+        attributes:
+{%- for attr, rec in b.attributes.items() %}
+          {{ rec['doc'] }}
+          {{ attr }}: {{ rec['value'] | safe }}
+
+{%- endfor %}
+{%- endif %}
+
+
+{%- endfor %}

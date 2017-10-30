@@ -201,9 +201,14 @@ class IOR(Benchmark):
 
     @cached_property
     def executable(self):
-        """Get absolute path to iperf executable
+        """Get path to iperf executable
         """
-        return find_executable(self.attributes['executable'])
+        return self.attributes['executable']
+
+    @property
+    def apis(self):
+        """List of API to test"""
+        return self.attributes['apis']
 
     @listify
     def execution_matrix(self, context):
@@ -217,7 +222,7 @@ class IOR(Benchmark):
         yield dict(
             category=api,
             command=[
-                self.executable,
+                find_executable(self.executable),
                 '-a', api,
                 '-b', str(self.block_size),
             ] + self.options,

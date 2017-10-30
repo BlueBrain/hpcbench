@@ -165,9 +165,14 @@ class IOSSD(Benchmark):
             )
         )
 
+    @property
+    def categories(self):
+        """List of categories to test"""
+        return self.attributes['categories']
+
     def execution_matrix(self, context):
         del context  # unused
-        for category in self.attributes['categories']:
+        for category in self.categories:
             cmd = dict(
                 category=category,
                 command=['./' + IOSSD.SCRIPT_NAME, category],
@@ -179,6 +184,7 @@ class IOSSD(Benchmark):
 
     @cached_property
     def path(self):
+        """Custom path the benchmark must be executed into"""
         return self.attributes['path']
 
     @cached_property

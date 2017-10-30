@@ -56,10 +56,9 @@ def tex_escape(text):
 ENV.filters['texscape'] = tex_escape
 
 
-def render(campaign_driver, template=None, ostr=None):
+def render(template=None, ostr=None, **kwargs):
     """Generate report from a campaign
 
-    :param campaign_driver: instance of ``hpcbench.driver.CampaignDriver``
     :param template: Jinja template to use, ``DEFAULT_TEMPLATE`` is used
     if not specified
     :param ostr: output file or filename. Default is standard output
@@ -67,4 +66,4 @@ def render(campaign_driver, template=None, ostr=None):
     template = template or DEFAULT_TEMPLATE
     ostr = ostr or sys.stdout
     jinja_template = ENV.get_template(template)
-    jinja_template.stream(campaign=campaign_driver).dump(ostr)
+    jinja_template.stream(**kwargs).dump(ostr)

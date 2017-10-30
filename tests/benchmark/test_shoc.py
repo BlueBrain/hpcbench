@@ -41,7 +41,6 @@ class TestShoc(AbstractBenchmarkTest, unittest.TestCase):
             ),
             [
                 dict(
-                    metas=dict(benchmark='all'),
                     category='gpu',
                     command=[
                         '/fake',
@@ -61,7 +60,6 @@ class TestShoc(AbstractBenchmarkTest, unittest.TestCase):
             ),
             [
                 dict(
-                    metas=dict(benchmark='all'),
                     category='gpu',
                     command=[
                         '/fake',
@@ -81,7 +79,6 @@ class TestShoc(AbstractBenchmarkTest, unittest.TestCase):
             ),
             [
                 dict(
-                    metas=dict(benchmark='all'),
                     category='gpu',
                     command=[
                         '/fake',
@@ -103,7 +100,6 @@ class TestShoc(AbstractBenchmarkTest, unittest.TestCase):
             ),
             [
                 dict(
-                    metas=dict(benchmark='all'),
                     category='gpu',
                     command=[
                         '/fake',

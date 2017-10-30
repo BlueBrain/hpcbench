@@ -105,19 +105,36 @@ class MDTest(Benchmark):
     def __init__(self):
         super(MDTest, self).__init__(attributes=MDTest.DEFAULT_ATTRIBUTES)
 
+    @property
+    def path(self):
+        """Overwrite directory files are created in"""
+        return self.attributes['path']
+
+    @property
+    def options(self):
+        """List of arguments given to the mdtest command"""
+        return [
+            str(e)
+            for e in self.attributes['options']
+        ]
+
     @cached_property
     def executable(self):
         """get absolute path to mdtest utility
         """
-        return find_executable(self.attributes['executable'])
+        return self.attributes['executable']
 
     @property
     def command(self):
         """get command line to execute
         """
-        cmd = [self.executable]
-        cmd += self.attributes['options']
-        return cmd
+        return [find_executable(self.executable)] + self.options
+
+    @property
+    def srun_nodes(self):
+        """Number of nodes the command is executed on.
+        """
+        return self.attributes['srun_nodes']
 
     def execution_matrix(self, context):
         del context  # unused
@@ -130,9 +147,3 @@ class MDTest(Benchmark):
     @property
     def metrics_extractors(self):
         return MDTestExtractor()
-
-    @property
-    def srun_nodes(self):
-        """Number of nodes the command is executed on.
-        """
-        return self.attributes['srun_nodes']
