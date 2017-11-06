@@ -39,7 +39,7 @@ setup(
         'setuptools_scm==1.15.6',
     ],
     install_requires=[
-        'cached-property==1.3.0',
+        'cached-property==1.3.1',
         'docopt==0.6.2',
         'elasticsearch==5.4.0',
         'jinja2==2.9.6',
