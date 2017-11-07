@@ -23,7 +23,7 @@ class ESExporter(object):
         float: 'float',
         int: 'long',
         six.text_type: 'text',
-        str: 'text',
+        str: 'keyword',
     }
     PROPERTIES_FIELD_TYPE = dict(date='date')
 
