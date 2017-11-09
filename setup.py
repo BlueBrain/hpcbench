@@ -42,7 +42,7 @@ setup(
         'cached-property==1.3.0',
         'docopt==0.6.2',
         'elasticsearch==5.4.0',
-        'jinja2==2.9.6',
+        'jinja2==2.10',
         'PyYAML>=3.12',
         'six==1.10',
     ],
