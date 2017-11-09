@@ -44,7 +44,7 @@ setup(
         'elasticsearch==5.4.0',
         'jinja2==2.9.6',
         'PyYAML>=3.12',
-        'six==1.10',
+        'six==1.11',
     ],
     extras_require=dict(
       PLOTTING=['matplotlib==2.0.2'],
