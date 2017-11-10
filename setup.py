@@ -41,7 +41,7 @@ setup(
     install_requires=[
         'cached-property==1.3.1',
         'docopt==0.6.2',
-        'elasticsearch==5.4.0',
+        'elasticsearch==5.5.0',
         'jinja2==2.10',
         'PyYAML>=3.12',
         'six==1.11',
