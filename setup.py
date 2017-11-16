@@ -48,6 +48,7 @@ setup(
     ],
     extras_require=dict(
       PLOTTING=['matplotlib==2.0.2'],
+      STDFUNC=['numpy==1.13.3'],
     ),
     include_package_data=True,
     package_data={

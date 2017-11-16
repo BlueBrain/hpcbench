@@ -190,7 +190,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
 
         expected_exec_matrix = self.expected_execution_matrix
         if expected_exec_matrix is not None:
-            assertCountEqual(self, exec_matrix, expected_exec_matrix)
+            assertCountEqual(self, expected_exec_matrix, exec_matrix)
 
         run_keys = {
             'category',

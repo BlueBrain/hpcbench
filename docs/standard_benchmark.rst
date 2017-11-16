@@ -133,7 +133,7 @@ Each dictionary describes a set of metas values.
       bar: [6, 7]
 
 Using a list of values allows you to describe a combination of commands. In the example above, it means
-launchning 6 commands:
+launching 6 commands:
 
 * ``echo 1 2``
 * ``echo 1 3``
@@ -142,6 +142,131 @@ launchning 6 commands:
 * ``echo 5 6``
 * ``echo 5 7``
 
+
+It is possible to specify several metas at once:
+
+.. code-block:: yaml
+
+  executables:
+  -
+    command: [echo, {foo}, {bar}]
+    metas:
+    -
+      foo: 1
+      bar: [2, 3]
+    - "foo, bar": [[4, 6], [5, 7]
+
+
+This sample is equivalent to the previous.
+
+
+
+Some functions can also be called to specify the list of values a meta can take, among:
+
+* ``range``, same as Python range builtin
+* ``linspace``, ``geomspace``, ``linspace``, ``arange``, same as NumPy corresponding functions.
+* ``correlate``, to specify multi metas at once.
+
+In this case, the meta description is a dictionary providing the following attributes:
+
+* ``function``: name of the function to call
+* ``args``: optional list of arguments given to the function
+* ``kwargs``: optional dictionary of keywords arguments given to the function
+
+For instance:
+
+.. code-block:: yaml
+
+  executables:
+  -
+    command: [echo, {foo}, {bar}]
+    metas:
+    -
+      foo: 1
+      bar:
+        function: range
+        args: [2, 4]
+
+Will launch the 2 commands:
+
+* ``echo 1 2``
+* ``echo 1 3``
+
+
+
+The ``correlate`` signature is as follow:
+* a mandatory list of series given in the ``args`` section
+* 2 optional arguments: ``explore`` and ``with_overflow``
+
+A serie is made of a list of arguments givento a NumPY function
+returning the values the meta has to take, for instance:
+
+``[geomspace, 32, 1, num=6]``
+
+allowed functions are: ``geomspace``, ``logspace``, ``linspace``, 
+``arange``
+an additional `_cast=<type>` allows you to cast the result of the NumPy
+function, for instance: ``[geomspace, 32, 1, num=6, _cast=int]``
+
+For example:
+
+.. code-block:: yaml
+
+  executables:
+  -
+    command: [mycommand, -p, {processes}, -t, {threads}]
+    metas:
+    -
+      "[processes, threads]":
+        function: correlate
+        args:
+        - [geomspace, 8, 1, num=4, _cast=int]
+        - [geomspace, 1, 8, num=4, _cast=int]
+
+Will launch the following 4 commands:
+
+* ``mycommand -p 8 -t 1``
+* ``mycommand -p 4 -t 2``
+* ``mycommand -p 2 -t 4``
+* ``mycommand -p 1 -t 8``
+
+
+The ``explore`` optional argument allows you to test additional
+combinations by modifying every combinations by given matrices
+
+For example:
+
+.. code-block:: yaml
+
+  executables:
+  -
+    command: [mycommand, -p, {processes}, -t, {threads}]
+    metas:
+    -
+      "[processes, threads]":
+        function: correlate
+        args:
+        - [geomspace, 4, 1, num=3, _cast=int]
+        - [geomspace, 1, 4, num=3, _cast=int]
+        kwargs:
+          explore:
+          - [0, 1]
+
+Will launch the following 8 commands:
+
+* ``mycommand -p 4 -t 1``
+* ``mycommand -p 2 -t 2``
+* ``mycommand -p 1 -t 4``
+* ``mycommand -p 4 -t 2``
+* ``mycommand -p 2 -t 3``
+
+If the optional boolean ``with_overflow`` keyword argument was set to
+True, then an additional ``(1, 1)`` command would have been triggered,
+corresponding to the initiual (1, 4) combination plus (1, 1) matrix.
+Instead of having (1, 5), the first value of the ``threads`` serie
+would had been used, resulting in the ``(1, 1)`` value.
+Because such combination is usually pointless, the ``with_overflow``
+default value is False.
 
 category (optional)
 ~~~~~~~~~~~~~~~~~~~

@@ -19,6 +19,144 @@ from hpcbench.api import (
 from hpcbench.toolbox.functools_ext import listify
 
 
+class MetaFunctions(object):
+    """Functions callable in the `meta` values section"""
+    FUNC_NAME_RE = re.compile(r"[a-zA-Z]\w*")
+    COMBINE_FUNCTIONS = {'geomspace', 'logspace', 'linspace', 'arange'}
+
+    @classmethod
+    def eval(cls, name, args, kwargs):
+        return cls._get_function(name)(*args, **kwargs)
+
+    @classmethod
+    def _get_function(cls, name):
+        if not cls.FUNC_NAME_RE.match(name):
+            raise Exception('Invalid function name: %s' % name)
+        return getattr(cls, '_func_' + name)
+
+    @classmethod
+    def _func_linspace(cls, *args, **kwargs):
+        import numpy as np
+        return list(np.linspace(*args, **kwargs))
+
+    @classmethod
+    def _func_arange(cls, *args, **kwargs):
+        import numpy as np
+        return list(np.arange(*args, **kwargs))
+
+    @classmethod
+    def _func_range(cls, *args, **kwargs):
+        return list(range(*args))
+
+    @classmethod
+    @listify
+    def _func_correlate(cls, *series, **kwargs):
+        import numpy as np
+        explore = kwargs.get('explore')
+        with_overflow = kwargs.get('with_overflow') or False
+        types_map = dict(
+            int=int,
+            float=float,
+            bool=bool,
+        )
+        series = copy.deepcopy(series)
+
+        def _build_serie(params):
+            func_set = cls.COMBINE_FUNCTIONS
+            if len(params) < 1:
+                raise Exception('Missing function name')
+            func, params = params[0], params[1:]
+            if func not in func_set:
+                raise Exception(
+                    'Unknown function %s. Allowed functions: %s' %
+                    (func, ', '.join(func_set))
+                )
+
+            def try_coerce(k, v):
+                if k in {'dtype', 'cast'}:
+                    return types_map.get(v, v)
+                for _type in [int, float, bool]:
+                    try:
+                        return _type(v)
+                    except:
+                        pass
+                return v
+
+            in_args = True
+            args = []
+            kwargs = {}
+            cast = None
+            for arg in params:
+                if isinstance(arg, six.string_types) and '=' in arg:
+                    in_args = False
+                if in_args:
+                    args.append(arg)
+                else:
+                    if '=' not in arg:
+                        raise Exception('Expected kwargs but got %s' % arg)
+                    k, v = arg.split('=', 1)
+                    if k == '_cast':
+                        cast = v
+                    else:
+                        kwargs[k] = try_coerce(k, v)
+            eax = getattr(np, func)(*args, **kwargs)
+            if cast:
+                eax = list(int(round(e)) for e in eax)
+            return eax
+        values = list(_build_serie(serie) for serie in series)
+        if len(set([len(e) for e in values])) != 1:
+            raise Exception('Series should have the same size: ' +
+                            repr(values))
+        count = len(values[0])
+        dims = len(series)
+        world = np.zeros(shape=(count,) * dims, dtype=bool)
+        for i in range(count):
+            world[(i,) * dims] = True
+
+        def _get_coords(w):
+            points = np.nonzero(w)
+            for point in range(len(points[0])):
+                yield tuple([
+                    t[point]
+                    for t in points
+                ])
+
+        def _get_values(w):
+            for point in _get_coords(w):
+                yield tuple([
+                    values[i][point[i]]
+                    for i in range(len(point))
+                ])
+        for v in _get_values(world):
+            yield v
+        for vector in (explore or []):
+            shifted_world = np.roll(
+                world,
+                tuple(vector),
+                axis=tuple(range(0, len(vector), 1))
+            )
+            if not with_overflow:
+                # remove out-of-bound values
+                for axis, shift in enumerate(vector):
+                    if shift > 0:
+                        if axis == 1:
+                            shifted_world[:, 0] = False
+                        elif axis == 0:
+                            shifted_world[0] = False
+                        else:
+                            raise Exception('Unsupported operation')
+                    elif shift < 0:
+                        if axis == 1:
+                            shifted_world[:, -1] = False
+                        elif axis == 0:
+                            shifted_world[-1] = False
+                        else:
+                            raise Exception('Unsupported operation')
+
+            for v in _get_values(shifted_world):
+                yield v
+
+
 class Configuration(object):
     def __init__(self, attributes):
         self.attributes = attributes
@@ -107,7 +245,7 @@ class Configuration(object):
 
         for metas_c in metas:
             metas_c = dict(
-                (k, v) if isinstance(v, list) else (k, [v])
+                (k, Configuration._expand_meta(v))
                 for k, v in six.iteritems(metas_c)
             )
             metas_c = list(
@@ -116,10 +254,37 @@ class Configuration(object):
             )
             for combination in itertools.product(*metas_c):
                 eax = list(combination)
+                eax = dict(itertools.chain.from_iterable(
+                    Configuration._expand_multi_metas(*e)
+                    for e in eax
+                ))
                 yield dict(eax)
 
     def metrics_extractors(self):
         return self._extractors
+
+    @classmethod
+    def _expand_multi_metas(cls, name, value):
+        if name[0] == '[' and name[-1] == ']':
+            names = [str.strip(s) for s in name[1: -1].split(',')]
+            for i, name in enumerate(names):
+                yield name, value[i]
+        else:
+            yield name, value
+
+    @classmethod
+    def _expand_meta(cls, val):
+        if isinstance(val, list):
+            return val
+        elif not isinstance(val, Mapping):
+            return [val]
+        else:
+            func = val.get('function')
+            args = tuple(val.get('args') or [])
+            kwargs = val.get('kwargs') or {}
+            if func is None:
+                raise Exception('Missing `function` key in meta description')
+            return MetaFunctions.eval(func, args, kwargs)
 
 
 class StdExtractor(MetricsExtractor):
