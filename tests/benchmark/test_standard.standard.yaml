@@ -29,7 +29,17 @@ shells:
 executables:
 - command: ["bench_brunel", "--partition", "{partition}", "1", "1", "{file}"]
   metas:
-  - partition: [1, 2]
+  - partition:
+      # allowed functions: linspace, arange, rangem combine
+      function: range
+      args: [1, 3]
     file: "1.syn2"
+    "[processes, threads]":
+      function: correlate
+      args:
+      # allowed NumPY functions: geomspace, logspace, linspace, arange
+      - [geomspace, 32, 1, num=6, _cast=int]
+      - [geomspace, 1, 32, num=6, _cast=int]
+
   - partition: 3
     file: "3.syn2"

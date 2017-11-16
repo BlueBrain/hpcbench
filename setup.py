@@ -45,9 +45,11 @@ setup(
         'jinja2==2.10',
         'PyYAML>=3.12',
         'six==1.11',
+        'numpy==1.13.3', # REMOVE THIS
     ],
     extras_require=dict(
       PLOTTING=['matplotlib==2.0.2'],
+      STDFUNC=['numpy==1.13.3'],
     ),
     include_package_data=True,
     package_data={

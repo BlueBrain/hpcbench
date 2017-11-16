@@ -236,7 +236,7 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         Current working directory is the execution directory.
 
         :param execution: one of the dictionary
-        provided in ``exedcution_matrix`` member method.
+                          provided in ``execution_matrix`` member method.
         """
         del execution  # unused
 
@@ -245,7 +245,7 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         Current working directory is the execution directory.
 
         :param execution: one of the dictionary
-        provided in ``exedcution_matrix`` member method.
+                          provided in ``execution_matrix`` member method.
         """
         del execution  # unused
 
