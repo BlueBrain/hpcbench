@@ -43,12 +43,14 @@ setup(
         'docopt==0.6.2',
         'elasticsearch==6.0.0',
         'jinja2==2.10',
+        'numpy==1.13.3',
         'PyYAML>=3.12',
         'six==1.11',
     ],
     extras_require=dict(
-      PLOTTING=['matplotlib==2.0.2'],
-      STDFUNC=['numpy==1.13.3'],
+        PLOTTING=[
+            'matplotlib==2.0.2',
+        ],
     ),
     include_package_data=True,
     package_data={
