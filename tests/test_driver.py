@@ -27,11 +27,9 @@ from hpcbench.driver import (
     HostDriver,
     SlurmExecutionDriver,
 )
-
 from hpcbench.toolbox.contextlib_ext import (
     capture_stdout,
 )
-
 from . import DriverTestCase, FakeBenchmark
 from . benchmark.benchmark import AbstractBenchmarkTest
 
