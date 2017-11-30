@@ -4,7 +4,6 @@ import unittest
 
 from hpcbench.cli import bennett
 from hpcbench.net import CampaignHolder
-
 from hpcbench.toolbox.contextlib_ext import (
     mkdtemp,
     pushd,

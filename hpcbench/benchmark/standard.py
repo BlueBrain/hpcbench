@@ -78,7 +78,7 @@ class MetaFunctions(object):
                 for _type in [int, float, bool]:
                     try:
                         return _type(v)
-                    except:
+                    except Exception:
                         pass
                 return v
 

@@ -18,7 +18,6 @@ import hpcbench
 from hpcbench.api import Benchmark
 from hpcbench.ext.ClusterShell.NodeSet import NodeSet
 from hpcbench.report import render
-
 from . toolbox.collections_ext import (
     Configuration,
     dict_map_kv,

@@ -12,7 +12,6 @@ Options:
 """
 
 from hpcbench.net import BeNet
-
 from . import cli_common
 
 
