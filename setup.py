@@ -57,7 +57,6 @@ setup(
     package_data={
         'hpcbench': [
             'templates/*.jinja',
-            'templates/plugins/benchmark',
             'benchmark/basic.bash',
         ]
     },
