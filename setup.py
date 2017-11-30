@@ -57,10 +57,10 @@ setup(
     package_data={
         'hpcbench': [
             'benchmark/basic.bash',
-            'plugins/benchmark/cookiecutter.json',
-            'plugins/benchmark/hooks/pre_gen_project.py',
-            'plugins/benchmark/{{cookiecutter.benchmark}}/hpcbench_{{cookiecutter.benchmark}}/benchmark.py',
-            'plugins/benchmark/{{cookiecutter.benchmark}}/setup.py',
+            'templates/plugins/benchmark/cookiecutter.json',
+            'templates/plugins/benchmark/hooks/pre_gen_project.py',
+            'templates/plugins/benchmark/{{cookiecutter.benchmark}}/hpcbench_{{cookiecutter.benchmark}}/benchmark.py',
+            'templates/plugins/benchmark/{{cookiecutter.benchmark}}/setup.py',
             'templates/*.jinja',
         ]
     },
