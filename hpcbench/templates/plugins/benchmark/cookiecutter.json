@@ -1,0 +1,6 @@
+{
+	"benchmark": "newbenchmark",
+	"full_name": "John Doe",
+	"email": "john.doe@acme.org",
+	"hpcbench_version": "0.3"
+}

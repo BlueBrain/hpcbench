@@ -56,13 +56,15 @@ CLI
 
 * ben-sh: Execute a tests campaign on your workstation
 * ben-umb: Extract metrics of an existing campaign
-* ben-plop: Draw figures of an existing campaign
+* ben-plot: Draw figures of an existing campaign
 * ben-elastic: Push campaign data to Elasticsearch
 * ben-nett: Execute a tests campaign on a cluster
 * ben-merge: Merge campaign output directories
+* ben-tpl: Generate HPCBench plugin scaffolds,
+  see :ref:`usage <ben-tpl-usage>`.
 
 **ben-sh** and **ben-nett** expect a YAML file describing the campaign to execute.
-Structure of this YAML file is detailled in the :doc:`campaign file reference <campaign>`.
+Structure of this YAML file is detailed in the :doc:`campaign file reference <campaign>`.
 
 Campaign YAML description
 -------------------------
@@ -111,7 +113,7 @@ Execute the following command::
    $ ben-sh local-campaign.yaml
 
 
-This will create a ``hpc-bench-<date>`` in the directory with the benchmark's results.
+This will create a ``hpcbench-<date>`` in the directory with the benchmark's results.
 
 Build the plots
 ~~~~~~~~~~~~~~~
@@ -146,6 +148,24 @@ It uses SSH to submit jobs so you have to sure you can access those servers with
 configuration (see) :doc:`campaign file reference <campaign>`)::
 
    $ ben-nett remote-campaign.yaml
+
+.. _ben-tpl-usage:
+
+How to create a new benchmark Python module?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is possible to augment the number of benchmarks utilities supported
+by HPCBench by writing Python code in a separate module.
+
+``ben-tpl`` is an utility which helps to create such modules.
+
+1. First create a default JSON file describing the Python module:
+    ``ben-tpl benchmark -g config.json``
+2. Update fields in ``config.json``
+3. Generate the Python module template in the current directory:
+    ``ben-tpl benchmark config.json``
+4. Edit the ``benchmark.py`` file
+5. When ready you can install the module, with ``pip`` for instance.
 
 Development Guide
 =================
@@ -231,14 +251,14 @@ Then::
 ``-e py27`` tells tox to only test against Python 2.7.
 
 
-Unit-tests assume that Elasticsearch is running on localhost. 
+Unit-tests assume that Elasticsearch is running on localhost.
 You can define ``UT_ELASTICSEARCH_HOST`` environment variable to specify
 another location::
 
    $ ELASTICSEARCH_HOST=server01:9200 tox
 
-How to integrate a new benchmark utility?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+How to integrate a new benchmark utility in HPCBench repository?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. First make sure you can properly build the project and tests pass successfully.
    It may be tempting to skip this part, but please don't.
