@@ -58,6 +58,7 @@ setup(
         'hpcbench': [
             'templates/*.jinja',
             'benchmark/basic.bash',
+            'benchmark/templates/*',
         ]
     },
     entry_points="""
