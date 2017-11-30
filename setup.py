@@ -56,9 +56,12 @@ setup(
     include_package_data=True,
     package_data={
         'hpcbench': [
-            'templates/*.jinja',
             'benchmark/basic.bash',
-            'benchmark/templates/*',
+            'plugins/benchmark/cookiecutter.json',
+            'plugins/benchmark/hooks/pre_gen_project.py',
+            'plugins/benchmark/{{cookiecutter.benchmark}}/hpcbench_{{cookiecutter.benchmark}}/benchmark.py',
+            'plugins/benchmark/{{cookiecutter.benchmark}}/setup.py',
+            'templates/*.jinja',
         ]
     },
     entry_points="""
