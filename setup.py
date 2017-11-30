@@ -40,6 +40,7 @@ setup(
     ],
     install_requires=[
         'cached-property==1.3.1',
+        'cookiecutter==1.6.0',
         'docopt==0.6.2',
         'elasticsearch==6.0.0',
         'jinja2==2.10',
@@ -56,6 +57,7 @@ setup(
     package_data={
         'hpcbench': [
             'templates/*.jinja',
+            'templates/plugins/benchmark',
             'benchmark/basic.bash',
         ]
     },
@@ -63,13 +65,14 @@ setup(
         [console_scripts]
         ben-doc = hpcbench.cli.bendoc:main
         ben-elastic = hpcbench.cli.benelastic:main
+        ben-merge = hpcbench.cli.benmerge:main
         ben-nett = hpcbench.cli.bennett:main
         ben-plot = hpcbench.cli.benplot:main [PLOTTING]
         ben-sh = hpcbench.cli.bensh:main
+        ben-tpl = hpcbench.cli.bentpl:main
         ben-umb = hpcbench.cli.benumb:main
-        ben-merge = hpcbench.cli.benmerge:main
+
         [hpcbench.benchmarks]
-        sysbench = hpcbench.benchmark.sysbench
         hpl = hpcbench.benchmark.hpl
         imb = hpcbench.benchmark.imb
         ior = hpcbench.benchmark.ior
@@ -79,5 +82,6 @@ setup(
         shoc = hpcbench.benchmark.shoc
         standard = hpcbench.benchmark.standard
         stream = hpcbench.benchmark.stream
+        sysbench = hpcbench.benchmark.sysbench
     """
 )

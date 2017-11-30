@@ -158,6 +158,9 @@ class Benchmark(with_metaclass(ABCMeta, object)):
 
     @property
     def in_campaign_template(self):
+        """Should the benchmark class be reference in the
+        campaign template YAML file
+        """
         return True
 
     @abstractmethod
