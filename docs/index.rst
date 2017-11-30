@@ -82,6 +82,8 @@ HPCBench API purpose is to provide an unified layer:
 * to execute, and parse results of existing benchmarks utilities (Linpack, IOR, ...)
 * to use extracted metrics to build figures
 
+More information in the :doc:`module reference <modules>`
+
 Getting Started
 ===============
 
@@ -244,7 +246,7 @@ How to integrate a new benchmark utility?
 3. Create a new Python module in ``hpcbench/benchmark`` directory named after the
    utility to integrate.
 4. In this new module, implement ``hpcbench.api.Benchmark`` and
-  ``hpcbench.MetricsExtractor`` classes.
+   ``hpcbench.MetricsExtractor`` classes.
 5. Register the new module in ``setup.py`` ``[hpcbench.benchmarks]`` entrypoint
    so that it can be found by HPCBench.
 6. Create a dedicate tests class in `tests/benchmark/` directory.
