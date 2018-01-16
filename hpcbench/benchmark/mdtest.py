@@ -97,18 +97,12 @@ class MDTest(Benchmark):
 
     DEFAULT_ATTRIBUTES = dict(
         executable='mdtest',
-        path=None,
         options=['-n', '10000', '-i', '3'],
         srun_nodes=1,
     )
 
     def __init__(self):
         super(MDTest, self).__init__(attributes=MDTest.DEFAULT_ATTRIBUTES)
-
-    @property
-    def path(self):
-        """Overwrite directory files are created in"""
-        return self.attributes['path']
 
     @property
     def options(self):
@@ -124,11 +118,18 @@ class MDTest(Benchmark):
         """
         return self.attributes['executable']
 
-    @property
-    def command(self):
+    def command(self, context):
         """get command line to execute
         """
-        return [find_executable(self.executable)] + self.options
+        options = self.options
+        for i, opt in enumerate(options):
+            if opt == '-d':
+                options[i + 1] = options[i + 1].format(
+                    node=context.node,
+                    tag=context.tag,
+                )
+
+        return [find_executable(self.executable)] + options
 
     @property
     def srun_nodes(self):
@@ -137,10 +138,9 @@ class MDTest(Benchmark):
         return self.attributes['srun_nodes']
 
     def execution_matrix(self, context):
-        del context  # unused
         yield dict(
             category='disk',
-            command=self.command,
+            command=self.command(context),
             srun_nodes=self.srun_nodes,
         )
 

@@ -196,6 +196,7 @@ class IOR(Benchmark):
                 srun_nodes=IOR.DEFAULT_SRUN_NODES,
                 executable=IOR.DEFAULT_EXECUTABLE,
                 options=IOR.DEFAULT_OPTIONS,
+                path=None,
             )
         )
 
@@ -204,6 +205,12 @@ class IOR(Benchmark):
         """Get path to iperf executable
         """
         return self.attributes['executable']
+
+    @cached_property
+    def path(self):
+        """Overwrite execution path
+        """
+        return self.attributes['path']
 
     @property
     def apis(self):
@@ -219,7 +226,7 @@ class IOR(Benchmark):
                 yield command
 
     def _execution_matrix(self, api):
-        yield dict(
+        cmd = dict(
             category=api,
             command=[
                 find_executable(self.executable),
@@ -230,8 +237,11 @@ class IOR(Benchmark):
                 api=api,
                 block_size=self.block_size
             ),
-            srun_nodes=self.srun_nodes
+            srun_nodes=self.srun_nodes,
         )
+        if self.path is not None:
+            cmd.update(cwd=self.path)
+        yield cmd
 
     @property
     def options(self):
