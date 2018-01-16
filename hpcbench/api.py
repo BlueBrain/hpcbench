@@ -207,6 +207,8 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         * *shell* (optional boolean):
           when `shell` parameter is `True`, then the given command
           is considered as a shell command.
+        * *cwd* (optional):
+          directory where the command is executed.
 
         Execution context: for every command, a dedicated output directory
         is created and the current working directory changed to this directory

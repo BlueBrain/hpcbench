@@ -52,7 +52,27 @@ class TestMDTestBenchmark(AbstractBenchmarkTest, unittest.TestCase):
         return ['disk']
 
     @property
+    def expected_execution_matrix(self):
+        return [
+            dict(
+                command=[
+                    '/path/to/fake',
+                    'foo',
+                    '-d',
+                    '/bar/localhost/kikoo/*'
+                ],
+                srun_nodes=1,
+                category='disk'
+            ),
+        ]
+
+    @property
     def attributes(self):
         return dict(
-            executable='/path/to/fake'
+            executable='/path/to/fake',
+            options=[
+                'foo',
+                '-d',
+                '/bar/{node}/kikoo/{tag}'
+            ],
         )

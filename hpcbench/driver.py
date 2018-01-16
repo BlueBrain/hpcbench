@@ -728,11 +728,21 @@ class ExecutionDriver(Leaf):
 
     @write_yaml_report
     def __call__(self, **kwargs):
-        self.benchmark.pre_execute(self.execution)
         with open('stdout.txt', 'w') as stdout, \
                 open('stderr.txt', 'w') as stderr:
-            exit_status = self.popen(stdout, stderr).wait()
-        self.benchmark.post_execute(self.execution)
+            cwd = self.execution.get('cwd')
+            if cwd is not None:
+                ctx = self.parent.parent.parent.exec_context
+                cwd = cwd.format(node=ctx.node, tag=ctx.tag)
+                with pushd(cwd):
+                    self.benchmark.pre_execute(self.execution)
+                    exit_status = self.popen(stdout, stderr).wait()
+                    self.benchmark.post_execute(self.execution)
+
+            else:
+                self.benchmark.pre_execute(self.execution)
+                exit_status = self.popen(stdout, stderr).wait()
+                self.benchmark.post_execute(self.execution)
         report = dict(
             exit_status=exit_status,
             benchmark=self.benchmark.name,

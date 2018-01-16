@@ -1,0 +1,6 @@
+benchmarks:
+    '*':
+        test_cwd:
+            type: fake
+            attributes:
+                run_path: /tmp/hpcbench-ut/test_cwd/{node}/{tag}
