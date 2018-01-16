@@ -36,7 +36,7 @@ class DriverTestCase(object):
 
 class FakeExtractor(MetricsExtractor):
     def __init__(self, show_cwd=None):
-        self.sghow_cwd = show_cwd
+        self.show_cwd = show_cwd
 
     @property
     def metrics(self):
