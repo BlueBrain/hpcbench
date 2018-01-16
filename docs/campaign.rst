@@ -304,6 +304,10 @@ they are not converted to True or False by YAML parse.
           TEST_ALL: 'true'
           LD_LIBRARY_PATH: /usr/local/lib64
 
+cwd (optional)
+~~~~~~~~~~~~~~
+Specifies a custom working directory.
+
 Precondition configuration reference
 ------------------------------------
 This section specifies conditions to filter benchmarks execution.
