@@ -1,7 +1,10 @@
 """Wrapper for MDTest metadata benchmark utility
     See https://github.com/LLNL/mdtest
 """
+import os
+import os.path as osp
 import re
+import shutil
 
 from cached_property import cached_property
 
@@ -99,6 +102,7 @@ class MDTest(Benchmark):
         executable='mdtest',
         options=['-n', '10000', '-i', '3'],
         srun_nodes=1,
+        post_cleanup=False,
     )
 
     def __init__(self):
@@ -137,6 +141,12 @@ class MDTest(Benchmark):
         """
         return self.attributes['srun_nodes']
 
+    @property
+    def post_cleanup(self):
+        """Remove content of test directory used by mdtest after the test
+        """
+        return self.attributes['post_cleanup']
+
     def execution_matrix(self, context):
         yield dict(
             category='disk',
@@ -147,3 +157,36 @@ class MDTest(Benchmark):
     @property
     def metrics_extractors(self):
         return MDTestExtractor()
+
+    @classmethod
+    def cleanup_dir_content(cls, path):
+        white_list = {
+            'stderr.txt',
+            'stdout.txt',
+            'hpcbench.yaml',
+            'metrics.json',
+        }
+        for file in os.listdir(path):
+            if file in white_list:
+                continue
+            file_path = osp.join(path, file)
+            try:
+                if osp.isdir(file_path):
+                    shutil.rmtree(file_path)
+                else:
+                    os.unlink(file_path)
+            except Exception:
+                pass
+
+    def post_execute(self, execution):
+        if self.post_cleanup:
+            # locate test directory
+            test_dir = None
+            command = execution['command']
+            for i, opt in enumerate(command):
+                if opt == '-d' and len(command) > i + 1:
+                    test_dir = command[i + 1]
+                    break
+            # remove its content but not the directory itself
+            if test_dir and osp.isdir(path):
+                MDTest.cleanup_dir_content(test_dir)
