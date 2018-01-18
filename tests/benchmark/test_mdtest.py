@@ -1,7 +1,51 @@
+import logging
+import os
+import os.path as osp
+import tempfile
 import unittest
 
+from hpcbench.api import ExecutionContext
 from hpcbench.benchmark.mdtest import MDTest
 from . benchmark import AbstractBenchmarkTest
+
+
+LOGGER = logging.getLogger('test_mdtest')
+
+
+class TestMDTestPostExecution(unittest.TestCase):
+    @classmethod
+    def fill_directory(cls, path):
+        os.mkdir(osp.join(path, 'a_dir'))
+        with open(osp.join(path, 'a_file'), 'w'):
+            pass
+
+    def test(self, fill_dir=True):
+        path = tempfile.mkdtemp(suffix='{node}--{tag}')
+        os.rmdir(path)
+        mdt = MDTest()
+        mdt.attributes.update(
+            post_cleanup=True,
+            options=['foo', '-d', path]
+        )
+        execution = next(mdt.execution_matrix(ExecutionContext(
+            node='node.local',
+            tag='tag.name',
+            nodes=[],
+            logger=LOGGER,
+            srun_options=None,
+        )))
+        path = execution['command'][-1]
+        self.assertTrue(path.endswith('node.local--tag.name'))
+        os.mkdir(path)
+        with open(osp.join(path, 'stderr.txt'), 'w'):
+            pass
+        if fill_dir:
+            TestMDTestPostExecution.fill_directory(path)
+        mdt.post_execute(execution)
+        self.assertEqual(os.listdir(path), ['stderr.txt'])
+
+    def test_empty_dir(self):
+        self.test(fill_dir=False)
 
 
 class TestMDTestBenchmark(AbstractBenchmarkTest, unittest.TestCase):
