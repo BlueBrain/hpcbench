@@ -1,8 +1,4 @@
 """IO SSD Bandwidth measurement using linux tool
-   WRITE: sync; dd if=/dev/zero of=tempfile bs=1M count=1024; sync
-   FLASH THE CASH: sudo /sbin/sysctl -w vm.drop_caches=3
-   READ: dd if=tempfile of=/dev/null bs=1M count=1024
-
 """
 from __future__ import division
 
@@ -110,7 +106,6 @@ class IOSSD(Benchmark):
     SCRIPT_NAME = 'iossd.sh'
     SCRIPT = textwrap.dedent("""\
     #!/bin/bash -e
-    #mac: 1m, linux 1M
 
     TEMPFILE=${FILE_PATH:-$PWD}/tempfile
 
@@ -126,6 +121,14 @@ class IOSSD(Benchmark):
             WCONV=fdatasync
     esac
 
+    function clear_cache {
+        if [ $NAME = "Linux" ]; then
+            sudo sysctl -w vm.drop_caches=3 >/dev/null 2>&1
+        else
+            sync && sudo purge 2>&1
+        fi
+    }
+
     function benchmark_write {
         echo "Writing benchmark"
         sync
@@ -135,8 +138,6 @@ class IOSSD(Benchmark):
 
     function benchmark_read {
         echo "Reading benchmark"
-        # flash the ddr to be sure we are using the IO
-        # /sbin/sysctl -w vm.drop_caches=3;
         dd if="$TEMPFILE" of=/dev/null bs=1$MB count=1024
     }
 
@@ -144,11 +145,7 @@ class IOSSD(Benchmark):
         benchmark_write
     else
         benchmark_write >/dev/null 2>&1
-        if [ $NAME = "Linux" ]; then
-            sudo sysctl vm.drop_caches=3 >/dev/null 2>&1
-        else
-            sync && sudo purge 2>&1
-        fi
+        clear_cache
         benchmark_read
     fi
     rm -f "$TEMPFILE"
