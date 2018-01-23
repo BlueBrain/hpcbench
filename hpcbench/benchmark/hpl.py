@@ -197,4 +197,4 @@ class HPL(Benchmark):
     def pre_execute(self, execution):
         with open('HPL.dat', 'w') as ostr:
             ostr.write(self.data)
-        shutil.copy(self.executable, '.')
+        shutil.copy(find_executable(self.executable), '.')
