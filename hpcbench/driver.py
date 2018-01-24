@@ -749,6 +749,12 @@ class ExecutionDriver(Leaf):
         )
         report.update(self.execution)
         report.update(command=self.command)
+        benchmark_config = self.parent.parent.parent.config
+        metrics = benchmark_config.get('metrics', {})
+        if not isinstance(metrics, Mapping):
+            raise Exception('"metrics" benchmark option must be a dict')
+        if metrics:
+            report.update(metrics=dict(**metrics))
         return report
 
 
