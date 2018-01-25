@@ -146,7 +146,7 @@ class IOSSD(Benchmark):
     else
         benchmark_write >/dev/null 2>&1
         if [ $NAME = "Linux" ]; then
-            sudo sysctl vm.drop_caches=3 >/dev/null 2>&1
+            sudo sysctl -w vm.drop_caches=3 >/dev/null 2>&1
         else
             sync && sudo purge 2>&1
         fi
