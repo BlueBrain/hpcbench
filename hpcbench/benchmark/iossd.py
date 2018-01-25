@@ -110,9 +110,10 @@ class IOSSD(Benchmark):
     SCRIPT_NAME = 'iossd.sh'
     SCRIPT = textwrap.dedent("""\
     #!/bin/bash -e
-    #mac: 1m, linux 1M
 
-    TEMPFILE=${FILE_PATH:-$PWD}/tempfile
+    TESTDIR="${FILE_PATH:-$PWD}"
+    mkdir -p "$TESTDIR"
+    TEMPFILE="$TESTDIR/tempfile"
 
     case `uname -s` in
         Darwin)
