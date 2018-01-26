@@ -44,6 +44,7 @@ setup(
         'docopt==0.6.2',
         'elasticsearch==6.0.0',
         'jinja2==2.10',
+        'mock==2.0.0',
         'numpy==1.13.3',
         'PyYAML>=3.12',
         'six==1.11',
@@ -76,6 +77,7 @@ setup(
         ben-umb = hpcbench.cli.benumb:main
 
         [hpcbench.benchmarks]
+        babelstream = hpcbench.benchmark.babelstream
         hpl = hpcbench.benchmark.hpl
         imb = hpcbench.benchmark.imb
         ior = hpcbench.benchmark.ior
