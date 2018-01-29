@@ -34,6 +34,7 @@ class IMBExtractor(MetricsExtractor):
 
     def extract_metrics(self, outdir, metas):
         # parse stdout and extract desired metrics
+        self.prelude()
         with open(self.stdout(outdir)) as istr:
             for line in istr:
                 if line.strip() == self.stdout_ignore_prior:
@@ -46,6 +47,9 @@ class IMBExtractor(MetricsExtractor):
     def process_line(self, line):
         """Process a line
         """
+
+    def prelude(self):
+        """method called before extracting metrics"""
 
     @abstractmethod
     def epilog(self):
@@ -64,6 +68,10 @@ class IMBPingPongExtractor(IMBExtractor):
         super(IMBPingPongExtractor, self).__init__()
         self.s_latency = set()
         self.s_bandwidth = set()
+
+    def prelude(self):
+        self.s_latency.clear()
+        self.s_bandwidth.clear()
 
     @cached_property
     def metrics(self):
@@ -101,6 +109,9 @@ class IMBAllToAllExtractor(IMBExtractor):
     def __init__(self):
         super(IMBAllToAllExtractor, self).__init__()
         self.s_res = set()
+
+    def prelude(self):
+        self.s_res.clear()
 
     @property
     def metrics(self):

@@ -41,8 +41,12 @@ class IOSSDExtractor(MetricsExtractor):
         """
         return self.METRICS
 
+    def prelude(self):
+        self.s_bandwidth.clear()
+
     def extract_metrics(self, outdir, metas):
         # parse stdout and extract desired metrics
+        self.prelude()
         with open(self.stderr(outdir)) as istr:
             for line in istr:
                 if line.strip() == self.STDOUT_IGNORE_PRIOR:
