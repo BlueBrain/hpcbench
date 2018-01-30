@@ -27,10 +27,10 @@ class CpuExtractor(MetricsExtractor):
 
     def __init__(self):
         self._metrics = dict(
-            minimum=Metrics.Milisecond,
-            average=Metrics.Milisecond,
-            maximum=Metrics.Milisecond,
-            percentile95=Metrics.Milisecond,
+            minimum=Metrics.Millisecond,
+            average=Metrics.Millisecond,
+            maximum=Metrics.Millisecond,
+            percentile95=Metrics.Millisecond,
             total_time=Metrics.Second
         )
 
