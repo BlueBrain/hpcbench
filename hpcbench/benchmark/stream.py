@@ -36,21 +36,21 @@ class StreamExtractor(MetricsExtractor):
     )
 
     METRICS = dict(
-        copy_min_time=Metrics.Milisecond,
-        copy_avg_time=Metrics.Milisecond,
-        copy_max_time=Metrics.Milisecond,
+        copy_min_time=Metrics.Millisecond,
+        copy_avg_time=Metrics.Millisecond,
+        copy_max_time=Metrics.Millisecond,
         copy_bandwidth=Metrics.MegaBytesPerSecond,
-        scale_min_time=Metrics.Milisecond,
-        scale_avg_time=Metrics.Milisecond,
-        scale_max_time=Metrics.Milisecond,
+        scale_min_time=Metrics.Millisecond,
+        scale_avg_time=Metrics.Millisecond,
+        scale_max_time=Metrics.Millisecond,
         scale_bandwidth=Metrics.MegaBytesPerSecond,
-        add_min_time=Metrics.Milisecond,
-        add_avg_time=Metrics.Milisecond,
-        add_max_time=Metrics.Milisecond,
+        add_min_time=Metrics.Millisecond,
+        add_avg_time=Metrics.Millisecond,
+        add_max_time=Metrics.Millisecond,
         add_bandwidth=Metrics.MegaBytesPerSecond,
-        triad_min_time=Metrics.Milisecond,
-        triad_avg_time=Metrics.Milisecond,
-        triad_max_time=Metrics.Milisecond,
+        triad_min_time=Metrics.Millisecond,
+        triad_avg_time=Metrics.Millisecond,
+        triad_max_time=Metrics.Millisecond,
         triad_bandwidth=Metrics.MegaBytesPerSecond,
     )
 

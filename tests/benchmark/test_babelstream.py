@@ -51,15 +51,15 @@ class TestBabelStream(AbstractBenchmarkTest, unittest.TestCase):
                         '42',
                         '--csv'
                     ],
-                    metas=dict(device='42')
+                    metas=dict(device=42)
                 )
             ]
         )
 
     DEVICES_MOCK_OUTPUT = textwrap.dedent("""\
     Devices:
-    device01: Tesla K20m
-    device02: Tesla K20m
+    01: Tesla K20m
+    02: Tesla K20m
     """)
 
     @mock.patch('subprocess.check_output')
@@ -73,20 +73,20 @@ class TestBabelStream(AbstractBenchmarkTest, unittest.TestCase):
                     command=[
                         '/bar',
                         '--device',
-                        'device01',
+                        '01',
                         '--csv'
                     ],
-                    metas=dict(device='device01'),
+                    metas=dict(device=1),
                 ),
                 dict(
                     category='stream',
                     command=[
                         '/bar',
                         '--device',
-                        'device02',
+                        '02',
                         '--csv'
                     ],
-                    metas=dict(device='device02'),
+                    metas=dict(device=2),
                 ),
             ]
         )

@@ -46,7 +46,8 @@ class UnexpectedMetricsException(Exception):
 class Metrics(object):  # pragma pylint: disable=too-few-public-methods
     """List of common metrics
     """
-    Milisecond = Metric('ms', float)
+    Microsecond = Metric('us', float)
+    Millisecond = Metric('ms', float)
     Second = Metric('s', float)
     MegaBytesPerSecond = Metric('MB/s', float)
     Cardinal = Metric('#', int)

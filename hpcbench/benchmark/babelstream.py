@@ -75,7 +75,7 @@ class BabelStream(Benchmark):
     def __init__(self):
         super(BabelStream, self).__init__(
             attributes=dict(
-                executable=BabelStream.DEFAULT_EXECUTABLE
+                executable=BabelStream.DEFAULT_EXECUTABLE,
             )
         )
 
@@ -120,7 +120,7 @@ class BabelStream(Benchmark):
                 category=BabelStream.CATEGORY,
                 command=self._command(device),
                 metas=dict(
-                    device=device,
+                    device=int(device),
                 )
             )
 

@@ -84,6 +84,7 @@ setup(
         iossd = hpcbench.benchmark.iossd
         iperf = hpcbench.benchmark.iperf
         mdtest = hpcbench.benchmark.mdtest
+        nvidia-bandwidthtest = hpcbench.benchmark.nvidia
         shoc = hpcbench.benchmark.shoc
         standard = hpcbench.benchmark.standard
         stream = hpcbench.benchmark.stream
