@@ -7,6 +7,8 @@ from docopt import docopt
 from hpcbench import __version__
 from hpcbench.toolbox.loader import load_components
 
+LOGGING_FORMAT = "%(asctime)-15s:%(levelname)s:%(name)s:%(message)s"
+
 
 def setup_logger(verbose):
     """Prepare root logger
@@ -17,7 +19,7 @@ def setup_logger(verbose):
         level = logging.INFO
     elif verbose > 1:
         level = logging.DEBUG
-    logging.basicConfig(level=level)
+    logging.basicConfig(level=level, format=LOGGING_FORMAT)
 
 
 def cli_common(doc, **kwargs):
