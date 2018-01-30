@@ -20,6 +20,7 @@ class ESExporter(object):
     """
 
     PY_TYPE_TO_ES_FIELD_TYPE = {
+        bool: 'boolean',
         float: 'float',
         int: 'long',
         six.text_type: 'text',
@@ -158,10 +159,20 @@ class ESExporter(object):
         }
 
     @classmethod
+    def _get_field_type(cls, value):
+        if isinstance(value, list):
+            if value:
+                return cls._get_field_type(value[0])
+            else:
+                value = 'a_string'
+        return type(value)
+
+    @classmethod
     def _get_field_mapping(cls, name, value):
         field_type = cls.PROPERTIES_FIELD_TYPE.get(name)
         if field_type is None:
-            field_type = cls.PY_TYPE_TO_ES_FIELD_TYPE[type(value)]
+            obj_type = cls._get_field_type(value)
+            field_type = cls.PY_TYPE_TO_ES_FIELD_TYPE[obj_type]
         return {
             name: {
                 'type': field_type
