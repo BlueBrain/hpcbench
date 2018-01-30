@@ -51,7 +51,7 @@ class TestBabelStream(AbstractBenchmarkTest, unittest.TestCase):
                         '42',
                         '--csv'
                     ],
-                    metas=dict(device='42')
+                    metas=dict(device=42)
                 )
             ]
         )
