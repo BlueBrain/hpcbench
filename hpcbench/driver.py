@@ -815,7 +815,8 @@ class SlurmExecutionDriver(ExecutionDriver):
             tag = self.parent.parent.parent.parent.name
         nodes = self._srun_nodes(tag, count)
         if 'srun_nodes' in self.execution:
-            self.execution['srun_nodes'] = len(nodes)
+            self.execution['srun_nodes'] = nodes
+            self.execution['srun_nodes_count'] = len(nodes)
         return nodes
 
     def _srun_nodes(self, tag, count):
