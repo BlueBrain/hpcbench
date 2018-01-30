@@ -813,7 +813,10 @@ class SlurmExecutionDriver(ExecutionDriver):
         else:
             assert isinstance(count, int)
             tag = self.parent.parent.parent.parent.name
-        return self._srun_nodes(tag, count)
+        nodes = self._srun_nodes(tag, count)
+        if 'srun_nodes' in self.execution:
+            self.execution['srun_nodes'] = len(nodes)
+        return nodes
 
     def _srun_nodes(self, tag, count):
         assert count >= 0
