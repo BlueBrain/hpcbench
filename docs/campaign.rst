@@ -13,8 +13,7 @@ output_dir
 This top-level attribute specifies the output directory
 where HPCBench stores the benchmark results.
 Default value is "hpcbench-%Y%m%d-%H:%M:%S"
-You can also specify some variables enclosed in braces.
-Because of environment variable
+You can also specify some variables enclosed in braces, among:
 
 * node: value of ben-sh "-n" option.
 
