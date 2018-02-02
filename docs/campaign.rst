@@ -17,8 +17,9 @@ You can also specify some variables enclosed in braces, among:
 
 * node: value of ben-sh "-n" option.
 
+This also includes environment variables (prefixed with $).
 For instance for a daily report with the node name inside
-the directory, you can use: "hpcbench-{node}-%Y%m%d"
+the directory, you can use: "hpcbench-{node}-$USER-%Y%m%d"
 
 Network configuration reference
 -------------------------------
