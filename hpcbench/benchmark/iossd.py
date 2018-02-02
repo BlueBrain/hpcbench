@@ -7,6 +7,7 @@
 from __future__ import division
 
 import os
+import os.path as osp
 import re
 import stat
 import textwrap
@@ -189,8 +190,13 @@ class IOSSD(Benchmark):
 
     @cached_property
     def path(self):
-        """Custom path the benchmark must be executed into"""
-        return self.attributes['path']
+        """Custom path the benchmark must be executed into
+        Environment variables expansion is performed using $VAR or ${VAR}.
+        """
+        path = self.attributes['path']
+        if path:
+            path = osp.expandvars(path)
+        return path
 
     @cached_property
     def metrics_extractors(self):

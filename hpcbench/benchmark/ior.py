@@ -2,6 +2,7 @@
 
     https://github.com/LLNL/ior
 """
+import os.path as osp
 import re
 import shlex
 
@@ -208,9 +209,13 @@ class IOR(Benchmark):
 
     @cached_property
     def path(self):
-        """Overwrite execution path
+        """Overwrite execution path.
+        Environment variables expansion is performed using $VAR or ${VAR}.
         """
-        return self.attributes['path']
+        path = self.attributes['path']
+        if path:
+            path = osp.expandvars(path)
+        return path
 
     @property
     def apis(self):
@@ -221,7 +226,7 @@ class IOR(Benchmark):
     def execution_matrix(self, context):
         del context  # unused
         # FIXME: Design the real set of commands to execute
-        for api in set(self.attributes['apis']) & set(IOR.APIS):
+        for api in set(self.apis) & set(IOR.APIS):
             for command in self._execution_matrix(api):
                 yield command
 
