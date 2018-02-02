@@ -7,6 +7,7 @@ from hpcbench.benchmark.iossd import (
     IOSSDExtractor,
 )
 from hpcbench.toolbox.contextlib_ext import (
+    environ,
     mkdtemp,
     pushd,
 )
@@ -63,3 +64,23 @@ class TestIossd(AbstractBenchmarkTest, unittest.TestCase):
                 benchmark.pre_execute(None)
                 self.assertTrue(osp.isfile(IOSSD.SCRIPT_NAME))
                 self.assertTrue(os.access(IOSSD.SCRIPT_NAME, os.X_OK))
+
+    def test_custom_attributes(self):
+        with environ(FOO='foo'):
+            self.assertExecutionMatrix(
+                dict(
+                    executable='/path/to/fake',
+                    path='/${FOO}/$BAR/$$FOO',
+                    categories=['SSD_WRITE'],
+                ),
+                [
+                    dict(
+                        category='SSD_WRITE',
+                        command=['./iossd.sh', 'SSD_WRITE'],
+                        environment=dict(
+                            FILE_PATH='/foo/$BAR/$foo'
+                        ),
+                        metas=dict(path='/foo/$BAR/$foo'),
+                    )
+                ]
+            )

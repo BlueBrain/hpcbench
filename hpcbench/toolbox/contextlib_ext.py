@@ -1,6 +1,7 @@
 """Additional methods usable in with-context
 """
 import contextlib
+import copy
 import os
 import os.path as osp
 import shutil
@@ -88,3 +89,17 @@ def mkdtemp(*args, **kwargs):
     finally:
         if remove:
             shutil.rmtree(path)
+
+
+@contextlib.contextmanager
+def environ(**kwargs):
+    """Update environment variable temporarily.
+
+    kwargs: environment keys and values to set
+    """
+    env = copy.copy(os.environ)
+    try:
+        os.environ.update(kwargs)
+        yield os.environ
+    finally:
+        os.environ = env

@@ -1,6 +1,7 @@
 import unittest
 
 from hpcbench.benchmark.ior import IOR
+from hpcbench.toolbox.contextlib_ext import environ
 from . benchmark import AbstractBenchmarkTest
 
 
@@ -54,3 +55,25 @@ class TestIORBenchmark(AbstractBenchmarkTest, unittest.TestCase):
         return dict(
             executable='/path/to/fake'
         )
+
+    def test_custom_attributes(self):
+        with environ(FOO='foo'):
+            self.assertExecutionMatrix(
+                dict(
+                    executable='/path/to/fake',
+                    path='/${FOO}/$BAR/$$FOO',
+                    apis=['POSIX'],
+                ),
+                [
+                    dict(
+                        category='POSIX',
+                        command=[
+                            '/path/to/fake',
+                            '-a', 'POSIX', '-b', '1G',
+                        ],
+                        cwd='/foo/$BAR/$foo',
+                        metas=dict(api='POSIX', block_size='1G'),
+                        srun_nodes=1,
+                    )
+                ]
+            )
