@@ -173,8 +173,8 @@ Development Guide
 Prerequisites
 -------------
 
-Elasticsearch
-~~~~~~~~~~~~~
+Docker
+~~~~~~
 
 `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ is required to execute unit-tests. The easiest way to proceed is
 to use Docker containers.
@@ -191,33 +191,10 @@ Post-installation instructions to use Docker without root privileges (logout/log
    $ sudo groupadd docker
    $ sudo usermod -aG docker $USER
 
-To start an Elasticsearch container, you can use the
-``misc/dc`` script wrapper on top of ``docker-compose``::
+Test your docker installation with
 
-   $ misc/dc up -d
+    $ docker run --rm hello-world
 
-It will start an Elasticsearch container listening on port 9200 and a Kibana
-instance listening on port 5612.
-
-Let's now try to ping Elasticsearch::
-
-   $ curl localhost:9200
-   {
-     "name" : "jQ-BcoF",
-     "cluster_name" : "elasticsearch",
-     "cluster_uuid" : "yGP7_Q2gSU2HmHpnQB-jzg",
-     "version" : {
-       "number" : "5.5.1",
-       "build_hash" : "19c13d0",
-       "build_date" : "2017-07-18T20:44:24.823Z",
-       "build_snapshot" : false,
-       "lucene_version" : "6.6.0"
-     },
-     "tagline" : "You Know, for Search"
-   }
-
-You can also access Kibana at http://localhost:5601
-The ``Dev Tools`` is one of the most handy Elasticsearch client for humans.
 
 Build instructions
 ------------------
@@ -250,6 +227,39 @@ Then::
 ``tox`` is configured to test HPCBench against different Python versions. Option
 ``-e py27`` tells tox to only test against Python 2.7.
 
+Elasticsearch
+~~~~~~~~~~~~~
+
+To start an Elasticsearch container, you can use the
+``misc/dc`` script wrapper on top of ``docker-compose``::
+
+   $ misc/dc up -d
+
+It will start an Elasticsearch container listening on port 9200 and a Kibana
+instance listening on port 5612.
+
+Let's now try to ping Elasticsearch::
+
+   $ curl localhost:9200
+   {
+     "name" : "jQ-BcoF",
+     "cluster_name" : "elasticsearch",
+     "cluster_uuid" : "yGP7_Q2gSU2HmHpnQB-jzg",
+     "version" : {
+       "number" : "5.5.1",
+       "build_hash" : "19c13d0",
+       "build_date" : "2017-07-18T20:44:24.823Z",
+       "build_snapshot" : false,
+       "lucene_version" : "6.6.0"
+     },
+     "tagline" : "You Know, for Search"
+   }
+
+You can also access Kibana at http://localhost:5601
+The ``Dev Tools`` is one of the most handy Elasticsearch client for humans.
+
+Testing it all out
+~~~~~~~~~~~~~~~~~~
 
 Unit-tests assume that Elasticsearch is running on localhost.
 You can define ``UT_ELASTICSEARCH_HOST`` environment variable to specify
@@ -276,7 +286,7 @@ How to integrate a new benchmark utility in HPCBench repository?
    * your metric extractor is properly working, without having to launch the
      utility itself.
 7. To properly test your metrics extractors, some outputs of the benchmark utility
-   will be added to the repository. For every category of your benchmark, create a 
+   will be added to the repository. For every category of your benchmark, create a
    file title ``tests/benchmark/<test_module_name>.<category>.stdout`` with the
    benchmark utility output. These files will be automatically used.
    Do not hesitate to take inspiration from ``tests/benchmark/test_sysbench.py``
