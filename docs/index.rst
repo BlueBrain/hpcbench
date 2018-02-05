@@ -193,7 +193,7 @@ Post-installation instructions to use Docker without root privileges (logout/log
 
 Test your docker installation with
 
-    $ docker run hello-world
+    $ docker run --rm hello-world
 
 
 Build instructions
