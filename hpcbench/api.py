@@ -9,8 +9,9 @@ import os.path as osp
 from six import with_metaclass
 
 __all__ = [
-    'MetricsExtractor',
     'Benchmark',
+    'ExecutionContext',
+    'MetricsExtractor',
 ]
 
 # Metrics have simply a unit and a type

@@ -46,6 +46,7 @@ from . toolbox.contextlib_ext import (
     pushd,
     Timer,
 )
+from . toolbox.edsl import kwargsql
 from . toolbox.functools_ext import listify
 from . toolbox.process import find_executable
 
@@ -584,7 +585,7 @@ class FixedAttempts(Enumerator):
                     report = yaml.safe_load(istr)
                 report['path'] = path
                 attempts.append(report)
-            sorted(attempts, **self.sort_config)
+            attempts = sorted(attempts, **self.sort_config)
             self.paths = [
                 report_['path']
                 for report_ in attempts
@@ -592,7 +593,20 @@ class FixedAttempts(Enumerator):
 
     @cached_property
     def sort_config(self):
-        return self.attempts_config.get('sorted')
+        config = self.attempts_config.get('sorted')
+        if config is not None:
+            sql = config.pop('sql', None)
+            if sql is not None:
+                if not isinstance(sql, list):
+                    sql = [sql]
+
+                def key_func(report):
+                    return tuple([
+                        kwargsql.get(report, query)
+                        for query in sql
+                    ])
+                config['key'] = key_func
+        return config
 
 
 class DynamicAttempts(FixedAttempts):

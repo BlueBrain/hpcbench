@@ -246,6 +246,25 @@ the ``fixed`` option.
               attempts:
                   fixed: 2
 
+All executions are present in the report but only metrics of the last run are reported. The
+``sorted`` key allows to change this behavior to reorder the runs according to criterias.
+
+.. code-block:: yaml
+  :emphasize-lines: 6-8
+
+  benchmarks:
+      '*':
+          test01:
+              type: imb
+              attempts:
+                  fixed: 5
+                  sorted:
+                    sql: metrics__latency
+                    reverse: true
+
+``sql`` can be a string or a list of string in kwargsql format. They are used to
+sort hpcbench.yaml reports. ``reverse`` is optional and allows to reverse the sort order.
+In this example, the report with the smallest latency is picked.
 
 The dynamic way allow you to execute the same command over and over again
 until a certain metric converges. The convergence condition is either fixed
