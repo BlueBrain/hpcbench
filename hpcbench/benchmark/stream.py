@@ -12,7 +12,6 @@ from hpcbench.api import (
 )
 from hpcbench.toolbox.process import (
     find_executable,
-    physical_cpus,
 )
 
 
@@ -96,33 +95,10 @@ class Stream(Benchmark):
 
     DEFAULT_EXECUTABLE = 'stream_c'
     DEFAULT_THREADS = [1, 4, 16, 26, 52, 104]
-    DEFAULT_FEATURES = {"cache", "mcdram", "cpu"}
-
-    FEATURE_CPU = 'cpu'
-
-    @cached_property
-    def features_config(self):
-        return dict(
-            cache=[dict(args=["--all"], name="all")],
-            mcdram=[
-                dict(
-                    args=['-m', str(socket)],
-                    name='numa_' + str(socket)
-                )
-                for socket in range(physical_cpus())
-            ],
-            cpu=[
-                dict(
-                    args=["--all"],
-                    name="all"
-                )
-            ],
-        )
 
     def __init__(self):
         super(Stream, self).__init__(
             attributes=dict(
-                features=Stream.DEFAULT_FEATURES,
                 threads=Stream.DEFAULT_THREADS,
                 executable=Stream.DEFAULT_EXECUTABLE,
             )
@@ -135,12 +111,6 @@ class Stream(Benchmark):
         return self.attributes['executable']
 
     @property
-    def features(self):
-        """List of tested features among "cache", "mcdram", and "cpu"
-        """
-        return Stream.DEFAULT_FEATURES & set(self.attributes['features'])
-
-    @property
     def threads(self):
         """List of possible threads the command is executed with"""
         return [
@@ -150,26 +120,16 @@ class Stream(Benchmark):
 
     def execution_matrix(self, context):
         del context  # unused
-        for feature in self.features:
-            for numa_policy in self.features_config[feature]:
-                for thread in self.threads:
-                    yield dict(
-                        category=Stream.FEATURE_CPU,
-                        command=[
-                            'numactl',
-                            " ".join(numa_policy['args']),
-                            find_executable(self.executable),
-                        ],
-                        metas=dict(
-                            threads=thread,
-                            numa_policy=numa_policy['name'],
-                            memory_type=feature,
-                        ),
-                        environment=dict(
-                            OMP_NUM_THREADS=thread,
-                            KMP_AFFINITY='scatter'
-                        ),
-                    )
+        for thread in self.threads:
+            yield dict(
+                category=Stream.name,
+                command=[find_executable(self.executable)],
+                metas=dict(threads=thread),
+                environment=dict(
+                    OMP_NUM_THREADS=thread,
+                    KMP_AFFINITY='scatter'
+                ),
+            )
 
     @cached_property
     def metrics_extractors(self):
@@ -178,7 +138,7 @@ class Stream(Benchmark):
     @property
     def plots(self):
         return {
-            Stream.FEATURE_CPU: [
+            Stream.name: [
                 dict(
                     name="{hostname} {category} timing",
                     series=dict(

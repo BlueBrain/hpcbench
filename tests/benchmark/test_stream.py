@@ -34,7 +34,7 @@ class TestStream(AbstractBenchmarkTest, unittest.TestCase):
         return TestStream.EXPECTED_METRICS
 
     def get_benchmark_categories(self):
-        return [self.get_benchmark_clazz().FEATURE_CPU]
+        return [self.get_benchmark_clazz().name]
 
     @property
     def attributes(self):
