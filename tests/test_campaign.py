@@ -82,6 +82,22 @@ class TestCampaign(unittest.TestCase):
             ]
         )
 
+    def test_cyclic_tags(self):
+        config = self.new_config
+        config['network']['tags']['A'] = dict(
+            tags=['B'])
+        config['network']['tags']['B'] = dict(
+            tags=['A'])
+        with self.assertRaises(Exception):
+            fill_default_campaign_values(config)
+
+    def test_recursive_tag_missing(self):
+        config = self.new_config
+        config['network']['tags']['atag'] = dict(
+            tags=['dontexist'])
+        with self.assertRaises(Exception):
+            fill_default_campaign_values(config)
+
     def test_tags_invalid_mode(self):
         config = self.new_config
         config['network']['tags']['invalid'] = dict(

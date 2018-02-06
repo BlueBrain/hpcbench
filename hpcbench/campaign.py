@@ -204,8 +204,7 @@ class NetworkConfig(object):
         """Perforn node expansion of network section.
         """
         self.network.nodes = NetworkConfig._expand_nodes(self.network.nodes)
-        for tag in list(self.network.tags):
-            self._expand_tag(tag)
+        self._expand_tags()
 
     @classmethod
     def _expand_nodes(cls, nodes):
@@ -225,18 +224,65 @@ class NetworkConfig(object):
             if mode == 'match':
                 pattern[mode] = re.compile(pattern[mode])
             elif mode == 'nodes':
-                pattern[mode] = NetworkConfig._expand_nodes(pattern[mode])
+                pattern[mode] = cls._expand_nodes(pattern[mode])
+            elif mode == 'tags':
+                pass  # don't fail but ignore tags
             else:
                 raise Exception('Unknown tag association pattern: %s',
                                 mode)
 
-    def _expand_tag(self, tag):
-        config = self.network.tags[tag]
-        if isinstance(config, dict):
-            config = [config]
-            self.network.tags[tag] = config
-        for pattern in config:
-            self._expand_tag_pattern(pattern)
+    @classmethod
+    def _is_leaf(cls, config):
+        # returns True if in none of the modes and patterns is 'tags'
+        return all(['tags' not in pat.keys() for pat in config])
+
+    @classmethod
+    def _resolve(cls, tag, config, expanded, recursive, visited):
+        for pattern in config[:]:
+            # we work with a copy so we can modify the original
+            # first expand all the other modes
+            cls._expand_tag_pattern(pattern)
+            # now let's go through that tags if they exist in this pattern
+            if 'tags' in list(pattern):
+                tags = pattern['tags']
+                for rectag in tags:
+                    if rectag in expanded:
+                        config += expanded[rectag]
+                    elif rectag in visited:
+                        raise Exception('found circular dependency '
+                                        + 'between %s and %s',
+                                        tag, rectag)
+                    elif rectag in recursive:
+                        recconfig = recursive.pop(rectag)
+                        visited.add(rectag)
+                        cls._resolve(rectag, recconfig,
+                                     expanded, recursive, visited)
+                    else:  # rectag is nowhere to be found
+                        raise Exception('%s refers to %s, which '
+                                        + 'is not defined.',
+                                        tag, rectag)
+                pattern.pop('tags')  # we've expanded this, it can be deleted
+        expanded[tag] = config
+
+    def _expand_tags(self):
+        expanded = {}
+        recursive = {}
+        for tag, config in self.network.tags.items():
+            if isinstance(config, dict):
+                config = [config]
+            if NetworkConfig._is_leaf(config):
+                for pattern in config:
+                    NetworkConfig._expand_tag_pattern(pattern)
+                expanded[tag] = config
+            else:
+                recursive[tag] = config
+        # we finished all the leafs (tags without any recursive tag references)
+        visited = set(expanded)
+        while recursive:
+            tag, config = recursive.popitem()
+            visited.add(tag)
+            NetworkConfig._resolve(tag, config, expanded, recursive, visited)
+        self.network.tags = expanded
 
 
 def get_benchmark_types(campaign):
