@@ -76,7 +76,7 @@ class IMBPingPongExtractor(IMBExtractor):
     @cached_property
     def metrics(self):
         return dict(
-            latency=Metrics.Second,
+            latency=Metrics.Microsecond,
             bandwidth=Metrics.MegaBytesPerSecond,
         )
 
@@ -115,7 +115,7 @@ class IMBAllToAllExtractor(IMBExtractor):
 
     @property
     def metrics(self):
-        return dict(latency=Metrics.Second)
+        return dict(latency=Metrics.Microsecond)
 
     @cached_property
     def stdout_ignore_prior(self):
