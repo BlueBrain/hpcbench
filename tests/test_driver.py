@@ -162,6 +162,9 @@ class TestHostDriver(unittest.TestCase):
                         group_rectags=dict(
                             tags=["group_match", "group_nodes"]
                         ),
+                        group_localhost=[
+                            dict(nodes=["localhost"])
+                        ],
                     )
                 )
             )
@@ -188,11 +191,11 @@ class TestHostDriver(unittest.TestCase):
     def test_host_driver_children(self):
         self.assertEqual(
             self.host_driver('node01').children,
-            {'*', 'n01', 'group_nodes', 'group_rectags'}
+            {'*', 'n01', 'group_nodes', 'group_rectags', 'group_localhost'}
         )
         self.assertEqual(
             self.host_driver('node10').children,
-            {'*', 'n10', 'group_match', 'group_rectags'}
+            {'*', 'n10', 'group_match', 'group_rectags', 'group_localhost'}
         )
 
     def slurm(self, node='node01', tag='group_nodes', srun_nodes=1):
