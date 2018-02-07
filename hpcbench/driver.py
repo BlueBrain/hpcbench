@@ -649,7 +649,7 @@ class ExecutionDriver(Leaf):
         self.benchmark = self.parent.benchmark
         self.execution = parent.execution
         self.command_expansion_vars = dict(
-            process_count=1
+            process_count="1"
         )
 
     def _wrap_in_bash_script(self, commands):
@@ -796,9 +796,10 @@ class SlurmExecutionDriver(ExecutionDriver):
 
     def _parse_srun_options(self, options):
         parser = argparse.ArgumentParser()
-        parser.add_argument('-n', '--ntasks', default=1)
+        parser.add_argument('-n', '--ntasks', default="1")
         args = parser.parse_known_args(options)
-        self.command_expansion_vars['process_count'] = args[0].ntasks
+        ntasks = args[0].ntasks.format(nodes=str(len(self.srun_nodes)))
+        self.command_expansion_vars['process_count'] = ntasks
 
     @cached_property
     def srun_nodes(self):
