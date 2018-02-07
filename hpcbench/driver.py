@@ -106,6 +106,10 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
         raise NotImplementedError  # pragma: no cover
 
     @cached_property
+    def has_children(self):
+        return len(self.children) > 0
+
+    @cached_property
     def report(self):
         """Get object report. Content of ``YAML_REPORT_FILE``
         """
@@ -118,8 +122,9 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
 
     def _call_without_report(self, **kwargs):
         for child in self._children:
-            with pushd(str(child), mkdir=True):
-                child_obj = self.child_builder(child)
+            child_obj = self.child_builder(child)
+            with pushd(str(child), cleanup=isinstance(child_obj, Enumerator)
+                       and not child_obj.has_children):
                 child_obj(**kwargs)
                 yield child
 
