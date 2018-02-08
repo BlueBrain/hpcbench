@@ -78,6 +78,7 @@ setup(
 
         [hpcbench.benchmarks]
         babelstream = hpcbench.benchmark.babelstream
+        custream = hpcbench.benchmark.custream
         hpl = hpcbench.benchmark.hpl
         imb = hpcbench.benchmark.imb
         ior = hpcbench.benchmark.ior
