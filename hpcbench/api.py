@@ -51,6 +51,7 @@ class Metrics(object):  # pragma pylint: disable=too-few-public-methods
     Millisecond = Metric('ms', float)
     Second = Metric('s', float)
     MegaBytesPerSecond = Metric('MB/s', float)
+    GigaBytesPerSecond = Metric('GB/s', float)
     Cardinal = Metric('#', int)
     Byte = Metric('B', int)
     Flops = Metric('flop/s', float)
