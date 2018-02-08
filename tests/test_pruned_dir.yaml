@@ -1,0 +1,15 @@
+network:
+  nodes:
+    - localhost
+  tags:
+    uc1:
+      nodes:
+        - localhost
+    uc2:
+      nodes:
+        - localhost
+
+benchmarks:
+    uc1:
+        test:
+            type: fake

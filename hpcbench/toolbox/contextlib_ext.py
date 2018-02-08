@@ -29,18 +29,24 @@ def capture_stdout():
 
 
 @contextlib.contextmanager
-def pushd(path, mkdir=True):
+def pushd(path, mkdir=True, cleanup=False):
     """Change current working directory in a with-context
     :param mkdir: If True, then directory is created if it does not exist
+    :param cleanup: If True and no pre-existing directory, the directory is
+    cleaned up at the end
     """
     cwd = os.getcwd()
-    if mkdir and not osp.exists(path):
+    exists = osp.exists(path)
+    if mkdir and not exists:
         os.makedirs(path)
     os.chdir(path)
     try:
         yield path
     finally:
         os.chdir(cwd)
+        if not exists and cleanup:
+            # NB: should we be checking for rmtree.avoids_symlink_attacks ?
+            shutil.rmtree(path)
 
 
 class Timer(object):  # pylint: disable=too-few-public-methods
