@@ -1,0 +1,57 @@
+"""Extract build information from executables
+"""
+
+import json
+from json import JSONDecodeError
+import logging
+import subprocess
+
+from hpcbench.toolbox.contextlib_ext import (
+    mkdtemp,
+    pushd,
+)
+
+
+LOGGER = logging.getLogger('hpcbench')
+
+OBJCOPY = 'objcopy'
+DUMP_SECTION = '--dump-section'
+ELF_SECTION = 'build_info'
+BUILDINFO_FILE = 'buildinfo.json'
+
+
+def extract_build_info(exe_path, elf_section=ELF_SECTION):
+    """Extracts the build information from a given executable.
+
+    The build information is expected to be in json format, which is parsed
+    and returned as a dictionary.
+    If no build information is found an empty dictionary is returned.
+
+    This assumes binutils 2.25 to work.
+
+    Args:
+        exe_path (str): The full path to the executable to be examined
+
+    Returns:
+        dict: A dictionary of the extracted information.
+    """
+    build_info = {}
+    with mkdtemp() as tempd, pushd(tempd):
+        errno = subprocess.call([OBJCOPY,
+                                 DUMP_SECTION,
+                                 "{secn}={ofile}".format(secn=elf_section,
+                                                         ofile=BUILDINFO_FILE),
+                                 exe_path])
+        if errno:  # just return the empty dict
+            LOGGER.warning('objcopy failed with errno {:d}'.format(errno))
+            return build_info
+
+        with open(BUILDINFO_FILE) as build_info_f:
+            try:
+                build_info = json.load(build_info_f)
+            except JSONDecodeError as jsde:
+                LOGGER.warning('benchmark executable build is not valid json:')
+                LOGGER.warning(jsde.msg)
+                LOGGER.warning('build info section content:')
+                LOGGER.warning(jsde.doc)
+    return build_info

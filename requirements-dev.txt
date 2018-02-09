@@ -6,3 +6,4 @@ pylint==1.8.2
 rednose==1.2.3
 sphinx==1.6.7
 flake8-import-order==0.16
+python-magic==0.4.15
