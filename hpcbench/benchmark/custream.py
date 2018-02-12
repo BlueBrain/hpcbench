@@ -139,7 +139,8 @@ class CUDAStream(Benchmark):
                     name="{hostname} {category} bandwidth",
                     series=dict(
                         metas=['blocksizes'],
-                        metrics=['copy_bandwidth',
+                        metrics=[
+                            'copy_bandwidth',
                             'scale_bandwidth',
                             'add_bandwidth',
                             'triad_bandwidth',
