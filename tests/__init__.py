@@ -1,4 +1,5 @@
 import inspect
+import os
 import os.path as osp
 import shutil
 import sys
@@ -14,6 +15,7 @@ from hpcbench.api import (
 )
 from hpcbench.cli import bensh
 from hpcbench.toolbox.contextlib_ext import pushd
+from . toolbox.test_buildinfo import TestExtractBuildinfo
 
 
 class DriverTestCase(object):
@@ -32,6 +34,16 @@ class DriverTestCase(object):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.TEST_DIR)
+
+
+class NullExtractor(MetricsExtractor):
+
+    @property
+    def metrics(self):
+        return dict()
+
+    def extract_metrics(self, outdir, metas):
+        return dict()
 
 
 class FakeExtractor(MetricsExtractor):
@@ -58,6 +70,42 @@ class FakeExtractor(MetricsExtractor):
             if self.show_cwd:
                 metrics.update(path=content[2].strip())
         return metrics
+
+
+class BuildInfoBench(Benchmark):
+    name = 'buildinfo_tester'
+
+    description = '''
+        fake benchmark for testing build info extraction
+    '''
+
+    def __init__(self):
+        super(BuildInfoBench, self).__init__(
+            attributes=dict(
+                run_path=None,
+            )
+        )
+        TestExtractBuildinfo.make_test_dummy('bibench')
+        self.exe_matrix = [dict(
+                category='main',
+                command=[osp.join(os.getcwd(), 'bibench')],
+                metas=dict())]
+
+    @property
+    def in_campaign_template(self):
+        return False
+
+    @property
+    def build_info(self):
+        return TestExtractBuildinfo.get_json()
+
+    def execution_matrix(self, context):
+        del context
+        return self.exe_matrix
+
+    @property
+    def metrics_extractors(self):
+        return NullExtractor()
 
 
 class FakeBenchmark(Benchmark):

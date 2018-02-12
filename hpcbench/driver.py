@@ -29,6 +29,7 @@ import types
 import uuid
 
 from cached_property import cached_property
+import magic
 import six
 import yaml
 
@@ -38,6 +39,7 @@ from . api import (
 )
 from . campaign import from_file
 from . plot import Plotter
+from . toolbox.buildinfo import extract_build_info
 from . toolbox.collections_ext import (
     dict_merge,
     nameddict,
@@ -416,9 +418,26 @@ class BenchmarkCategoryDriver(Enumerator):
                 MetricsDriver(self.campaign, self.benchmark)(**kwargs)
         self.gather_metrics(runs)
 
+    def _add_build_info(self, execution):
+        executable = execution['command'][0]
+        try:
+            exepath = find_executable(executable, required=True)
+            if magic.from_file(exepath).startswith('ELF'):
+                if 'metas' not in execution or execution['metas'] is None:
+                    execution['metas'] = dict()
+                execution['metas']['build_info'] = extract_build_info(exepath)
+            else:
+                LOGGER.info('{xp} is not pointing to an ELF executable'.format(
+                            xp=exepath))
+        except NameError as ne:
+            LOGGER.info("Could not find executable to examine for build info")
+            LOGGER.info(str(ne))
+
     def _execute(self, **kwargs):
         runs = dict()
         for execution, run_dir in self.children:
+            if 'shell' not in execution:
+                self._add_build_info(execution)
             runs.setdefault(execution['category'], []).append(run_dir)
             with pushd(run_dir, mkdir=True):
                 attempt_cls = self.attempt_run_class(execution)

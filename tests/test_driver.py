@@ -29,8 +29,10 @@ from hpcbench.driver import (
 )
 from hpcbench.toolbox.contextlib_ext import (
     capture_stdout,
+    mkdtemp,
+    pushd,
 )
-from . import DriverTestCase, FakeBenchmark
+from . import BuildInfoBench, DriverTestCase, FakeBenchmark
 from . benchmark.benchmark import AbstractBenchmarkTest
 
 
@@ -194,6 +196,32 @@ class TestHostDriver(unittest.TestCase):
             self.host_driver('node10').children,
             {'*', 'n10', 'group_match', 'group_rectags'}
         )
+
+    def test_builinfo(self):
+        node = 'node01'
+        tag = '*'
+        campaign_file = TestHostDriver.CAMPAIGN_FILE
+        with mkdtemp() as test_dir, pushd(test_dir):
+            bench = BuildInfoBench()
+            BenchmarkCategoryDriver(
+                BenchmarkDriver(
+                    BenchmarkTagDriver(
+                        HostDriver(
+                            CampaignDriver(
+                                campaign_file=campaign_file,
+                                node=node
+                            ),
+                            node
+                        ),
+                        tag
+                    ),
+                    bench,
+                    dict(),
+                ),
+                'main'
+            )()
+            build_info = bench.execution_matrix(None)[0]['metas']['build_info']
+            self.assertEqual(build_info, bench.build_info)
 
     def slurm(self, node='node01', tag='group_nodes', srun_nodes=1):
         execution = dict(
