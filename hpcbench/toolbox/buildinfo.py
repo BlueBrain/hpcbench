@@ -2,7 +2,10 @@
 """
 
 import json
-from json import JSONDecodeError
+try:
+    from json import JSONDecodeError as JSONDcdError
+except ImportError:
+    from json import ValueError as JSONDcdError
 import logging
 import subprocess
 
@@ -49,7 +52,7 @@ def extract_build_info(exe_path, elf_section=ELF_SECTION):
         with open(BUILDINFO_FILE) as build_info_f:
             try:
                 build_info = json.load(build_info_f)
-            except JSONDecodeError as jsde:
+            except JSONDcdError as jsde:
                 LOGGER.warning('benchmark executable build is not valid json:')
                 LOGGER.warning(jsde.msg)
                 LOGGER.warning('build info section content:')
