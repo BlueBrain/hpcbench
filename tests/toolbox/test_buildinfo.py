@@ -20,9 +20,7 @@ DUMMY_BUILDINFO = """{
     "name": "gcc",
     "version": "5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.6)"
   },
-  "opt_flags": ["-O0",
-    "-mtune=intel"
-  ],
+  "opt_flags": ["-O0"],
   "build_options": [],
   "extra_info": "this is a test"
 }
@@ -35,7 +33,7 @@ class TestExtractBuildinfo(unittest.TestCase):
     def make_test_dummy(cls, dummy='dummy'):
         with open('dummy.c', 'w') as dummyf:
             dummyf.write(DUMMY_C)
-        subprocess.check_call(['gcc', '-O0', '-mtune=intel',
+        subprocess.check_call(['gcc', '-O0',
                                '-o', dummy, 'dummy.c'])
         with open('dummy.buildinfo', 'w') as dummybif:
             dummybif.write(DUMMY_BUILDINFO)
