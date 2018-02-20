@@ -5,7 +5,7 @@ import json
 try:
     from json import JSONDecodeError as JSONDcdError
 except ImportError:
-    from json import ValueError as JSONDcdError
+    JSONDcdError = ValueError
 import logging
 import subprocess
 
