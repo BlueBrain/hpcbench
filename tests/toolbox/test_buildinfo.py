@@ -1,4 +1,5 @@
 import json
+import os
 import os.path as osp
 import subprocess
 import unittest
@@ -46,6 +47,8 @@ class TestExtractBuildinfo(unittest.TestCase):
     def get_json(cls):
         return json.loads(DUMMY_BUILDINFO)
 
+    @unittest.skipIf('TRAVIS_TAG' in os.environ,
+                     'objcopy version does not support --dump-section yet')
     def test_extract_build_info(self):
         with mkdtemp() as test_dir, pushd(test_dir):
             TestExtractBuildinfo.make_test_dummy(DUMMY_EXE)

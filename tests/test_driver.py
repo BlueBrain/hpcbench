@@ -197,6 +197,8 @@ class TestHostDriver(unittest.TestCase):
             {'*', 'n10', 'group_match', 'group_rectags'}
         )
 
+    @unittest.skipIf('TRAVIS_TAG' in os.environ,
+                     'objcopy version does not support --dump-section yet')
     def test_builinfo(self):
         node = 'node01'
         tag = '*'
