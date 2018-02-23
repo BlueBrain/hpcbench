@@ -391,7 +391,7 @@ class CampaignMerge(object):
                 elif key not in lhs:
                     lhs[key] = rhs[key]
         lhs_file = osp.join(self.lhs, path)
-        rhs_file = osp.join(self.lhs, path)
+        rhs_file = osp.join(self.rhs, path)
         assert osp.isfile(rhs_file)
         assert osp.isfile(lhs_file)
         lhs_data = self.serializers[extension].reader(lhs_file)
@@ -420,7 +420,7 @@ class CampaignMerge(object):
                     with self._push(filename):
                         self._merge()
             else:
-                if file_path in CampaignMerge.IGNORED_FILES:
+                if CampaignMerge.IGNORED_FILES in file_path:
                     continue
                 extension = osp.splitext(filename)[1][1:]
                 if extension in CampaignMerge.DATA_FILE_EXTENSIONS:
