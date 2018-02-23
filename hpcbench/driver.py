@@ -180,6 +180,8 @@ class Network(object):
             return []
         nodes = set()
         for definition in definitions:
+            if len(definition.items()) == 0:
+              continue
             mode, value = list(definition.items())[0]
             if mode == 'match':
                 nodes = nodes.union(set([
