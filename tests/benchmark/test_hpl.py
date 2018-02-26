@@ -37,14 +37,15 @@ class TestHpl(AbstractBenchmarkTest, unittest.TestCase):
         self.assertExecutionMatrix(
             dict(
                 executable='/path/to/fake',
-                srun_nodes='tag-name'
+                srun_nodes='tag-name',
             ),
             [
                 dict(
                     category='cpu',
                     environment=dict(
                         KMP_AFFINITY='scatter',
-                        OMP_NUM_THREADS='1'
+                        OMP_NUM_THREADS='1',
+                        MKL_NUM_THREADS='1',
                     ),
                     command=['./fake'],
                     srun_nodes='tag-name',
@@ -54,16 +55,39 @@ class TestHpl(AbstractBenchmarkTest, unittest.TestCase):
         self.assertExecutionMatrix(
             dict(
                 executable='/path/to/fake',
-                srun_nodes=None
+                srun_nodes=None,
             ),
             [
                 dict(
                     category='cpu',
                     environment=dict(
                         KMP_AFFINITY='scatter',
-                        OMP_NUM_THREADS='1'
+                        OMP_NUM_THREADS='1',
+                        MKL_NUM_THREADS='1',
                     ),
                     command=['./fake'],
+                )
+            ]
+        )
+        self.assertExecutionMatrix(
+            dict(
+                executable='/path/to/fake',
+                srun_nodes=None,
+                options=['--problem_size', '100000',
+                         '--block_size', '336',
+                         '--hpl_numthreads', '64'],
+            ),
+            [
+                dict(
+                    category='cpu',
+                    environment=dict(
+                        KMP_AFFINITY='scatter',
+                        OMP_NUM_THREADS='1',
+                        MKL_NUM_THREADS='1',
+                    ),
+                    command=['./fake', '--problem_size', '100000',
+                             '--block_size', '336',
+                             '--hpl_numthreads', '64'],
                 )
             ]
         )
@@ -78,7 +102,8 @@ class TestHpl(AbstractBenchmarkTest, unittest.TestCase):
                     category='cpu',
                     environment=dict(
                         KMP_AFFINITY='scatter',
-                        OMP_NUM_THREADS='1'
+                        OMP_NUM_THREADS='1',
+                        MKL_NUM_THREADS='1',
                     ),
                     command=['mpirun', '-n', '21', './fake'],
                 )

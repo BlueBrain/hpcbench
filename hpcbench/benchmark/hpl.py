@@ -3,9 +3,11 @@
 """
 import os.path as osp
 import re
+import shlex
 import shutil
 
 from cached_property import cached_property
+import six
 
 from hpcbench.api import (
     Benchmark,
@@ -126,6 +128,7 @@ class HPL(Benchmark):
                 executable=HPL.DEFAULT_EXECUTABLE,
                 mpirun=[],
                 srun_nodes=0,
+                options=[],
             )
         )
     name = 'hpl'
@@ -138,15 +141,30 @@ class HPL(Benchmark):
         """
         return self.attributes['executable']
 
+    @property
+    def options(self):
+        """
+        additional options passed to the shoc executable
+        """
+        options = self.attributes['options'] or []
+        if isinstance(options, six.string_types):
+            options = shlex.split(options)
+        return options
+
+    @property
+    def command(self):
+        return [
+            './' + osp.basename(find_executable(self.executable)),
+        ] + self.options
+
     def execution_matrix(self, context):
         del context  # unused
         cmd = dict(
             category=HPL.DEFAULT_DEVICE,
-            command=self.mpirun + [
-                './' + osp.basename(find_executable(self.executable)),
-            ],
+            command=self.mpirun + self.command,
             environment=dict(
                 OMP_NUM_THREADS=self.threads,
+                MKL_NUM_THREADS=self.threads,
                 KMP_AFFINITY='scatter'
             ),
         )
