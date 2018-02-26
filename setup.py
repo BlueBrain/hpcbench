@@ -67,6 +67,7 @@ setup(
     },
     entry_points="""
         [console_scripts]
+        ben-csv = hpcbench.cli.bencsv:main
         ben-doc = hpcbench.cli.bendoc:main
         ben-elastic = hpcbench.cli.benelastic:main
         ben-merge = hpcbench.cli.benmerge:main
