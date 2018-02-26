@@ -1,15 +1,16 @@
 """ben-elastic - Export campaign in Elasticsearch
 
 Usage:
-  ben-elastic [-v | -vv] [--es=<host>] CAMPAIGN-DIR
+  ben-elastic [-v | -vv] [-l LOGFILE] [--es=<host>] CAMPAIGN-DIR
   ben-elastic (-h | --help)
   ben-elastic --version
 
 Options:
-  --es=<host>  Elasticsearch host [default: localhost]
-  -h, --help   Show this screen
-  --version    Show version
-  -v -vv       Increase program verbosity
+  --es=<host>       Elasticsearch host [default: localhost]
+  -l --log=LOGFILE  Specify an option logfile to write to
+  -h, --help        Show this screen
+  --version         Show version
+  -v -vv            Increase program verbosity
 """
 
 from hpcbench.driver import CampaignDriver

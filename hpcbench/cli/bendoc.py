@@ -1,7 +1,7 @@
 """ben-doc - Generate a campaign report
 
 Usage:
-  ben-doc [-t TEMPLATE] [-o FILE] [-v | -vv] CAMPAIGN-DIR
+  ben-doc [-t TEMPLATE] [-o FILE] [-v | -vv] [-l LOGFILE] CAMPAIGN-DIR
   ben-doc (-h | --help)
   ben-doc --version
 
@@ -9,6 +9,7 @@ Options:
   -o, --output FILE       Write report to specified file
                           instead of standard output
   -t, --template TEMPLATE Specify a custom Jinja template
+  -l --log=LOGFILE        Specify an option logfile to write to
   -h, --help              Show this screen
   --version               Show version
   -v -vv                  Increase program verbosity
