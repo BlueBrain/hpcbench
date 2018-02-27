@@ -46,7 +46,7 @@ def pip_installer_url(version=None):
 
 
 DEFAULT_CAMPAIGN = dict(
-    output_dir="hpcbench-%Y%m%d-%H:%M:%S",
+    output_dir="hpcbench-%Y%m%d-%H%M%S",
     network=dict(
         nodes=[
             socket.gethostname(),
