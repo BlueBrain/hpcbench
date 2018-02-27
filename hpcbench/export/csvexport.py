@@ -6,7 +6,6 @@ import csv
 from cached_property import cached_property
 
 from hpcbench.campaign import (
-    get_benchmark_types,
     get_metrics,
 )
 from hpcbench.toolbox.collections_ext import flatten_dict
@@ -37,30 +36,12 @@ class CSVExporter(object):
             for run in self._get_runs(self.campaign):
                 csvf.writerow(run)
 
-    @property
-    def _documents(self):
-        for run in CSVExporter._get_runs(self.campaign):
-            yield dict(
-                index=dict(
-                    _type=run['benchmark'],
-                    _id=run['id']
-                )
-            )
-            yield run
-
     @cached_property
     def _headers(self):
         headers = {}
         for run in self._get_runs(self.campaign):
             headers = headers | run.keys()
         return headers
-
-    @cached_property
-    def _document_types(self):
-        return [
-            benchmark
-            for benchmark in get_benchmark_types(self.campaign.campaign)
-        ]
 
     @classmethod
     def _get_runs(cls, campaign):
@@ -77,7 +58,8 @@ class CSVExporter(object):
         for attrs, metrics in get_metrics(campaign):
             for run in metrics:
                 if run['benchmark'] == benchmark:
+                    run_flat = flatten_dict(run)
                     eax = dict()
                     eax.update(attrs)
-                    eax.update(run)
+                    eax.update(run_flat)
                     yield eax
