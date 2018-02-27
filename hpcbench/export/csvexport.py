@@ -24,17 +24,40 @@ class CSVExporter(object):
         self.campaign = campaign
         self.ofile = ofile
 
-    def export(self):
-        """Create export campaign data to csv
+    def export(self, fields=None):
+        """Export campaign data to csv
+        :param fields: a comma-seperated string of columns to be
+                       used for exporting
         """
-        self._push_data()
+        if fields:
+            self._push_data_filtered(fields)
+        else:
+            self._push_data()
+
+    def peek(self):
+        """Print the Campaign data columns"""
+        for col in self._headers:
+            print('- '+col)
 
     def _push_data(self):
         with write_wherever(self.ofile) as ofo:
-            csvf = csv.DictWriter(ofo, fieldnames=list(self._headers))
+            csvf = csv.DictWriter(ofo, fieldnames=self._headers)
             csvf.writeheader()
             for run in self._get_runs(self.campaign):
                 csvf.writerow(run)
+
+    def _push_data_filtered(self, fieldstr):
+        fields = fieldstr.split(',')
+        if len(set(fields) - self._headers):
+            raise ValueError('The provided list of fields contains an element '
+                             + 'that could not be found in this campaign\n'
+                             + str(set(fields) - self._headers))
+        with write_wherever(self.ofile) as ofo:
+            csvf = csv.DictWriter(ofo, fieldnames=fields)
+            csvf.writeheader()
+            for run in self._get_runs(self.campaign):
+                run_f = {k: v for k, v in run.items() if k in fields}
+                csvf.writerow(run_f)
 
     @cached_property
     def _headers(self):

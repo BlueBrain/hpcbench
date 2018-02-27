@@ -1,12 +1,16 @@
 """ben-csv - Export campaign CSV
 
 Usage:
-  ben-csv [-v | -vv] [-l LOGFILE] [-o CSVFILE] CAMPAIGN-DIR
+  ben-csv [-v | -vv] [-l LOGFILE] [-o CSVFILE] [-f FIELDS] CAMPAIGN-DIR
+  ben-csv [-v | -vv] -p  CAMPAIGN-DIR
   ben-csv (-h | --help)
   ben-csv --version
 
 Options:
   -o --output=CSVFILE  CSV file
+  -f --fields=FIELDS   comma-separated list of fields that should be output
+                       in CSV
+  -p --peek            peek into campaign and print out all CSV column names
   -l --log=LOGFILE     Specify an option logfile to write to
   -h, --help           Show this screen
   --version            Show version
@@ -24,8 +28,11 @@ def main(argv=None):
     arguments = cli_common(__doc__, argv=argv)
     campaign_path = arguments['CAMPAIGN-DIR']
     driver = CampaignDriver(campaign_path=campaign_path)
-    csv_export = CSVExporter(driver, arguments['--output'])
     with pushd(campaign_path):
-        csv_export.export()
-    if argv is not None:
-        return csv_export
+        csv_export = CSVExporter(driver, arguments['--output'])
+        if arguments['--peek']:
+            csv_export.peek()
+        else:
+            csv_export.export(arguments['--fields'])
+        if argv is not None:
+            return csv_export
