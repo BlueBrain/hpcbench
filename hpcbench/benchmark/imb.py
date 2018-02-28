@@ -2,6 +2,7 @@
     https://software.intel.com/en-us/articles/intel-mpi-benchmarks
 """
 from abc import abstractmethod, abstractproperty
+from operator import itemgetter
 import re
 
 from cached_property import cached_property
@@ -17,11 +18,16 @@ from hpcbench.toolbox.process import find_executable
 class IMBExtractor(MetricsExtractor):
     """Abstract class for IMB benchmark metrics extractor
     """
-    @abstractproperty
+    @cached_property
     def metrics(self):
-        """ The metrics to be extracted.
-            This property can not be replaced, but can be mutated as required
-        """
+        return dict(minb_lat=Metrics.Microsecond,
+                    minb_lat_bytes=Metrics.Byte,
+                    min_lat=Metrics.Microsecond,
+                    min_lat_bytes=Metrics.Byte,
+                    maxb_bw=Metrics.MegaBytesPerSecond,
+                    maxb_bw_bytes=Metrics.Byte,
+                    max_bw=Metrics.MegaBytesPerSecond,
+                    max_bw_bytes=Metrics.Byte)
 
     @abstractproperty
     def stdout_ignore_prior(self):
@@ -66,19 +72,14 @@ class IMBPingPongExtractor(IMBExtractor):
 
     def __init__(self):
         super(IMBPingPongExtractor, self).__init__()
-        self.s_latency = set()
-        self.s_bandwidth = set()
+        self.s_bytes = []
+        self.s_latency = []
+        self.s_bandwidth = []
 
     def prelude(self):
+        self.s_bytes.clear()
         self.s_latency.clear()
         self.s_bandwidth.clear()
-
-    @cached_property
-    def metrics(self):
-        return dict(
-            latency=Metrics.Microsecond,
-            bandwidth=Metrics.MegaBytesPerSecond,
-        )
 
     @cached_property
     def stdout_ignore_prior(self):
@@ -89,14 +90,23 @@ class IMBPingPongExtractor(IMBExtractor):
         if search:
             byte = int(search.group(1))
             if byte != 0:
-                self.s_latency.add(float(search.group(2)))
-                self.s_bandwidth.add(float(search.group(3)))
+                lat = float(search.group(2))
+                bw = float(search.group(3))
+                self.s_bytes.append(byte)
+                self.s_latency.append(lat)
+                self.s_bandwidth.append(bw)
 
     def epilog(self):
-        return dict(
-            latency=min(self.s_latency),
-            bandwidth=max(self.s_bandwidth),
-        )
+        minb_lat, minb_lat_b = self.s_latency[0], self.s_bytes[0]
+        min_lat, min_lat_b = min(zip(self.s_latency, self.s_bytes),
+                                 key=itemgetter(0))
+        maxb_bw, maxb_bw_b = self.s_bandwidth[-1], self.s_bytes[-1]
+        max_bw, max_bw_b = max(zip(self.s_bandwidth, self.s_bytes),
+                               key=itemgetter(0))
+        return dict(minb_lat=minb_lat, minb_lat_bytes=minb_lat_b,
+                    min_lat=min_lat, min_lat_bytes=min_lat_b,
+                    maxb_bw=maxb_bw, maxb_bw_bytes=maxb_bw_b,
+                    max_bw=max_bw, max_bw_bytes=max_bw_b)
 
 
 class IMBAllToAllExtractor(IMBExtractor):
@@ -108,17 +118,14 @@ class IMBAllToAllExtractor(IMBExtractor):
 
     def __init__(self):
         super(IMBAllToAllExtractor, self).__init__()
-        self.s_latency = set()
-        self.s_bandwidth = set()
+        self.s_bytes = []
+        self.s_latency = []
+        self.s_bandwidth = []
 
     def prelude(self):
+        self.s_bytes.clear()
         self.s_latency.clear()
         self.s_bandwidth.clear()
-
-    @property
-    def metrics(self):
-        return dict(latency=Metrics.Microsecond,
-                    bandwidth=Metrics.MegaBytesPerSecond)
 
     @cached_property
     def stdout_ignore_prior(self):
@@ -131,12 +138,21 @@ class IMBAllToAllExtractor(IMBExtractor):
             if byte != 0:
                 usec = float(search.group(2))
                 bw = round((byte/1024.**2)/(usec/1.e6), 2)
-                self.s_latency.add(usec)
-                self.s_bandwidth.add(bw)
+                self.s_bytes.append(byte)
+                self.s_latency.append(usec)
+                self.s_bandwidth.append(bw)
 
     def epilog(self):
-        return dict(latency=min(self.s_latency),
-                    bandwidth=max(self.s_bandwidth))
+        minb_lat, minb_lat_b = self.s_latency[0], self.s_bytes[0]
+        min_lat, min_lat_b = min(zip(self.s_latency, self.s_bytes),
+                                 key=itemgetter(0))
+        maxb_bw, maxb_bw_b = self.s_bandwidth[-1], self.s_bytes[-1]
+        max_bw, max_bw_b = max(zip(self.s_bandwidth, self.s_bytes),
+                               key=itemgetter(0))
+        return dict(minb_lat=minb_lat, minb_lat_bytes=minb_lat_b,
+                    min_lat=min_lat, min_lat_bytes=min_lat_b,
+                    maxb_bw=maxb_bw, maxb_bw_bytes=maxb_bw_b,
+                    max_bw=max_bw, max_bw_bytes=max_bw_b)
 
 
 class IMBAllGatherExtractor(IMBAllToAllExtractor):

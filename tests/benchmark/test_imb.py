@@ -8,16 +8,34 @@ from . benchmark import AbstractBenchmarkTest
 class TestImb(AbstractBenchmarkTest, unittest.TestCase):
     EXPECTED_METRICS = {
         IMB.PING_PONG: dict(
-            latency=0.20,
-            bandwidth=8344.45,
+            max_bw=8344.45,
+            max_bw_bytes=524288,
+            maxb_bw=5257.28,
+            maxb_bw_bytes=4194304,
+            min_lat=0.20,
+            min_lat_bytes=1,
+            minb_lat=0.20,
+            minb_lat_bytes=1
         ),
         IMB.ALL_TO_ALL: dict(
-            latency=0.38,
-            bandwidth=3685.14,
+           max_bw=3685.14,
+           max_bw_bytes=32768,
+           maxb_bw=1280.39,
+           maxb_bw_bytes=4194304,
+           min_lat=0.38,
+           min_lat_bytes=1,
+           minb_lat=0.38,
+           minb_lat_bytes=1
         ),
         IMB.ALL_GATHER: dict(
-            latency=0.65,
-            bandwidth=2290.22,
+           max_bw=2290.22,
+           max_bw_bytes=65536,
+           maxb_bw=1010.21,
+           maxb_bw_bytes=4194304,
+           min_lat=0.65,
+           min_lat_bytes=8,
+           minb_lat=0.68,
+           minb_lat_bytes=1
         ),
     }
 
