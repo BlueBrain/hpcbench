@@ -102,34 +102,41 @@ class IMBPingPongExtractor(IMBExtractor):
 class IMBAllToAllExtractor(IMBExtractor):
     """Metrics extractor for AllToAll IMB benchmark"""
 
-    LATENCY_RE = re.compile(
+    TIME_RE = re.compile(
         r'^\s*(\d+)\s+\d+\s+\d*\.?\d+[\s]+\d*\.?\d+[\s]+(\d*\.?\d+)'
     )
 
     def __init__(self):
         super(IMBAllToAllExtractor, self).__init__()
-        self.s_res = set()
+        self.s_latency = set()
+        self.s_bandwidth = set()
 
     def prelude(self):
-        self.s_res.clear()
+        self.s_latency.clear()
+        self.s_bandwidth.clear()
 
     @property
     def metrics(self):
-        return dict(latency=Metrics.Microsecond)
+        return dict(latency=Metrics.Microsecond,
+                    bandwidth=Metrics.MegaBytesPerSecond)
 
     @cached_property
     def stdout_ignore_prior(self):
         return "# Benchmarking Alltoallv"
 
     def process_line(self, line):
-        search = self.LATENCY_RE.search(line)
+        search = self.TIME_RE.search(line)
         if search:
             byte = int(search.group(1))
             if byte != 0:
-                self.s_res.add(float(search.group(2)))
+                usec = float(search.group(2))
+                bw = round((byte/1024.**2)/(usec/1.e6), 2)
+                self.s_latency.add(usec)
+                self.s_bandwidth.add(bw)
 
     def epilog(self):
-        return dict(latency=min(self.s_res))
+        return dict(latency=min(self.s_latency),
+                    bandwidth=max(self.s_bandwidth))
 
 
 class IMBAllGatherExtractor(IMBAllToAllExtractor):

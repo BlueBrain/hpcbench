@@ -13,9 +13,11 @@ class TestImb(AbstractBenchmarkTest, unittest.TestCase):
         ),
         IMB.ALL_TO_ALL: dict(
             latency=0.38,
+            bandwidth=3685.14,
         ),
         IMB.ALL_GATHER: dict(
             latency=0.65,
+            bandwidth=2290.22,
         ),
     }
 
