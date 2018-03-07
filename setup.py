@@ -51,7 +51,7 @@ setup(
     ],
     extras_require=dict(
         PLOTTING=[
-            'matplotlib==2.0.2',
+            'matplotlib==2.2.0',
         ],
     ),
     include_package_data=True,
