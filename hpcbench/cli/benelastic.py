@@ -23,7 +23,7 @@ def main(argv=None):
     """ben-elastic entry point"""
     arguments = cli_common(__doc__, argv=argv)
     campaign_path = arguments['CAMPAIGN-DIR']
-    driver = CampaignDriver(campaign_path=campaign_path)
+    driver = CampaignDriver(campaign_path=campaign_path, expandcampvars=False)
     es_host = arguments['--es']
     if es_host:
         es_conf = driver.campaign.export.elasticsearch

@@ -25,7 +25,7 @@ def main(argv=None):
     """ben-doc entry point"""
     arguments = cli_common(__doc__, argv=argv)
     campaign_path = arguments['CAMPAIGN-DIR']
-    driver = CampaignDriver(campaign_path=campaign_path)
+    driver = CampaignDriver(campaign_path=campaign_path, expandcampvars=False)
     with pushd(campaign_path):
         render(template=arguments['--template'],
                ostr=arguments['--output'],

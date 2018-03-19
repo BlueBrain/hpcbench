@@ -27,7 +27,7 @@ def main(argv=None):
     """ben-elastic entry point"""
     arguments = cli_common(__doc__, argv=argv)
     campaign_path = arguments['CAMPAIGN-DIR']
-    driver = CampaignDriver(campaign_path=campaign_path)
+    driver = CampaignDriver(campaign_path=campaign_path, expandcampvars=False)
     with pushd(campaign_path):
         csv_export = CSVExporter(driver, arguments['--output'])
         if arguments['--peek']:

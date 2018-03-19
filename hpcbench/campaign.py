@@ -143,22 +143,24 @@ class Generator(object):
         return desc.replace('\n        ', '\n      # ').strip()
 
 
-def from_file(campaign_file):
+def from_file(campaign_file, expandcampvars=True):
     """Load campaign from YAML file
 
     :param campaign_file: path to YAML file
+    :param expandcampvars: should env variables be expanded? default: yes
     :return: memory representation of the YAML file
     :rtype: dictionary
     """
     campaign = Configuration.from_file(campaign_file)
-    return fill_default_campaign_values(campaign)
+    return fill_default_campaign_values(campaign, expandcampvars)
 
 
-def fill_default_campaign_values(campaign):
+def fill_default_campaign_values(campaign, expandcampvars=True):
     """Fill an existing campaign with default
     values for optional keys
 
     :param campaign: dictionary
+    :param expandcampvars: should env variables be expanded? True by default
     :return: object provided in parameter
     :rtype: dictionary
     """
@@ -182,7 +184,10 @@ def fill_default_campaign_values(campaign):
         if isinstance(value, six.string_types):
             return expandvars(value)
         return value
-    campaign = nameddict(dict_map_kv(campaign, _expandvars))
+    if expandcampvars:
+        campaign = nameddict(dict_map_kv(campaign, _expandvars))
+    else:
+        campaign = nameddict(campaign)
 
     NetworkConfig(campaign).expand()
     return campaign
