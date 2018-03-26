@@ -1,10 +1,8 @@
 """the High-Performance Linpack Benchmark for Distributed-Memory Computers
     http://www.netlib.org/benchmark/hpl/
 """
-import os.path as osp
 import re
 import shlex
-import shutil
 
 from cached_property import cached_property
 import six
@@ -154,7 +152,7 @@ class HPL(Benchmark):
     @property
     def command(self):
         return [
-            './' + osp.basename(find_executable(self.executable)),
+            find_executable(self.executable),
         ] + self.options
 
     def execution_matrix(self, context):
@@ -215,4 +213,3 @@ class HPL(Benchmark):
     def pre_execute(self, execution):
         with open('HPL.dat', 'w') as ostr:
             ostr.write(self.data)
-        shutil.copy(find_executable(self.executable), '.')

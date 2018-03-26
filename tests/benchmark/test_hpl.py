@@ -47,7 +47,7 @@ class TestHpl(AbstractBenchmarkTest, unittest.TestCase):
                         OMP_NUM_THREADS='1',
                         MKL_NUM_THREADS='1',
                     ),
-                    command=['./fake'],
+                    command=['/path/to/fake'],
                     srun_nodes='tag-name',
                 )
             ]
@@ -65,7 +65,7 @@ class TestHpl(AbstractBenchmarkTest, unittest.TestCase):
                         OMP_NUM_THREADS='1',
                         MKL_NUM_THREADS='1',
                     ),
-                    command=['./fake'],
+                    command=['/path/to/fake'],
                 )
             ]
         )
@@ -85,7 +85,7 @@ class TestHpl(AbstractBenchmarkTest, unittest.TestCase):
                         OMP_NUM_THREADS='1',
                         MKL_NUM_THREADS='1',
                     ),
-                    command=['./fake', '--problem_size', '100000',
+                    command=['/path/to/fake', '--problem_size', '100000',
                              '--block_size', '336',
                              '--hpl_numthreads', '64'],
                 )
@@ -105,7 +105,7 @@ class TestHpl(AbstractBenchmarkTest, unittest.TestCase):
                         OMP_NUM_THREADS='1',
                         MKL_NUM_THREADS='1',
                     ),
-                    command=['mpirun', '-n', '21', './fake'],
+                    command=['mpirun', '-n', '21', '/path/to/fake'],
                 )
             ]
         )
