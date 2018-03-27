@@ -60,9 +60,9 @@ class CSVExporter(object):
 
     @cached_property
     def _headers(self):
-        headers = {}
+        headers = set()
         for run in self.runs:
-            headers = headers | run.keys()
+            headers = headers | set(run.keys())
         return headers
 
     @cached_property
