@@ -77,9 +77,9 @@ class IMBPingPongExtractor(IMBExtractor):
         self.s_bandwidth = []
 
     def prelude(self):
-        self.s_bytes.clear()
-        self.s_latency.clear()
-        self.s_bandwidth.clear()
+        self.s_bytes = []
+        self.s_latency = []
+        self.s_bandwidth = []
 
     @cached_property
     def stdout_ignore_prior(self):
@@ -123,9 +123,9 @@ class IMBAllToAllExtractor(IMBExtractor):
         self.s_bandwidth = []
 
     def prelude(self):
-        self.s_bytes.clear()
-        self.s_latency.clear()
-        self.s_bandwidth.clear()
+        self.s_bytes = []
+        self.s_latency = []
+        self.s_bandwidth = []
 
     @cached_property
     def stdout_ignore_prior(self):
