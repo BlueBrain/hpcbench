@@ -34,7 +34,7 @@ def main(argv=None):
             csv_export.peek()
         else:
             fieldsstr = arguments.get('--fields')
-            fields = fieldsstr.split(',') if fieldsstr else []
+            fields = fieldsstr.split(',') if fieldsstr else None
             csv_export.export(fields)
         if argv is not None:
             return csv_export
