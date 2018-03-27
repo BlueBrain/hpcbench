@@ -75,14 +75,3 @@ class CSVExporter(object):
                 eax.update(attrs)
                 eax.update(run_flat)
                 yield eax
-
-    @classmethod
-    def _get_benchmark_runs(cls, campaign, benchmark):
-        for attrs, metrics in get_metrics(campaign):
-            for run in metrics:
-                if run['benchmark'] == benchmark:
-                    run_flat = flatten_dict(run)
-                    eax = dict()
-                    eax.update(attrs)
-                    eax.update(run_flat)
-                    yield eax
