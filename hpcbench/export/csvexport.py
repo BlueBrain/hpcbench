@@ -10,6 +10,7 @@ from hpcbench.campaign import (
 )
 from hpcbench.toolbox.collections_ext import flatten_dict
 from hpcbench.toolbox.contextlib_ext import write_wherever
+from hpcbench.toolbox.functools_ext import listify
 
 
 class CSVExporter(object):
@@ -53,20 +54,21 @@ class CSVExporter(object):
         with write_wherever(self.ofile) as ofo:
             csvf = csv.DictWriter(ofo, fieldnames=fields)
             csvf.writeheader()
-            for run in self._get_runs(self.campaign):
+            for run in self.runs:
                 run_f = {k: v for k, v in run.items() if k in fields}
                 csvf.writerow(run_f)
 
     @cached_property
     def _headers(self):
         headers = {}
-        for run in self._get_runs(self.campaign):
+        for run in self.runs:
             headers = headers | run.keys()
         return headers
 
-    @classmethod
-    def _get_runs(cls, campaign):
-        for attrs, metrics in get_metrics(campaign):
+    @cached_property
+    @listify
+    def runs(self):
+        for attrs, metrics in get_metrics(self.campaign):
             for run in metrics:
                 run_flat = flatten_dict(run)
                 eax = dict()
