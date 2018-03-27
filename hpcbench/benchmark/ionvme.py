@@ -1,4 +1,4 @@
-"""IO SSD Bandwidth measurement using linux tool
+"""IO NVME Bandwidth measurement using linux tool
    WRITE: sync; dd if=/dev/zero of=tempfile bs=1M count=1024; sync
    FLASH THE CASH: sudo /sbin/sysctl -w vm.drop_caches=3
    READ: dd if=tempfile of=/dev/null bs=1M count=1024
@@ -20,7 +20,7 @@ from hpcbench.api import (
 )
 
 
-class IOSSDExtractor(MetricsExtractor):
+class IONVMEExtractor(MetricsExtractor):
     """Ignore stdout until this line"""
     STDOUT_IGNORE_PRIOR = "1024+0 records out"
     METRICS = dict(
@@ -65,7 +65,7 @@ class IOSSDExtractor(MetricsExtractor):
             if len(tokens) == 2:
                 value, unit = tokens[1].split(' ', 2)
                 value = float(value)
-                bandwidth = IOSSDExtractor.parse_bandwidth_linux(
+                bandwidth = IONVMEExtractor.parse_bandwidth_linux(
                     value, unit
                 )
                 self.s_bandwidth.add(bandwidth)
@@ -88,30 +88,30 @@ class IOSSDExtractor(MetricsExtractor):
         return dict(bandwidth=max(self.s_bandwidth))
 
 
-class IOSSDWriteExtractor(IOSSDExtractor):
+class IONVMEWriteExtractor(IONVMEExtractor):
     pass
 
 
-class IOSSDReadExtractor(IOSSDExtractor):
+class IONVMEReadExtractor(IONVMEExtractor):
     pass
 
 
-class IOSSD(Benchmark):
+class IONVME(Benchmark):
     """Benchmark wrapper for the SSDIObench utility
     """
 
-    name = 'iossd'
+    name = 'ionvme'
 
-    description = "Provides SSD bandwidth"
+    description = "Provides NVME bandwidth"
 
-    SSD_READ = 'Read'
-    SSD_WRITE = 'Write'
+    NVME_READ = 'Read'
+    NVME_WRITE = 'Write'
     DEFAULT_CATEGORIES = [
-        SSD_WRITE,
-        SSD_READ,
+        NVME_WRITE,
+        NVME_READ,
     ]
 
-    SCRIPT_NAME = 'iossd.sh'
+    SCRIPT_NAME = 'ionvme.sh'
     SCRIPT = textwrap.dedent("""\
     #!/bin/bash -e
 
@@ -160,11 +160,11 @@ class IOSSD(Benchmark):
     """)
 
     def __init__(self):
-        super(IOSSD, self).__init__(
+        super(IONVME, self).__init__(
             attributes=dict(
                 categories=[
-                    IOSSD.SSD_WRITE,
-                    IOSSD.SSD_READ,
+                    IONVME.NVME_WRITE,
+                    IONVME.NVME_READ,
                 ],
                 path=None,
             )
@@ -180,7 +180,7 @@ class IOSSD(Benchmark):
         for category in self.categories:
             cmd = dict(
                 category=category,
-                command=['./' + IOSSD.SCRIPT_NAME, category],
+                command=['./' + IONVME.SCRIPT_NAME, category],
             )
             if self.path:
                 cmd.setdefault('environment', {})['FILE_PATH'] = self.path
@@ -195,13 +195,13 @@ class IOSSD(Benchmark):
     @cached_property
     def metrics_extractors(self):
         return {
-            IOSSD.SSD_READ: IOSSDReadExtractor(),
-            IOSSD.SSD_WRITE: IOSSDWriteExtractor(),
+            IONVME.NVME_READ: IONVMEReadExtractor(),
+            IONVME.NVME_WRITE: IONVMEWriteExtractor(),
         }
 
     def pre_execute(self, execution):
         del execution  # unused
-        with open(IOSSD.SCRIPT_NAME, 'w') as ostr:
-            ostr.write(IOSSD.SCRIPT)
-        st = os.stat(IOSSD.SCRIPT_NAME)
-        os.chmod(IOSSD.SCRIPT_NAME, st.st_mode | stat.S_IEXEC)
+        with open(IONVME.SCRIPT_NAME, 'w') as ostr:
+            ostr.write(IONVME.SCRIPT)
+        st = os.stat(IONVME.SCRIPT_NAME)
+        os.chmod(IONVME.SCRIPT_NAME, st.st_mode | stat.S_IEXEC)

@@ -1,4 +1,4 @@
-output_dir: hpcbench-%Y%m%d-%H:%M:%S
+output_dir: hpcbench-%Y%m%d-%H%M%S
 benchmarks:
   uc1:
     sysbench_cpu:

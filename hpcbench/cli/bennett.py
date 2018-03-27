@@ -1,14 +1,15 @@
 """ben-nett
 
 Usage:
-  ben-nett [-v | -vv ] CAMPAIGN_FILE
+  ben-nett [-v | -vv ] [-l LOGFILE] CAMPAIGN_FILE
   ben-nett (-h | --help)
   ben-nett --version
 
 Options:
-  -h --help  Show this screen
-  --version  Show version
-  -v -vv     Increase program verbosity
+  -h --help         Show this screen
+  -l --log=LOGFILE  Specify an option logfile to write to
+  --version         Show version
+  -v -vv            Increase program verbosity
 """
 
 from hpcbench.net import BeNet
