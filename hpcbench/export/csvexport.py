@@ -26,8 +26,7 @@ class CSVExporter(object):
 
     def export(self, fields=None):
         """Export campaign data to csv
-        :param fields: a comma-seperated string of columns to be
-                       used for exporting
+        :param fields: list of columns to export. If None, all columns are.
         """
         if fields:
             self._push_data_filtered(fields)
@@ -43,11 +42,10 @@ class CSVExporter(object):
         with write_wherever(self.ofile) as ofo:
             csvf = csv.DictWriter(ofo, fieldnames=self._headers)
             csvf.writeheader()
-            for run in self._get_runs(self.campaign):
+            for run in self.runs:
                 csvf.writerow(run)
 
-    def _push_data_filtered(self, fieldstr):
-        fields = fieldstr.split(',')
+    def _push_data_filtered(self, fields):
         if len(set(fields) - self._headers):
             raise ValueError('The provided list of fields contains an element '
                              + 'that could not be found in this campaign\n'

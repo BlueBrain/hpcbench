@@ -33,6 +33,8 @@ def main(argv=None):
         if arguments['--peek']:
             csv_export.peek()
         else:
-            csv_export.export(arguments['--fields'])
+            fieldsstr = arguments.get('--fields')
+            fields = fieldsstr.split(',') if fieldsstr else []
+            csv_export.export(fields)
         if argv is not None:
             return csv_export
