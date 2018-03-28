@@ -169,15 +169,25 @@ class ESExporter(object):
 
     @classmethod
     def _get_field_mapping(cls, name, value):
+        extra_params = {}
         field_type = cls.PROPERTIES_FIELD_TYPE.get(name)
         if field_type is None:
             obj_type = cls._get_field_type(value)
-            field_type = cls.PY_TYPE_TO_ES_FIELD_TYPE[obj_type]
-        return {
+            if obj_type == dict:
+                if isinstance(value, list):
+                    value = value[0]
+                extra_params = cls._get_dict_mapping(None, value)[None]
+                extra_params['dynamic'] = False
+                field_type = 'nested'
+            else:
+                field_type = cls.PY_TYPE_TO_ES_FIELD_TYPE[obj_type]
+        mapping = {
             name: {
                 'type': field_type
             }
         }
+        mapping[name].update(extra_params)
+        return mapping
 
     @classmethod
     def _get_runs(cls, campaign):
