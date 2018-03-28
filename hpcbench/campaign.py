@@ -46,7 +46,7 @@ def pip_installer_url(version=None):
 
 
 DEFAULT_CAMPAIGN = dict(
-    output_dir="hpcbench-%Y%m%d-%H:%M:%S",
+    output_dir="hpcbench-%Y%m%d-%H%M%S",
     network=dict(
         nodes=[
             socket.gethostname(),
@@ -143,22 +143,24 @@ class Generator(object):
         return desc.replace('\n        ', '\n      # ').strip()
 
 
-def from_file(campaign_file):
+def from_file(campaign_file, expandcampvars=True):
     """Load campaign from YAML file
 
     :param campaign_file: path to YAML file
+    :param expandcampvars: should env variables be expanded? default: yes
     :return: memory representation of the YAML file
     :rtype: dictionary
     """
     campaign = Configuration.from_file(campaign_file)
-    return fill_default_campaign_values(campaign)
+    return fill_default_campaign_values(campaign, expandcampvars)
 
 
-def fill_default_campaign_values(campaign):
+def fill_default_campaign_values(campaign, expandcampvars=True):
     """Fill an existing campaign with default
     values for optional keys
 
     :param campaign: dictionary
+    :param expandcampvars: should env variables be expanded? True by default
     :return: object provided in parameter
     :rtype: dictionary
     """
@@ -182,7 +184,10 @@ def fill_default_campaign_values(campaign):
         if isinstance(value, six.string_types):
             return expandvars(value)
         return value
-    campaign = nameddict(dict_map_kv(campaign, _expandvars))
+    if expandcampvars:
+        campaign = nameddict(dict_map_kv(campaign, _expandvars))
+    else:
+        campaign = nameddict(campaign)
 
     NetworkConfig(campaign).expand()
     return campaign
@@ -391,7 +396,7 @@ class CampaignMerge(object):
                 elif key not in lhs:
                     lhs[key] = rhs[key]
         lhs_file = osp.join(self.lhs, path)
-        rhs_file = osp.join(self.lhs, path)
+        rhs_file = osp.join(self.rhs, path)
         assert osp.isfile(rhs_file)
         assert osp.isfile(lhs_file)
         lhs_data = self.serializers[extension].reader(lhs_file)
@@ -420,7 +425,7 @@ class CampaignMerge(object):
                     with self._push(filename):
                         self._merge()
             else:
-                if file_path in CampaignMerge.IGNORED_FILES:
+                if CampaignMerge.IGNORED_FILES in file_path:
                     continue
                 extension = osp.splitext(filename)[1][1:]
                 if extension in CampaignMerge.DATA_FILE_EXTENSIONS:

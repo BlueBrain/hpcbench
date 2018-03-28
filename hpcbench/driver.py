@@ -56,10 +56,11 @@ LOGGER = logging.getLogger('hpcbench')
 YAML_REPORT_FILE = 'hpcbench.yaml'
 YAML_CAMPAIGN_FILE = 'campaign.yaml'
 JSON_METRICS_FILE = 'metrics.json'
+LOCALHOST = 'localhost'
 
 
 def write_yaml_report(func):
-    """Decorator used to campaign node post-processing
+    """Decorator used in campaign node post-processing
     """
     @wraps(func)
     def _wrapper(*args, **kwargs):
@@ -108,6 +109,10 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
         raise NotImplementedError  # pragma: no cover
 
     @cached_property
+    def has_children(self):
+        return len(self.children) > 0
+
+    @cached_property
     def report(self):
         """Get object report. Content of ``YAML_REPORT_FILE``
         """
@@ -120,8 +125,9 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
 
     def _call_without_report(self, **kwargs):
         for child in self._children:
-            with pushd(str(child), mkdir=True):
-                child_obj = self.child_builder(child)
+            child_obj = self.child_builder(child)
+            with pushd(str(child), cleanup=isinstance(child_obj, Enumerator)
+                       and not child_obj.has_children):
                 child_obj(**kwargs)
                 yield child
 
@@ -176,6 +182,8 @@ class Network(object):
             return []
         nodes = set()
         for definition in definitions:
+            if len(definition.items()) == 0:
+                continue
             mode, value = list(definition.items())[0]
             if mode == 'match':
                 nodes = nodes.union(set([
@@ -191,7 +199,7 @@ class Network(object):
 class CampaignDriver(Enumerator):
     """Abstract representation of an entire campaign"""
     def __init__(self, campaign_file=None, campaign_path=None,
-                 node=None, logger=None):
+                 node=None, logger=None, expandcampvars=True):
         node = node or socket.gethostname()
         if campaign_file and campaign_path:
             raise Exception('Either campaign_file xor path can be specified')
@@ -200,7 +208,7 @@ class CampaignDriver(Enumerator):
         self.campaign_file = osp.abspath(campaign_file)
         super(CampaignDriver, self).__init__(
             Top(
-                campaign=from_file(campaign_file),
+                campaign=from_file(campaign_file, expandcampvars),
                 node=node,
                 logger=logger or LOGGER,
                 root=self
@@ -247,12 +255,13 @@ class HostDriver(Enumerator):
             for config in configs:
                 for mode, kconfig in config.items():
                     if mode == 'match':
-                        if kconfig.match(self.name):
+                        if (kconfig.match(self.name) or
+                                kconfig.match(LOCALHOST)):
                             tags.add(tag)
                             break
                     else:
                         assert mode == 'nodes'
-                        if self.name in kconfig:
+                        if self.name in kconfig or LOCALHOST in kconfig:
                             tags.add(tag)
                             break
                 if tag in tags:
