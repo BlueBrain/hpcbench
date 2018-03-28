@@ -117,7 +117,11 @@ class TestFakeBenchmark(AbstractBenchmarkTest, unittest.TestCase):
     def get_expected_metrics(self, category):
         return dict(
             performance=10.0,
-            standard_error=1.0
+            standard_error=1.0,
+            pairs=[
+                dict(first=1.5, second=True),
+                dict(first=3.0, second=False),
+            ],
         )
 
     def get_benchmark_categories(self):
