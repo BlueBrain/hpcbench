@@ -1,17 +1,18 @@
 """ben-tpl Generate HPCBench related templates
 
 Usage:
-  ben-tpl [-v | -vv ] (benchmark) [-i ] [-g|-o DIR] <FILE>
+  ben-tpl [-v | -vv ] [-l LOGFILE] (benchmark) [-i ] [-g|-o DIR] <FILE>
   ben-tpl (-h | --help)
   ben-tpl --version
 
 Options:
-  -g               Generate configuration template
+  -g                Generate configuration template
   -i, --interactive
-  -h --help        Show this screen
+  -h --help         Show this screen
   -o <DIR>, --output-dir <DIR>
-  --version        Show version
-  -v -vv           Increase program verbosity
+  -l --log=LOGFILE  Specify an option logfile to write to
+  --version         Show version
+  -v -vv            Increase program verbosity
 """
 
 import json
