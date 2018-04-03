@@ -1,15 +1,16 @@
 """ben-elastic - Export campaign in Elasticsearch
 
 Usage:
-  ben-elastic [-v | -vv] [--es=<host>] CAMPAIGN-DIR
+  ben-elastic [-v | -vv] [-l LOGFILE] [--es=<host>] CAMPAIGN-DIR
   ben-elastic (-h | --help)
   ben-elastic --version
 
 Options:
-  --es=<host>  Elasticsearch host [default: localhost]
-  -h, --help   Show this screen
-  --version    Show version
-  -v -vv       Increase program verbosity
+  --es=<host>       Elasticsearch host [default: localhost]
+  -l --log=LOGFILE  Specify an option logfile to write to
+  -h, --help        Show this screen
+  --version         Show version
+  -v -vv            Increase program verbosity
 """
 
 from hpcbench.driver import CampaignDriver
@@ -22,7 +23,7 @@ def main(argv=None):
     """ben-elastic entry point"""
     arguments = cli_common(__doc__, argv=argv)
     campaign_path = arguments['CAMPAIGN-DIR']
-    driver = CampaignDriver(campaign_path=campaign_path)
+    driver = CampaignDriver(campaign_path=campaign_path, expandcampvars=False)
     es_host = arguments['--es']
     if es_host:
         es_conf = driver.campaign.export.elasticsearch

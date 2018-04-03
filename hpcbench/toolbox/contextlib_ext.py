@@ -29,6 +29,14 @@ def capture_stdout():
 
 
 @contextlib.contextmanager
+def write_wherever(file_name=None):
+    writer = open(file_name, 'w') if file_name is not None else sys.stdout
+    yield writer
+    if file_name is not None:
+        writer.close()
+
+
+@contextlib.contextmanager
 def pushd(path, mkdir=True, cleanup=False):
     """Change current working directory in a with-context
     :param mkdir: If True, then directory is created if it does not exist
