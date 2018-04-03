@@ -6,7 +6,7 @@ from . benchmark import AbstractBenchmarkTest
 
 class TestCUDAStream(AbstractBenchmarkTest, unittest.TestCase):
     EXPECTED_METRICS = dict(
-        copy_bandwidth=746,
+        copy_bandwidth=746.0,
         copy_avg_time=0.00134171,
         copy_min_time=0.00133991,
         copy_max_time=0.00134277,
