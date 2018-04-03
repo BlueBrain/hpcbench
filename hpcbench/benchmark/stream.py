@@ -106,7 +106,7 @@ class Stream(Benchmark):
 
     @cached_property
     def executable(self):
-        """Get path to iperf executable
+        """Get path to stream executable
         """
         return self.attributes['executable']
 
