@@ -43,6 +43,8 @@ class FakeExtractor(MetricsExtractor):
         metrics = dict(
             performance=Metric('m', float),
             standard_error=Metric('m', float),
+            pairs=list(dict(first=Metric('m', float),
+                            second=Metric('m', bool)))
         )
         if self.show_cwd:
             metrics.update(path=Metric('', str))
@@ -54,6 +56,10 @@ class FakeExtractor(MetricsExtractor):
             metrics = dict(
                 performance=float(content[0].strip()),
                 standard_error=float(content[1].strip()),
+                pairs=[
+                    dict(first=1.5, second=True),
+                    dict(first=3.0, second=False),
+                ],
             )
             if self.show_cwd:
                 metrics.update(path=content[2].strip())

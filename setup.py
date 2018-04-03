@@ -67,6 +67,7 @@ setup(
     },
     entry_points="""
         [console_scripts]
+        ben-csv = hpcbench.cli.bencsv:main
         ben-doc = hpcbench.cli.bendoc:main
         ben-elastic = hpcbench.cli.benelastic:main
         ben-merge = hpcbench.cli.benmerge:main
@@ -81,7 +82,7 @@ setup(
         hpl = hpcbench.benchmark.hpl
         imb = hpcbench.benchmark.imb
         ior = hpcbench.benchmark.ior
-        iossd = hpcbench.benchmark.iossd
+        ionvme = hpcbench.benchmark.ionvme
         iperf = hpcbench.benchmark.iperf
         mdtest = hpcbench.benchmark.mdtest
         nvidia-bandwidthtest = hpcbench.benchmark.nvidia

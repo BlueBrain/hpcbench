@@ -35,6 +35,7 @@ import yaml
 from . api import (
     Benchmark,
     ExecutionContext,
+    Metric,
 )
 from . campaign import from_file
 from . plot import Plotter
@@ -180,6 +181,8 @@ class Network(object):
             return []
         nodes = set()
         for definition in definitions:
+            if len(definition.items()) == 0:
+                continue
             mode, value = list(definition.items())[0]
             if mode == 'match':
                 nodes = nodes.union(set([
@@ -195,7 +198,7 @@ class Network(object):
 class CampaignDriver(Enumerator):
     """Abstract representation of an entire campaign"""
     def __init__(self, campaign_file=None, campaign_path=None,
-                 node=None, logger=None):
+                 node=None, logger=None, expandcampvars=True):
         node = node or socket.gethostname()
         if campaign_file and campaign_path:
             raise Exception('Either campaign_file xor path can be specified')
@@ -204,7 +207,7 @@ class CampaignDriver(Enumerator):
         self.campaign_file = osp.abspath(campaign_file)
         super(CampaignDriver, self).__init__(
             Top(
-                campaign=from_file(campaign_file),
+                campaign=from_file(campaign_file, expandcampvars),
                 node=node,
                 logger=logger or LOGGER,
                 root=self
@@ -498,23 +501,38 @@ class MetricsDriver(object):
         for extractor in extractors:
             run_metrics = extractor.extract(os.getcwd(),
                                             self.report.get('metas'))
-            MetricsDriver._check_metrics(extractor, run_metrics)
+            MetricsDriver._check_metrics(extractor.metrics, run_metrics)
             metrics.update(run_metrics)
         return self.report
 
     @classmethod
-    def _check_metrics(cls, extractor, metrics):
+    def _check_metrics(cls, schema, metrics):
         """Ensure that returned metrics are properly exposed
         """
-        exposed_metrics = extractor.metrics
         for name, value in metrics.items():
-            metric = exposed_metrics.get(name)
+            metric = schema.get(name)
             if not metric:
                 message = "Unexpected metric '{}' returned".format(name)
                 raise Exception(message)
-            elif not isinstance(value, metric.type):
+            cls._check_metric(schema, metric, name, value)
+
+    @classmethod
+    def _check_metric(cls, schema, metric, name, value):
+        if isinstance(metric, Metric):
+            if not isinstance(value, metric.type):
                 message = "Unexpected type for metrics {}".format(name)
                 raise Exception(message)
+        elif isinstance(metric, list):
+            if not isinstance(value, list):
+                message = "Unexpected type for metrics {}".format(name)
+                raise Exception(message)
+            for item in value:
+                cls._check_metric(schema, metric[0], name, item)
+        elif isinstance(metric, dict):
+            if not isinstance(value, dict):
+                message = "Unexpected type for metrics {}".format(name)
+                raise Exception(message)
+            cls._check_metrics(metric, value)
 
 
 class FixedAttempts(Enumerator):

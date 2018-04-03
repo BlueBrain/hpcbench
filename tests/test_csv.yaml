@@ -1,0 +1,7 @@
+benchmarks:
+    '*':
+        test_default_metrics:
+            type: fake
+            metrics:
+                foo: bar
+                bar: 42
