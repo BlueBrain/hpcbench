@@ -227,6 +227,15 @@ srun_options
 When the `srun` execution layer is enabled, a list of providing additional
 options given to the `srun` command.
 
+.. code-block:: yaml
+  :emphasize-lines: 4
+
+  benchmarks:
+    cpu:
+      osu:
+        srun_options: [-C, "uc1*6|uc2*6", -N, 12, --ntasks-per-node=36]
+        type: osu
+
 attempts (optional)
 ~~~~~~~~~~~~~~~~~~~
 Dictionary to specify the number of times a command must be executed before
