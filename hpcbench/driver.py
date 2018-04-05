@@ -828,16 +828,19 @@ class SlurmExecutionDriver(ExecutionDriver):
         """
         srun_options = copy.copy(self.common_srun_options)
         srun_options += self.parent.parent.parent.config['srun_options']
-        self._parse_srun_options(srun_options)
-        srun_options.append('--nodelist=' + ','.join(self.srun_nodes))
+        args = self._parse_srun_options(srun_options)
+        if not args.constraint:
+            srun_options.append('--nodelist=' + ','.join(self.srun_nodes))
         command = super(SlurmExecutionDriver, self).command
         return [self.srun] + srun_options + command
 
     def _parse_srun_options(self, options):
         parser = argparse.ArgumentParser()
         parser.add_argument('-n', '--ntasks', default=1)
+        parser.add_argument('-C', '--constraint')
         args = parser.parse_known_args(options)
         self.command_expansion_vars['process_count'] = args[0].ntasks
+        return args[0]
 
     @cached_property
     def srun_nodes(self):
