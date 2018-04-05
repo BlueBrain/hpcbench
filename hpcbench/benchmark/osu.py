@@ -18,6 +18,10 @@ from hpcbench.toolbox.process import find_executable
 class OSUExtractor(MetricsExtractor):
     """Abstract class for OSU micro benchmark metrics extractor
     """
+
+    def __init__(self):
+        self.s_raw_data = []
+
     @abstractproperty
     def metrics(self):
         """Define metrics"""
@@ -49,6 +53,7 @@ class OSUExtractor(MetricsExtractor):
 
     def prelude(self):
         """method called before extracting metrics"""
+        self.s_raw_data.clear()
 
     @abstractmethod
     def epilog(self):
@@ -65,19 +70,17 @@ class OSUBWExtractor(OSUExtractor):
 
     def __init__(self):
         super(OSUBWExtractor, self).__init__()
-        self.s_bytes = []
-        self.s_bandwidth = []
 
     @cached_property
     def metrics(self):
         return dict(max_bw_bytes=Metrics.Byte,
                     max_bw=Metrics.MegaBytesPerSecond,
                     maxb_bw_bytes=Metrics.Byte,
-                    maxb_bw=Metrics.MegaBytesPerSecond)
-
-    def prelude(self):
-        self.s_bytes.clear()
-        self.s_bandwidth.clear()
+                    maxb_bw=Metrics.MegaBytesPerSecond,
+                    raw=list(dict(
+                        bytes=Metrics.Byte,
+                        bandwidth=Metrics.MegaBytesPerSecond,
+                )))
 
     @cached_property
     def stdout_ignore_prior(self):
@@ -86,15 +89,14 @@ class OSUBWExtractor(OSUExtractor):
     def process_line(self, line):
         search = self.BW_BANDWIDTH_RE.search(line)
         if search:
-            self.s_bytes.append(int(search.group(0)))
-            self.s_bandwidth.append(float(search.group(1)))
+            self.s_raw_data.append((int(search.group(1)), float(search.group(2))))
 
     def epilog(self):
-        maxb_bw, maxb_bw_b = self.s_bandwidth[-1], self.s_bytes[-1]
-        max_bw, max_bw_b = max(zip(self.s_bandwidth, self.s_bytes),
-                               key=itemgetter(0))
+        maxb_bw_b, maxb_bw = self.s_raw_data[-1]
+        max_bw_b, max_bw = max(self.s_raw_data, key=itemgetter(0))
         return dict(maxb_bw=maxb_bw, maxb_bw_bytes=maxb_bw_b,
-                    max_bw=max_bw, max_bw_bytes=max_bw_b)
+                    max_bw=max_bw, max_bw_bytes=max_bw_b,
+                    raw=[{'bytes':b, 'bandwidth':bw} for b, bw in self.s_raw_data])
 
 
 class OSULatExtractor(OSUExtractor):
@@ -106,38 +108,35 @@ class OSULatExtractor(OSUExtractor):
 
     def __init__(self):
         super(OSULatExtractor, self).__init__()
-        self.s_bytes = []
-        self.s_latency = []
 
     @cached_property
     def metrics(self):
-        return dict(mn_lat_bytes=Metrics.Byte,
+        return dict(min_lat_bytes=Metrics.Byte,
                     min_lat=Metrics.Microsecond,
                     minb_lat_bytes=Metrics.Byte,
-                    minb_lat=Metrics.Microsecond)
-
-    def prelude(self):
-        self.s_bytes.clear()
-        self.s_latency.clear()
+                    minb_lat=Metrics.Microsecond,
+                    raw=list(dict(
+                        bytes=Metrics.Byte,
+                        latency=Metrics.Microsecond,
+            )))
 
     @cached_property
     def stdout_ignore_prior(self):
-        return "# Size      Bandwidth (MB/s)"
+        return "# Size          Latency (us)"
 
     def process_line(self, line):
         search = self.BW_LATENCY_RE.search(line)
         if search:
-            bytes = int(search.group(0))
+            bytes = int(search.group(1))
             if bytes > 0:
-                self.s_bytes.append(bytes)
-                self.s_latency.append(float(search.group(1)))
+                self.s_raw_data.append((bytes, float(search.group(2))))
 
     def epilog(self):
-        minb_lat, minb_lat_b = self.s_latency[-1], self.s_bytes[-1]
-        min_lat, min_lat_b = max(zip(self.s_latency, self.s_bytes),
-                               key=itemgetter(0))
+        minb_lat_b, minb_lat = self.s_raw_data[-1]
+        min_lat_b, min_lat = min(self.s_raw_data, key=itemgetter(0))
         return dict(minb_lat=minb_lat, minb_lat_bytes=minb_lat_b,
-                    min_lat=min_lat, min_lat_bytes=min_lat_b)
+                    min_lat=min_lat, min_lat_bytes=min_lat_b,
+                    raw=[{'bytes':b, 'latency':l} for b, l in self.s_raw_data])
 
 
 class OSU(Benchmark):
@@ -199,7 +198,7 @@ class OSU(Benchmark):
     def execution_matrix(self, context):
         for category in self.categories:
             arguments = self.arguments.get(category) or []
-            if category == OSU.OSU_BW:
+            if category in {OSU.OSU_BW, OSU.OSU_LAT}:
                 for pair in OSU.host_pairs(context):
                     yield dict(
                         category=category,

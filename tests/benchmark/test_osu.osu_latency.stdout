@@ -1,0 +1,5 @@
+# OSU MPI Latency Test v5.3.2
+# Size          Latency (us)
+16                      3.68
+32                      3.85
+64                      3.84
