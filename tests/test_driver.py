@@ -202,7 +202,11 @@ class TestHostDriver(unittest.TestCase):
             {'*', 'n10', 'group_match', 'group_rectags', 'group_localhost'}
         )
 
-    def slurm(self, node='node01', tag='group_nodes', srun_nodes=1):
+    def slurm(self, **kwargs):
+        node = kwargs.get('node', 'node01')
+        tag = kwargs.get('tag', 'group_nodes')
+        srun_nodes = kwargs.get('srun_nodes', 1)
+        benchmark_config = kwargs.get('benchmark_config')
         execution = dict(
             command=['ls', '-la']
         )
@@ -224,13 +228,25 @@ class TestHostDriver(unittest.TestCase):
                             tag
                         ),
                         namedtuple('benchmark', ['name'])(name='benchmark'),
-                        dict(),
+                        benchmark_config or dict(),
                     ),
                     'category'
                 ),
                 execution
             )
         )
+
+    def test_slurm_constraint(self):
+        """SLURM -C option disables node name resolution"""
+        slurm = self.slurm(benchmark_config=dict(
+            srun_options=["-C", "uc1*6|uc2*6"]
+        ))
+        os.environ['SRUN'] = 'true'  # otherwise `find_executable` crashes
+        self.assertEqual(
+            slurm.command,
+            ['true', '-C', 'uc1*6|uc2*6', 'ls', '-la']
+        )
+        os.environ.pop('SRUN')
 
     @classmethod
     def tearDownClass(cls):
