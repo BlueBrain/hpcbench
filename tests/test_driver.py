@@ -25,7 +25,7 @@ from hpcbench.driver import (
     CampaignDriver,
     FixedAttempts,
     HostDriver,
-    SlurmExecutionDriver,
+    SrunExecutionDriver,
 )
 from hpcbench.toolbox.contextlib_ext import (
     capture_stdout,
@@ -213,7 +213,7 @@ class TestHostDriver(unittest.TestCase):
         campaign_file = TestHostDriver.CAMPAIGN_FILE
         if srun_nodes is not None:
             execution.update(srun_nodes=srun_nodes)
-        return SlurmExecutionDriver(
+        return SrunExecutionDriver(
            FixedAttempts(
                 BenchmarkCategoryDriver(
                     BenchmarkDriver(

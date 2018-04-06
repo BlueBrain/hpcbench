@@ -588,7 +588,7 @@ class FixedAttempts(Enumerator):
         """Get execution layer class
         """
         name = self.campaign.process.type
-        for clazz in [ExecutionDriver, SlurmExecutionDriver]:
+        for clazz in [ExecutionDriver, SrunExecutionDriver]:
             if name == clazz.name:
                 return clazz
         raise NameError("Unknown execution layer: '%s'" % name)
@@ -797,7 +797,7 @@ class ExecutionDriver(Leaf):
         return report
 
 
-class SlurmExecutionDriver(ExecutionDriver):
+class SrunExecutionDriver(ExecutionDriver):
     """Manage process execution with srun (SLURM)
     """
     name = 'srun'
@@ -831,7 +831,7 @@ class SlurmExecutionDriver(ExecutionDriver):
         args = self._parse_srun_options(srun_options)
         if not args.constraint:
             srun_options.append('--nodelist=' + ','.join(self.srun_nodes))
-        command = super(SlurmExecutionDriver, self).command
+        command = super(SrunExecutionDriver, self).command
         return [self.srun] + srun_options + command
 
     def _parse_srun_options(self, options):
