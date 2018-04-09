@@ -1,10 +1,12 @@
 process:
     type: srun
-    config:
-        srun: srun-ut
-        srun_options:
-            - --exclusive
-            - --ntasks=42
+    command: srun-ut
+    tag_constraint: false
+    srun:
+        mpi: pmi2
+    args:
+        exclusive:
+        ntasks: 42
 benchmarks:
     '*':
         test-slurm:

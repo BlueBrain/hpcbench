@@ -237,14 +237,14 @@ class TestHostDriver(unittest.TestCase):
         )
 
     def test_slurm_constraint(self):
-        """SLURM -C option disables node name resolution"""
+        """SLURM --constraint option disables node name resolution"""
         slurm = self.slurm(benchmark_config=dict(
-            srun_options=["-C", "uc1*6|uc2*6"]
+            srun_options=["--constraint=uc1*6|uc2*6"]
         ))
         os.environ['SRUN'] = 'true'  # otherwise `find_executable` crashes
         self.assertEqual(
             slurm.command,
-            ['true', '-C', 'uc1*6|uc2*6', 'ls', '-la']
+            ['true', '--constraint=uc1*6|uc2*6', 'ls', '-la']
         )
         os.environ.pop('SRUN')
 

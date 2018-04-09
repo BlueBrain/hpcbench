@@ -802,13 +802,18 @@ class SrunExecutionDriver(ExecutionDriver):
     """
     name = 'srun'
 
+    def __init__(self, parent):
+        super(SrunExecutionDriver, self).__init__(parent)
+        self.tag_constraints = self.campaign.process.get(
+            'tag_constraints', False)
+
     @cached_property
     def srun(self):
         """Get path to srun executable
 
         :rtype: string
         """
-        srun = self.campaign.process.config.get('srun') or 'srun'
+        srun = self.campaign.process.get('command') or 'srun'
         return find_executable(srun)
 
     @cached_property
@@ -817,8 +822,17 @@ class SrunExecutionDriver(ExecutionDriver):
 
         :rtype: list of string
         """
-        slurm_config = self.campaign.process.get('config', {})
-        return slurm_config.get('srun_options') or []
+        slurm_config = self.campaign.process.get('args', {})
+        args = []
+        for k, v in slurm_config.items():
+            args += ['--{}={}'.format(k, v)]
+
+        # XXX this is only temporary before we replace the srun process
+        # by sbatch/salloc
+        srun_config = self.campaign.process.get('srun', {})
+        for k, v in srun_config.items():
+            args += ['--{}={}'.format(k, v)]
+        return args
 
     @cached_property
     def command(self):
