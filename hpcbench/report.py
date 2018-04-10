@@ -3,22 +3,10 @@
 import re
 import sys
 
-from jinja2 import (
-    Environment,
-    PackageLoader,
-    select_autoescape,
-)
 import six
 
+from hpcbench import jinja_environment
 
-ENV = Environment(
-    loader=PackageLoader('hpcbench', 'templates'),
-    autoescape=select_autoescape(
-        disabled_extensions=('txt',),
-        default_for_string=True,
-        default=True
-    ),
-)
 DEFAULT_TEMPLATE = 'report.tex.jinja'
 
 
@@ -53,9 +41,6 @@ def tex_escape(text):
     return regex.sub(lambda match: conv[match.group()], text)
 
 
-ENV.filters['texscape'] = tex_escape
-
-
 def render(template=None, ostr=None, **kwargs):
     """Generate report from a campaign
 
@@ -63,7 +48,8 @@ def render(template=None, ostr=None, **kwargs):
     if not specified
     :param ostr: output file or filename. Default is standard output
     """
+    jinja_environment.filters['texscape'] = tex_escape
     template = template or DEFAULT_TEMPLATE
     ostr = ostr or sys.stdout
-    jinja_template = ENV.get_template(template)
+    jinja_template = jinja_environment.get_template(template)
     jinja_template.stream(**kwargs).dump(ostr)
