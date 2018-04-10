@@ -292,18 +292,40 @@ class SbatchDriver(Enumerator):
     def child_builder(self, child):
         del child  # not needed
 
+    @property
+    def sbatch_template(self):
+        """:return Jinja sbatch template for the current tag"""
+        templates = self.campaign.process.sbatch_template
+        if isinstance(templates, Mapping):
+            # find proper template according to the tag
+            template = templates.get(self.tag)
+            if template is None:
+                template = templates.get('*')
+            if template is None:
+                template = self.parent.SBATCH_JINJA
+        else:
+            template = templates
+        if template.startswith('#!'):
+            # script is embedded in YAML
+            return jinja_environment.from_string(template)
+        return jinja_environment.get_template(template)
+
     @write_yaml_report
     def __call__(self, **kwargs):
         with open(self.sbatch_filename, 'w') as sbatch:
-            template = jinja_environment.get_template(
-                self.campaign.process.sbatch_template)
-            properties = dict(
-                sbatch_arguments={k: six.moves.shlex_quote(str(v))
-                                  for k, v in self.sbatch_args.items()},
-                sbatch_command=self.sbatch_cmd
-            )
-            template.stream(**properties).dump(sbatch)
+            self._create_sbatch(sbatch)
         return dict(sbatch=self.sbatch_filename)
+
+    def _create_sbatch(self, ostr):
+        """Write sbatch template to output stream
+        :param ostr: opened file to write to
+        """
+        properties = dict(
+            sbatch_arguments={k: six.moves.shlex_quote(str(v))
+                              for k, v in self.sbatch_args.items()},
+            sbatch_command=self.sbatch_cmd
+        )
+        self.sbatch_template.stream(**properties).dump(ostr)
 
 
 class HostDriver(Enumerator):
