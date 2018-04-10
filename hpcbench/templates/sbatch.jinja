@@ -1,0 +1,6 @@
+#!/bin/bash
+{%- for name, value in sbatch_arguments.items() %}
+#SBATCH --{{name}}={{value}}
+{%- endfor %}
+
+{{sbatch_command}}

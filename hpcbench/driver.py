@@ -32,6 +32,7 @@ from cached_property import cached_property
 import six
 import yaml
 
+from . import jinja_environment
 from . api import (
     Benchmark,
     ExecutionContext,
@@ -250,6 +251,13 @@ class CampaignDriver(Enumerator):
 class SlurmDriver(Enumerator):
     """Abstract representation of the campaign for the current cluster"""
 
+    SBATCH_JINJA = 'sbatch.jinja'
+
+    def __init__(self, parent):
+        super(SlurmDriver, self).__init__(parent)
+        self.campaign.process.setdefault('sbatch_template',
+                                         self.SBATCH_JINJA)
+
     @cached_property
     def children(self):
         bench_tags = set([tag for tag in self.campaign.benchmarks
@@ -287,12 +295,14 @@ class SbatchDriver(Enumerator):
     @write_yaml_report
     def __call__(self, **kwargs):
         with open(self.sbatch_filename, 'w') as sbatch:
-            print('#!/bin/bash', file=sbatch)
-            for k, v in self.sbatch_args.items():
-                print('#SBATCH --{}={}'.format(
-                      k, six.moves.shlex_quote(str(v))), file=sbatch)
-            print('', file=sbatch)
-            print(self.sbatch_cmd, file=sbatch)
+            template = jinja_environment.get_template(
+                self.campaign.process.sbatch_template)
+            properties = dict(
+                sbatch_arguments={k: six.moves.shlex_quote(str(v))
+                                  for k, v in self.sbatch_args.items()},
+                sbatch_command=self.sbatch_cmd
+            )
+            template.stream(**properties).dump(sbatch)
         return dict(sbatch=self.sbatch_filename)
 
 
