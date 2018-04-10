@@ -1,16 +1,31 @@
+network:
+  nodes:
+    - n[1-4]
+  tags:
+    uc1:
+      nodes: [n1, n2]
+    uc2:
+      nodes: [n3, n4]
+
 process:
-    type: srun
-    command: srun-ut
-    tag_constraint: false
-    srun:
-        mpi: pmi2
-    args:
-        exclusive:
-        ntasks: 42
+  type: slurm
+  commands:
+    sbatch: sbatch-ut
+    srun: srun-ut
+  srun:
+    mpi: pmi2
+    mem-per-cpu: 16g
+  sbatch:
+    mail-type: ALL
+
 benchmarks:
-    '*':
-        test-slurm:
-            type: fake
-            attributes:
-                input:
-                - "{process_count}"
+  uc1:
+    test-slurm:
+      srun:
+        tasks-per-node: 2
+      type: fake
+  uc2:
+    test-slurm2:
+      srun:
+        tasks-per-node: 2
+      type: fake

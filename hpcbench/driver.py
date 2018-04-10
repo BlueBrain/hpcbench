@@ -155,6 +155,7 @@ class Leaf(Enumerator):
     def child_builder(self, child):
         del child  # unused
 
+    @cached_property
     def children(self):
         return []
 
@@ -224,7 +225,10 @@ class CampaignDriver(Enumerator):
             self.campaign_path = self.campaign_path.format(node=node)
 
     def child_builder(self, child):
-        return HostDriver(self, name=child)
+        if self.campaign.process.type == 'slurm':
+            return SlurmDriver(self)
+        else:
+            return HostDriver(self, name=child)
 
     @cached_property
     def children(self):
@@ -241,6 +245,55 @@ class CampaignDriver(Enumerator):
                         yaml.dump(self.campaign, ostr,
                                   default_flow_style=False)
             super(CampaignDriver, self).__call__(**kwargs)
+
+
+class SlurmDriver(Enumerator):
+    """Abstract representation of the campaign for the current cluster"""
+
+    @cached_property
+    def children(self):
+        bench_tags = set([tag for tag in self.campaign.benchmarks
+                          if any(self.campaign.benchmarks[tag])])
+
+        cluster_tags = bench_tags & set(self.campaign.network.tags)
+        return list(cluster_tags)
+
+    def child_builder(self, child):
+        return SbatchDriver(self, child)
+
+
+class SbatchDriver(Enumerator):
+    """Abstract representation of sbatch jobs created for each non-empty tag"""
+
+    def __init__(self, parent, tag):
+        super(SbatchDriver, self).__init__(parent, name=tag)
+        self.tag = tag
+        now = datetime.datetime.now()
+        sbatch_filename = '{tag}-%Y%m%d-%H%M%S.sbatch'
+        cmd = 'ben-sh --srun {tag} -n $SLURMD_NODENAME -o {tag}-%Y%m%d-%H%M%S'
+        self.sbatch_filename = now.strftime(sbatch_filename)
+        self.sbatch_filename = self.sbatch_filename.format(tag=tag)
+        self.sbatch_cmd = now.strftime(cmd)
+        self.sbatch_cmd = self.sbatch_cmd.format(tag=tag)
+        self.sbatch_args = self.campaign.process.get('sbatch', {})
+
+    @cached_property
+    def children(self):
+        return [self.tag]
+
+    def child_builder(self, child):
+        del child  # not needed
+
+    @write_yaml_report
+    def __call__(self, **kwargs):
+        with open(self.sbatch_filename, 'w') as sbatch:
+            print('#!/bin/bash', file=sbatch)
+            for k, v in self.sbatch_args.items():
+                print('#SBATCH --{}={}'.format(
+                      k, six.moves.shlex_quote(str(v))), file=sbatch)
+            print('', file=sbatch)
+            print(self.sbatch_cmd, file=sbatch)
+        return dict(sbatch=self.sbatch_filename)
 
 
 class HostDriver(Enumerator):
@@ -701,8 +754,7 @@ class ExecutionDriver(Leaf):
                     print(' '.join(command), file=ostr)
                 else:
                     print(command, file=ostr)
-
-            os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC)
+        os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC)
         return [path]
 
     @cached_property
@@ -802,19 +854,14 @@ class SrunExecutionDriver(ExecutionDriver):
     """
     name = 'srun'
 
-    def __init__(self, parent):
-        super(SrunExecutionDriver, self).__init__(parent)
-        self.tag_constraints = self.campaign.process.get(
-            'tag_constraints', False)
-
     @cached_property
     def srun(self):
         """Get path to srun executable
 
         :rtype: string
         """
-        srun = self.campaign.process.get('command') or 'srun'
-        return find_executable(srun)
+        commands = self.campaign.process.get('commands', {})
+        return find_executable(commands.get('srun', 'srun'))
 
     @cached_property
     def common_srun_options(self):
@@ -822,17 +869,7 @@ class SrunExecutionDriver(ExecutionDriver):
 
         :rtype: list of string
         """
-        slurm_config = self.campaign.process.get('args', {})
-        args = []
-        for k, v in slurm_config.items():
-            args += ['--{}={}'.format(k, v)]
-
-        # XXX this is only temporary before we replace the srun process
-        # by sbatch/salloc
-        srun_config = self.campaign.process.get('srun', {})
-        for k, v in srun_config.items():
-            args += ['--{}={}'.format(k, v)]
-        return args
+        return self.campaign.process.get('srun', {})
 
     @cached_property
     def command(self):
@@ -841,12 +878,25 @@ class SrunExecutionDriver(ExecutionDriver):
         :return: list of string
         """
         srun_options = copy.copy(self.common_srun_options)
-        srun_options += self.parent.parent.parent.config['srun_options']
-        args = self._parse_srun_options(srun_options)
-        if not args.constraint:
-            srun_options.append('--nodelist=' + ','.join(self.srun_nodes))
+        srun_options.update(self.parent.parent.parent.config.get('srun', {}))
+        srun_optlist = self._make_srun_arguments(srun_options)
+        self._parse_srun_options(srun_optlist)
+        # FIXME constraints needs to be redone properly
+        # if not args.constraint:
+        # args.append('--nodelist=' + ','.join(self.srun_nodes))
         command = super(SrunExecutionDriver, self).command
-        return [self.srun] + srun_options + command
+        return [self.srun] + srun_optlist + command
+
+    def _make_srun_arguments(self, optdict):
+        args = []
+        for k, v in optdict.items():
+            if v is None:
+                continue
+            elif v is True:  # specifically check if it is true
+                args += ['--{}'.format(k)]
+            else:
+                args += ['--{}={}'.format(k, six.moves.shlex_quote(str(v)))]
+        return args
 
     def _parse_srun_options(self, options):
         parser = argparse.ArgumentParser()
@@ -854,7 +904,6 @@ class SrunExecutionDriver(ExecutionDriver):
         parser.add_argument('-C', '--constraint')
         args = parser.parse_known_args(options)
         self.command_expansion_vars['process_count'] = args[0].ntasks
-        return args[0]
 
     @cached_property
     def srun_nodes(self):
