@@ -520,17 +520,23 @@ class MetricsDriver(object):
     def _check_metric(cls, schema, metric, name, value):
         if isinstance(metric, Metric):
             if not isinstance(value, metric.type):
-                message = "Unexpected type for metrics {}".format(name)
+                message = "Unexpected type for metrics {}:\n".format(name)
+                message += "expected {}, but got {}".format(metric.type,
+                                                            type(value))
                 raise Exception(message)
         elif isinstance(metric, list):
             if not isinstance(value, list):
                 message = "Unexpected type for metrics {}".format(name)
+                message += "expected {}, but got {}".format(list,
+                                                            type(value))
                 raise Exception(message)
             for item in value:
                 cls._check_metric(schema, metric[0], name, item)
         elif isinstance(metric, dict):
             if not isinstance(value, dict):
                 message = "Unexpected type for metrics {}".format(name)
+                message += "expected {}, but got {}".format(dict,
+                                                            type(value))
                 raise Exception(message)
             cls._check_metrics(metric, value)
 
