@@ -527,7 +527,7 @@ class MetricsDriver(object):
         elif isinstance(metric, list):
             if not isinstance(value, list):
                 message = "Unexpected type for metrics {}".format(name)
-                message += "expected {}, but got {}".format(type(list),
+                message += "expected {}, but got {}".format(list,
                                                             type(value))
                 raise Exception(message)
             for item in value:
@@ -535,7 +535,7 @@ class MetricsDriver(object):
         elif isinstance(metric, dict):
             if not isinstance(value, dict):
                 message = "Unexpected type for metrics {}".format(name)
-                message += "expected {}, but got {}".format(type(dict),
+                message += "expected {}, but got {}".format(dict,
                                                             type(value))
                 raise Exception(message)
             cls._check_metrics(metric, value)
