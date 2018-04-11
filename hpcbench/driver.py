@@ -813,44 +813,68 @@ class ExecutionDriver(Leaf):
             process_count=1
         )
 
-    def _wrap_in_bash_script(self, commands):
-        fd, path = tempfile.mkstemp(suffix='.bash', dir=os.getcwd())
+    @cached_property
+    def _executor_script(self):
+        """Create shell-script in charge of executing the benchmark
+        and return its path.
+        """
+        fd, path = tempfile.mkstemp(suffix='.sh', dir=os.getcwd())
         os.close(fd)
         with open(path, 'w') as ostr:
-            print("#!/bin/bash", file=ostr)
-            for command in commands:
-                if isinstance(command, list):
-                    print(' '.join(command), file=ostr)
-                else:
-                    print(command, file=ostr)
+            self._write_executor_script(ostr)
         os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC)
-        return [path]
+        return path
+
+    @property
+    def _jinja_executor_template(self):
+        """:return Jinja template of the shell-script executor"""
+        template = self.campaign.process.executor_template
+        if template.startswith('#!'):
+            return jinja_environment.from_string(template)
+        else:
+            return jinja_environment.get_template(template)
+
+    def _write_executor_script(self, ostr):
+        """Write shell script in charge of executing the command"""
+        properties = dict(
+            command=self.command,
+            cwd=os.getcwd(),
+            environment=dict(
+                (var, six.moves.shlex_quote(value))
+                for var, value in
+                (self.execution.get('environment') or {}).items()
+            ),
+        )
+        self._jinja_executor_template.stream(**properties).dump(ostr)
 
     @cached_property
     def command(self):
-        """get command to execute
-
-        :return: list of string
-        """
-        benchmark_config = self.parent.parent.parent.config
-        if self.execution.get('shell', False):
-            exec_prefix = benchmark_config.get('exec_prefix') or ""
-            if exec_prefix:
-                self.execution['command'][-1].insert(0, exec_prefix)
-            return self._wrap_in_bash_script(self.execution['command'])
-
-        exec_prefix = benchmark_config.get('exec_prefix') or []
-        if not isinstance(exec_prefix, list):
-            exec_prefix = shlex.split(exec_prefix)
-        if not isinstance(self.execution['command'], list):
-            command = shlex.split(self.execution['command'])
+        """:return command to execute inside the generated shell-script"""
+        exec_prefix = self.parent.parent.parent.config.get('exec_prefix', [])
+        command = self.execution['command']
+        if isinstance(command, list):
+            command = [arg.format(**self.command_expansion_vars)
+                       for arg in command]
         else:
-            command = self.execution['command']
-        command = list(exec_prefix) + command
-        return [
-            arg.format(**self.command_expansion_vars)
-            for arg in command
-        ]
+            command = command.format(**self.command_expansion_vars)
+        if self.execution.get('shell', False):
+            if not isinstance(exec_prefix, six.string_types):
+                exec_prefix = ' '.join(exec_prefix)
+            if not isinstance(command, six.string_types):
+                msg = "Expected string for shell command, not {type}: {value}"
+                msg = msg.format(type=type(command).__name__,
+                                 value=repr(command))
+                raise Exception(msg)
+            eax = [exec_prefix + command]
+        else:
+            if not isinstance(exec_prefix, list):
+                exec_prefix = shlex.split(exec_prefix)
+            if not isinstance(command, list):
+                eax = exec_prefix + shlex.split(command)
+            else:
+                eax = exec_prefix + command
+            eax = [six.moves.shlex_quote(arg) for arg in eax]
+        return eax
 
     @cached_property
     def command_str(self):
@@ -865,26 +889,14 @@ class ExecutionDriver(Leaf):
             self.command
         ))
 
-    def _popen_env(self, kwargs):
-        custom_env = self.execution.get('environment')
-        if custom_env:
-            env = copy.deepcopy(os.environ)
-            env.update(custom_env)
-            kwargs.update(env=env)
-        kwargs.update(shell=self.execution.get('shell', False))
-
     def popen(self, stdout, stderr):
         """Build popen object to run
 
         :rtype: subprocess.Popen
         """
-        kwargs = dict(stdout=stdout, stderr=stderr)
-        self._popen_env(kwargs)
         self.logger.info('Executing command: %s', self.command_str)
-        return subprocess.Popen(
-            self.command,
-            **kwargs
-        )
+        return subprocess.Popen([self._executor_script],
+                                stdout=stdout, stderr=stderr)
 
     @write_yaml_report
     def __call__(self, **kwargs):

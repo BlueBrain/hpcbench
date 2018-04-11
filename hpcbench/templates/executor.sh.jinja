@@ -1,0 +1,8 @@
+#!/bin/sh
+
+{%- for var, value in environment.items() %}
+export {{ var }}={{ value }}
+{%- endfor %}
+cd "{{ cwd }}"
+exec {{ " ".join(command) }}
+

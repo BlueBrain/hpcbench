@@ -411,6 +411,24 @@ The ``srun`` layer accepts the following keys:
         - --account=project42
         - --partition=über-cluster
 
+executor_template (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Override default Jinja template used to generate
+shell-scripts in charge of executing benchmarks.
+Default value is:
+
+.. code-block:: shell
+  #!/bin/sh
+
+  {%- for var, value in environment.items() %}
+  export {{ var }}={{ value }}
+  {%- endfor %}
+  cd "{{ cwd }}"
+  exec {{ " ".join(command) }}
+
+If value does not start with shebang, then it is considered
+like a file location.
+
 Environment variable expansion
 ------------------------------
 
