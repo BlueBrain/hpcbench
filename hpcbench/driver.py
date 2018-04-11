@@ -200,7 +200,8 @@ class Network(object):
 class CampaignDriver(Enumerator):
     """Abstract representation of an entire campaign"""
     def __init__(self, campaign_file=None, campaign_path=None,
-                 node=None, logger=None, expandcampvars=True):
+                 node=None, output_dir=None, srun=False,
+                 logger=None, expandcampvars=True):
         node = node or socket.gethostname()
         if campaign_file and campaign_path:
             raise Exception('Either campaign_file xor path can be specified')
@@ -216,13 +217,16 @@ class CampaignDriver(Enumerator):
             ),
         )
         self.network = Network(self.campaign)
+        if srun:  # overwrite process type and force srun when requested
+            self.campaign.process.type = 'srun'
         if campaign_path:
             self.existing_campaign = True
             self.campaign_path = campaign_path
         else:
             self.existing_campaign = False
             now = datetime.datetime.now()
-            self.campaign_path = now.strftime(self.campaign.output_dir)
+            self.campaign_path = now.strftime(output_dir or
+                                              self.campaign.output_dir)
             self.campaign_path = self.campaign_path.format(node=node)
 
     def child_builder(self, child):
