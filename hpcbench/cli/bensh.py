@@ -1,7 +1,7 @@
 """ben-sh - Execute a campaign
 
 Usage:
-  ben-sh [-v | -vv] [-r | --srun] [-n HOST] [-o OUTDIR] [-l LOGFILE]
+  ben-sh [-v | -vv] [-r TAG] [-n HOST] [-o OUTDIR] [-l LOGFILE]
          [-g] CAMPAIGN_FILE
   ben-sh (-h | --help)
   ben-sh --version
@@ -11,8 +11,9 @@ Options:
   -o --output-dir=OUTDIR  Specify output directory, overwriting campaign file
                           output_dir directive
   -l --log=LOGFILE        Specify an option logfile to write to
-  -r --srun               Go into srun mode, which is used when ben-sh is
-                          called as a dependent process inside a SLURM job.
+  -r --srun=TAG           Go into srun mode and run on one tag, which is used
+                          when ben-sh is called as a dependent process inside
+                          a SLURM job.
   -h --help               Show this screen
   -g                      Generate a default YAML campaign file
   --version               Show version
@@ -38,15 +39,11 @@ def main(argv=None):
     else:
         node = arguments.get('-n')
         output_dir = arguments.get('--output-dir')
-        if arguments['--srun']:
-            driver = CampaignDriver(campaign_file=campaign_file,
-                                    node=node,
-                                    output_dir=output_dir,
-                                    srun=True)
-        else:
-            driver = CampaignDriver(campaign_file=campaign_file,
-                                    node=node,
-                                    output_dir=output_dir)
+        srun_tag = arguments.get('--srun')
+        driver = CampaignDriver(campaign_file=campaign_file,
+                                node=node,
+                                output_dir=output_dir,
+                                srun=srun_tag)
         driver()
         if argv is not None:
             return driver

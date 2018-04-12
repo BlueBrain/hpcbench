@@ -200,7 +200,7 @@ class Network(object):
 class CampaignDriver(Enumerator):
     """Abstract representation of an entire campaign"""
     def __init__(self, campaign_file=None, campaign_path=None,
-                 node=None, output_dir=None, srun=False,
+                 node=None, output_dir=None, srun=None,
                  logger=None, expandcampvars=True):
         node = node or socket.gethostname()
         if campaign_file and campaign_path:
@@ -217,6 +217,7 @@ class CampaignDriver(Enumerator):
             ),
         )
         self.network = Network(self.campaign)
+        self.filter_tag = srun
         if srun:  # overwrite process type and force srun when requested
             self.campaign.process.type = 'srun'
         if campaign_path:
@@ -233,7 +234,7 @@ class CampaignDriver(Enumerator):
         if self.campaign.process.type == 'slurm':
             return SlurmDriver(self)
         else:
-            return HostDriver(self, name=child)
+            return HostDriver(self, name=child, tag=self.filter_tag)
 
     @cached_property
     def children(self):
@@ -327,19 +328,38 @@ class SbatchDriver(Enumerator):
         properties = dict(
             sbatch_arguments={k: six.moves.shlex_quote(str(v))
                               for k, v in self.sbatch_args.items()},
-            sbatch_command=self.sbatch_cmd
+            hpcbench_command=self.hpcbench_cmd
         )
         self.sbatch_template.stream(**properties).dump(ostr)
+
+    def _execute_sbatch(self):
+        """Schedule the sbatch file using the sbatch command
+        :returns the slurm job id
+        """
+        commands = self.campaign.process.get('commands', {})
+        sbatch = find_executable(commands.get('sbatch', 'sbatch'))
+        sbatch_command = [sbatch, '--parsable', self.sbatch_filename]
+        sbatch_out = subprocess.check_output(sbatch_command,
+                                             universal_newlines=True)
+        return int(sbatch_out.split(';')[0])
 
 
 class HostDriver(Enumerator):
     """Abstract representation of the campaign for the current host"""
 
+    def __init__(self, parent, name, tag=None):
+        super(HostDriver, self).__init__(parent, name)
+        self.tag = tag
+
     @cached_property
     def children(self):
         """Retrieve tags associated to the current node"""
         tags = {'*'}
-        for tag, configs in self.campaign.network.tags.items():
+        if self.tag:
+            network_tags = {self.tag: self.campaign.network.tags[self.tag]}
+        else:
+            network_tags = self.campaign.network.tags
+        for tag, configs in network_tags.items():
             for config in configs:
                 for mode, kconfig in config.items():
                     if mode == 'match':
