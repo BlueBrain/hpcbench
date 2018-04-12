@@ -32,6 +32,7 @@ from cached_property import cached_property
 import six
 import yaml
 
+from . import jinja_environment
 from . api import (
     Benchmark,
     ExecutionContext,
@@ -155,6 +156,7 @@ class Leaf(Enumerator):
     def child_builder(self, child):
         del child  # unused
 
+    @cached_property
     def children(self):
         return []
 
@@ -198,7 +200,8 @@ class Network(object):
 class CampaignDriver(Enumerator):
     """Abstract representation of an entire campaign"""
     def __init__(self, campaign_file=None, campaign_path=None,
-                 node=None, logger=None, expandcampvars=True):
+                 node=None, output_dir=None, srun=None,
+                 logger=None, expandcampvars=True):
         node = node or socket.gethostname()
         if campaign_file and campaign_path:
             raise Exception('Either campaign_file xor path can be specified')
@@ -214,17 +217,24 @@ class CampaignDriver(Enumerator):
             ),
         )
         self.network = Network(self.campaign)
+        self.filter_tag = srun
+        if srun:  # overwrite process type and force srun when requested
+            self.campaign.process.type = 'srun'
         if campaign_path:
             self.existing_campaign = True
             self.campaign_path = campaign_path
         else:
             self.existing_campaign = False
             now = datetime.datetime.now()
-            self.campaign_path = now.strftime(self.campaign.output_dir)
+            self.campaign_path = now.strftime(output_dir or
+                                              self.campaign.output_dir)
             self.campaign_path = self.campaign_path.format(node=node)
 
     def child_builder(self, child):
-        return HostDriver(self, name=child)
+        if self.campaign.process.type == 'slurm':
+            return SlurmDriver(self)
+        else:
+            return HostDriver(self, name=child, tag=self.filter_tag)
 
     @cached_property
     def children(self):
@@ -243,14 +253,120 @@ class CampaignDriver(Enumerator):
             super(CampaignDriver, self).__call__(**kwargs)
 
 
+class SlurmDriver(Enumerator):
+    """Abstract representation of the campaign for the current cluster"""
+
+    SBATCH_JINJA = 'sbatch.jinja'
+
+    def __init__(self, parent):
+        super(SlurmDriver, self).__init__(parent)
+        self.campaign.process.setdefault('sbatch_template',
+                                         self.SBATCH_JINJA)
+
+    @cached_property
+    def children(self):
+        bench_tags = set([tag for tag in self.campaign.benchmarks
+                          if any(self.campaign.benchmarks[tag])])
+
+        cluster_tags = bench_tags & set(self.campaign.network.tags)
+        return list(cluster_tags)
+
+    def child_builder(self, child):
+        return SbatchDriver(self, child)
+
+
+class SbatchDriver(Enumerator):
+    """Abstract representation of sbatch jobs created for each non-empty tag"""
+
+    def __init__(self, parent, tag):
+        super(SbatchDriver, self).__init__(parent, name=tag)
+        self.tag = tag
+        now = datetime.datetime.now()
+        sbatch_filename = '{tag}-%Y%m%d-%H%M%S.sbatch'
+        cmd = ('ben-sh --srun={tag} '
+               + '-n $SLURMD_NODENAME '
+               + '--output-dir={tag}-%Y%m%d-%H%M%S '
+               + self.parent.parent.campaign_file)
+        self.sbatch_filename = now.strftime(sbatch_filename)
+        self.sbatch_filename = self.sbatch_filename.format(tag=tag)
+        self.sbatch_outdir = osp.splitext(self.sbatch_filename)[0]
+        self.hpcbench_cmd = now.strftime(cmd)
+        self.hpcbench_cmd = self.hpcbench_cmd.format(tag=tag)
+        self.sbatch_args = self.campaign.process.get('sbatch', {})
+
+    @cached_property
+    def children(self):
+        return [self.tag]
+
+    def child_builder(self, child):
+        del child  # not needed
+
+    @property
+    def sbatch_template(self):
+        """:return Jinja sbatch template for the current tag"""
+        templates = self.campaign.process.sbatch_template
+        if isinstance(templates, Mapping):
+            # find proper template according to the tag
+            template = templates.get(self.tag)
+            if template is None:
+                template = templates.get('*')
+            if template is None:
+                template = self.parent.SBATCH_JINJA
+        else:
+            template = templates
+        if template.startswith('#!'):
+            # script is embedded in YAML
+            return jinja_environment.from_string(template)
+        return jinja_environment.get_template(template)
+
+    @write_yaml_report
+    def __call__(self, **kwargs):
+        with open(self.sbatch_filename, 'w') as sbatch:
+            self._create_sbatch(sbatch)
+        sbatch_jobid = self._execute_sbatch()
+        return dict(sbatch=self.sbatch_filename,
+                    jobid=sbatch_jobid,
+                    children=[self.sbatch_outdir])
+
+    def _create_sbatch(self, ostr):
+        """Write sbatch template to output stream
+        :param ostr: opened file to write to
+        """
+        properties = dict(
+            sbatch_arguments={k: six.moves.shlex_quote(str(v))
+                              for k, v in self.sbatch_args.items()},
+            hpcbench_command=self.hpcbench_cmd
+        )
+        self.sbatch_template.stream(**properties).dump(ostr)
+
+    def _execute_sbatch(self):
+        """Schedule the sbatch file using the sbatch command
+        :returns the slurm job id
+        """
+        commands = self.campaign.process.get('commands', {})
+        sbatch = find_executable(commands.get('sbatch', 'sbatch'))
+        sbatch_command = [sbatch, '--parsable', self.sbatch_filename]
+        sbatch_out = subprocess.check_output(sbatch_command,
+                                             universal_newlines=True)
+        return int(sbatch_out.split(';')[0])
+
+
 class HostDriver(Enumerator):
     """Abstract representation of the campaign for the current host"""
+
+    def __init__(self, parent, name, tag=None):
+        super(HostDriver, self).__init__(parent, name)
+        self.tag = tag
 
     @cached_property
     def children(self):
         """Retrieve tags associated to the current node"""
         tags = {'*'}
-        for tag, configs in self.campaign.network.tags.items():
+        if self.tag:
+            network_tags = {self.tag: self.campaign.network.tags[self.tag]}
+        else:
+            network_tags = self.campaign.network.tags
+        for tag, configs in network_tags.items():
             for config in configs:
                 for mode, kconfig in config.items():
                     if mode == 'match':
@@ -594,7 +710,7 @@ class FixedAttempts(Enumerator):
         """Get execution layer class
         """
         name = self.campaign.process.type
-        for clazz in [ExecutionDriver, SlurmExecutionDriver]:
+        for clazz in [ExecutionDriver, SrunExecutionDriver]:
             if name == clazz.name:
                 return clazz
         raise NameError("Unknown execution layer: '%s'" % name)
@@ -707,8 +823,7 @@ class ExecutionDriver(Leaf):
                     print(' '.join(command), file=ostr)
                 else:
                     print(command, file=ostr)
-
-            os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC)
+        os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC)
         return [path]
 
     @cached_property
@@ -803,7 +918,7 @@ class ExecutionDriver(Leaf):
         return report
 
 
-class SlurmExecutionDriver(ExecutionDriver):
+class SrunExecutionDriver(ExecutionDriver):
     """Manage process execution with srun (SLURM)
     """
     name = 'srun'
@@ -814,8 +929,8 @@ class SlurmExecutionDriver(ExecutionDriver):
 
         :rtype: string
         """
-        srun = self.campaign.process.config.get('srun') or 'srun'
-        return find_executable(srun)
+        commands = self.campaign.process.get('commands', {})
+        return find_executable(commands.get('srun', 'srun'))
 
     @cached_property
     def common_srun_options(self):
@@ -823,8 +938,7 @@ class SlurmExecutionDriver(ExecutionDriver):
 
         :rtype: list of string
         """
-        slurm_config = self.campaign.process.get('config', {})
-        return slurm_config.get('srun_options') or []
+        return self.campaign.process.get('srun') or {}
 
     @cached_property
     def command(self):
@@ -833,12 +947,25 @@ class SlurmExecutionDriver(ExecutionDriver):
         :return: list of string
         """
         srun_options = copy.copy(self.common_srun_options)
-        srun_options += self.parent.parent.parent.config['srun_options']
-        args = self._parse_srun_options(srun_options)
-        if not args.constraint:
-            srun_options.append('--nodelist=' + ','.join(self.srun_nodes))
-        command = super(SlurmExecutionDriver, self).command
-        return [self.srun] + srun_options + command
+        srun_options.update(self.parent.parent.parent.config.get('srun') or {})
+        srun_optlist = self._make_srun_arguments(srun_options)
+        self._parse_srun_options(srun_optlist)
+        # FIXME constraints needs to be redone properly
+        # if not args.constraint:
+        # args.append('--nodelist=' + ','.join(self.srun_nodes))
+        command = super(SrunExecutionDriver, self).command
+        return [self.srun] + srun_optlist + command
+
+    def _make_srun_arguments(self, optdict):
+        args = []
+        for k, v in optdict.items():
+            if v is None:
+                continue
+            elif v is True:  # specifically check if it is true
+                args.append('--{}'.format(k))
+            else:
+                args.append('--{}={}'.format(k, six.moves.shlex_quote(str(v))))
+        return args
 
     def _parse_srun_options(self, options):
         parser = argparse.ArgumentParser()
@@ -846,7 +973,6 @@ class SlurmExecutionDriver(ExecutionDriver):
         parser.add_argument('-C', '--constraint')
         args = parser.parse_known_args(options)
         self.command_expansion_vars['process_count'] = args[0].ntasks
-        return args[0]
 
     @cached_property
     def srun_nodes(self):

@@ -1,0 +1,41 @@
+network:
+  nodes:
+    - n[1-4]
+  tags:
+    uc1:
+      nodes: [n1, n2]
+    uc2:
+      nodes: [n3, n4]
+
+process:
+  type: slurm
+  sbatch:
+    account: 42
+  sbatch_template:
+    uc1: |
+        #!/bin/bash
+        {%- for var, val in sbatch_arguments.items() %}
+        #SBATCH {{var}}={{val}}
+        {%- endfor %}
+        module load nix/spack
+        spack load nix
+        {{ hpcbench_command }}
+    '*': |
+        #!/bin/bash
+        {%- for var, val in sbatch_arguments.items() %}
+        #SBATCH {{var}}=forced
+        {%- endfor %}
+        module load nix/spack
+        spack load nix
+        {{ hpcbench_command }}
+
+benchmarks:
+  uc1:
+    sbatch:
+        # this value must be used in sbatch script
+        account: uc1
+    test-slurm:
+      type: fake
+  uc2:
+    test-slurm:
+      type: fake
