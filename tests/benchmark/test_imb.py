@@ -1,6 +1,6 @@
 import unittest
 
-from hpcbench.api import ExecutionContext
+from hpcbench.api.v1 import ExecutionContext
 from hpcbench.benchmark.imb import IMB
 from . benchmark import AbstractBenchmarkTest
 

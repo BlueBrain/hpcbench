@@ -15,7 +15,7 @@ from six import (
 )
 import yaml
 
-from hpcbench.api import (
+from hpcbench.api.v1 import (
     Benchmark,
     ExecutionContext,
     MetricsExtractor,

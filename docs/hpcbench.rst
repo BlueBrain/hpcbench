@@ -1,22 +1,10 @@
-hpcbench package
-================
+hpcbench.api package
+====================
 
-Submodules
-----------
+hpcbench\.api\.v1 module
+------------------------
 
-hpcbench\.api module
---------------------
-
-.. automodule:: hpcbench.api
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: hpcbench
+.. automodule:: hpcbench.api.v1
     :members:
     :undoc-members:
     :show-inheritance:

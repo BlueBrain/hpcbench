@@ -33,7 +33,7 @@ import six
 import yaml
 
 from . import jinja_environment
-from . api import (
+from . api.v1 import (
     Benchmark,
     ExecutionContext,
     Metric,

@@ -17,7 +17,7 @@ import six
 import yaml
 
 import hpcbench
-from hpcbench.api import Benchmark
+from hpcbench.api.v1 import Benchmark
 from hpcbench.ext.ClusterShell.NodeSet import NodeSet
 from hpcbench.report import render
 from . toolbox.collections_ext import (

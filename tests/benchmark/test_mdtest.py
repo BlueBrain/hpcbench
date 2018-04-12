@@ -4,7 +4,7 @@ import os.path as osp
 import tempfile
 import unittest
 
-from hpcbench.api import ExecutionContext
+from hpcbench.api.v1 import ExecutionContext
 from hpcbench.benchmark.mdtest import MDTest
 from . benchmark import AbstractBenchmarkTest
 

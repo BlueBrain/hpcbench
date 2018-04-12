@@ -1,6 +1,6 @@
 import unittest
 
-from hpcbench.api import Benchmark
+from hpcbench.api.v1 import Benchmark
 from . import AbstractBenchmarkTest
 
 

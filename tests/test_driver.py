@@ -11,7 +11,7 @@ import unittest
 from cached_property import cached_property
 import yaml
 
-from hpcbench.api import Benchmark
+from hpcbench.api.v1 import Benchmark
 from hpcbench.cli import (
     bendoc,
     benelastic,
