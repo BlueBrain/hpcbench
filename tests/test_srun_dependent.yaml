@@ -1,0 +1,34 @@
+network:
+  nodes:
+    - n[1-4]
+  tags:
+    uc1:
+      nodes: [n1, n2]
+    uc2:
+      nodes: [n3, n4]
+    uc3:
+      nodes: [n3]
+
+process:
+  type: slurm
+  commands:
+    sbatch: sbatch-ut
+    srun: srun-ut
+  srun:
+      mpi: pmi2
+      exclusive: true
+      ntasks: 42
+
+benchmarks:
+  uc1:
+    test-slurm:
+      type: fake
+  uc2:
+    test-slurm2:
+      type: fake
+      attributes:
+          input:
+          - "{process_count}"
+  uc3:
+    test-slurm3:
+      type: fake
