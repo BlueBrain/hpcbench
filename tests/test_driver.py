@@ -11,7 +11,7 @@ import unittest
 from cached_property import cached_property
 import yaml
 
-from hpcbench.api import Benchmark
+from hpcbench.api.v1 import Benchmark
 from hpcbench.cli import (
     bendoc,
     benelastic,
@@ -30,8 +30,7 @@ from hpcbench.driver import (
 from hpcbench.toolbox.contextlib_ext import (
     capture_stdout,
 )
-from . import DriverTestCase, FakeBenchmark
-from . benchmark.benchmark import AbstractBenchmarkTest
+from . import DriverTestCase
 
 
 LOGGER = logging.getLogger('hpcbench')
@@ -108,24 +107,6 @@ class TestDriver(DriverTestCase, unittest.TestCase):
         if 'UT_KEEP_ELASTICSEARCH_INDEX' not in os.environ:
             # Cleanup
             exporter.remove_index()
-
-
-class TestFakeBenchmark(AbstractBenchmarkTest, unittest.TestCase):
-    def get_benchmark_clazz(self):
-        return FakeBenchmark
-
-    def get_expected_metrics(self, category):
-        return dict(
-            performance=10.0,
-            standard_error=1.0,
-            pairs=[
-                dict(first=1.5, second=True),
-                dict(first=3.0, second=False),
-            ],
-        )
-
-    def get_benchmark_categories(self):
-        return ['main']
 
 
 class TestHostDriver(unittest.TestCase):

@@ -15,7 +15,7 @@ from six import (
 )
 import yaml
 
-from hpcbench.api import (
+from hpcbench.api.v1 import (
     Benchmark,
     ExecutionContext,
     MetricsExtractor,
@@ -118,7 +118,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
     def check_category_metrics(self, category):
         self.logger.info('testing metrics of category %s', category)
         self.maxDiff = None
-        with mkdtemp() as top_dir, pushd(top_dir):
+        with mkdtemp(remove=False) as top_dir, pushd(top_dir):
             with open(YAML_REPORT_FILE, 'w') as ostr:
                 yaml.dump(
                     dict(

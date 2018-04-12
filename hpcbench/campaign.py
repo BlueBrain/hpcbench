@@ -3,7 +3,9 @@
 import collections
 from contextlib import contextmanager
 import filecmp
+import imp
 import json
+import logging
 import os
 import os.path as osp
 import re
@@ -15,7 +17,7 @@ import six
 import yaml
 
 import hpcbench
-from hpcbench.api import Benchmark
+from hpcbench.api.v1 import Benchmark
 from hpcbench.ext.ClusterShell.NodeSet import NodeSet
 from hpcbench.report import render
 from . toolbox.collections_ext import (
@@ -46,6 +48,7 @@ def pip_installer_url(version=None):
 
 
 DEFAULT_CAMPAIGN = dict(
+    plugins=[],
     output_dir="hpcbench-%Y%m%d-%H%M%S",
     network=dict(
         nodes=[
@@ -77,6 +80,92 @@ DEFAULT_CAMPAIGN = dict(
     ),
     precondition=dict(),
 )
+
+
+class PluginsLoader(object):
+    """Import Python files at runtime
+    """
+    LOADED_PLUGINS = dict()
+    DEFAULT_INCLUDE_PATHS = [os.getcwd()]
+
+    def __init__(self, include_paths=None):
+        """
+        :param include_paths:
+          list of directories where to look for extensions
+        """
+        self.include_paths = include_paths or \
+            PluginsLoader.DEFAULT_INCLUDE_PATHS
+
+    @classmethod
+    def load_campaign_plugins(cls, campaign, path):
+        """Load plugins specified in YAML
+
+        :param campaign: dict loaded from YAML file
+        :param path: path to the campaign file
+        """
+        loader = PluginsLoader(include_paths=[
+            osp.dirname(osp.abspath(path)),
+            os.getcwd()
+        ])
+        loader.load(campaign.get('plugins'))
+
+    def load(self, arg):
+        """Load plugins
+
+        :param arg: path to a file or list of paths
+        """
+        if isinstance(arg, six.string_types):
+            return self.load_plugin(arg)
+        elif isinstance(arg, list):
+            for plugin in arg:
+                self.load_plugin(plugin)
+        else:
+            msg = 'parameter should be a list or a string, not '
+            msg += type(arg).__name__
+            raise Exception(msg)
+
+    def _plugin_path(self, file):
+        """Look for specified file in include paths
+
+        :param file: relative or absolute path to Python code
+        Optional extensions are .hpcbench or .py
+        """
+        if osp.isabs(file):
+            return file
+        else:
+            for include_path in self.include_paths:
+                for ext in ['', '.hpcbench', '.py']:
+                    name = file + ext
+                    path = osp.join(include_path, name)
+                    logging.debug('Looking for plugin %s in %s',
+                                  name, include_path)
+                    if osp.exists(path):
+                        logging.debug('Found plugin %s in %s',
+                                      name, path)
+                        return path
+            logging.warn('Could not load plugin %s', file)
+
+    def module_name(self, plugin_path):
+        """Get name of the loaded module as it will appear
+        in `sys.modules`
+        """
+        basename = osp.basename(plugin_path)
+        name = osp.splitext(basename)[0]
+        return 'hpcbench_plugins_' + name
+
+    def load_plugin(self, plugin):
+        """Load specified Python file
+
+        :return: loaded module
+        """
+        path = self._plugin_path(plugin)
+        if path:
+            name = self.module_name(path)
+            mod = PluginsLoader.LOADED_PLUGINS.get(name)
+            if mod is None:
+                mod = imp.load_source(name, path)
+                PluginsLoader.LOADED_PLUGINS[name] = mod
+            return mod
 
 
 class Generator(object):
@@ -153,7 +242,9 @@ def from_file(campaign_file, expandcampvars=True):
     :rtype: dictionary
     """
     campaign = Configuration.from_file(campaign_file)
-    return fill_default_campaign_values(campaign, expandcampvars)
+    campaign = fill_default_campaign_values(campaign, expandcampvars)
+    PluginsLoader.load_campaign_plugins(campaign, campaign_file)
+    return campaign
 
 
 def fill_default_campaign_values(campaign, expandcampvars=True):

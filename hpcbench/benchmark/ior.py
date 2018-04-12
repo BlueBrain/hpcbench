@@ -8,7 +8,7 @@ import shlex
 from cached_property import cached_property
 import six
 
-from hpcbench.api import (
+from hpcbench.api.v1 import (
     Benchmark,
     Metric,
     MetricsExtractor,

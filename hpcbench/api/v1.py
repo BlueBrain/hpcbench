@@ -268,9 +268,9 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         in the ``execution_matrix`` member method.
 
         :return: metrics_extractors instances for each category
-        :rtype: ``dict of list of hpcbench.api.MetricsExtractor`` instances.
+        :rtype: ``dict of list of hpcbench.api.v1.MetricsExtractor`` instances.
                 if there are dedicated extractors for each category.
-                Otherwise a ``list of hpcbench.api.MetricsExtractor``
+                Otherwise a ``list of hpcbench.api.v1.MetricsExtractor``
                 instances of there are common extractors for all categories,
 
         The list structure can be skipped when there is one

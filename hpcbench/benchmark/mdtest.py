@@ -8,7 +8,7 @@ import shutil
 
 from cached_property import cached_property
 
-from hpcbench.api import (
+from hpcbench.api.v1 import (
     Benchmark,
     Metrics,
     MetricsExtractor,
