@@ -19,7 +19,7 @@ process:
         {%- endfor %}
         module load nix/spack
         spack load nix
-        {{ sbatch_command }}
+        {{ hpcbench_command }}
 
 benchmarks:
   uc1:

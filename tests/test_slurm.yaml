@@ -15,6 +15,7 @@ process:
   srun:
     mpi: pmi2
     mem-per-cpu: 16g
+    ntasks: 42
   sbatch:
     mail-type: ALL
 
@@ -28,4 +29,11 @@ benchmarks:
     test-slurm2:
       srun:
         tasks-per-node: 2
-      type: fake
+      type: standard
+      attributes:
+        executables:
+            - command: ["echo", "42"]
+        metrics:
+            dummy:
+                match: "(.*)"
+                type: Cardinal

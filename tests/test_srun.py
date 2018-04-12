@@ -7,6 +7,9 @@ import tempfile
 import textwrap
 import unittest
 
+from hpcbench.driver import (
+    CampaignDriver,
+)
 from . import DriverTestCase
 
 
@@ -35,6 +38,30 @@ class TestSrun(DriverTestCase, unittest.TestCase):
             TestSrun.driver.node,
             '*',
             'test-slurm',
+            'main',
+            'metrics.json'
+        )
+        self.assertTrue(osp.isfile(aggregated_metrics_f),
+                        "Not file: " + aggregated_metrics_f)
+        with open(aggregated_metrics_f) as istr:
+            data = json.load(istr)
+        self.assertEqual(data[0]['metrics']['performance'], 42.0)
+
+    def test_srun_dependent(self):
+        yaml_file = 'test_srun_dependent.yaml'
+        campaign_file = osp.join(osp.dirname(__file__), yaml_file)
+        output_dir = osp.join(self.TEST_DIR, 'test_srun_uc2')
+        node = 'n3'
+        driver = CampaignDriver(campaign_file=campaign_file,
+                                node=node,
+                                srun='uc2',
+                                output_dir=output_dir)
+        driver()
+        aggregated_metrics_f = osp.join(
+            output_dir,
+            node,
+            'uc2',
+            'test-slurm2',
             'main',
             'metrics.json'
         )

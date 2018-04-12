@@ -19,7 +19,7 @@ process:
         {%- endfor %}
         module load nix/spack
         spack load nix
-        {{ sbatch_command }}
+        {{ hpcbench_command }}
     '*': |
         #!/bin/bash
         {%- for var, val in sbatch_arguments.items() %}
@@ -27,7 +27,7 @@ process:
         {%- endfor %}
         module load nix/spack
         spack load nix
-        {{ sbatch_command }}
+        {{ hpcbench_command }}
 
 benchmarks:
   uc1:

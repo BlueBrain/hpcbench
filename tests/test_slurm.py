@@ -1,5 +1,10 @@
 from io import StringIO
+import json
+import os
 import os.path as osp
+import shutil
+import stat
+import tempfile
 import textwrap
 import unittest
 
@@ -15,9 +20,39 @@ from . import DriverTestCase
 
 class TestSlurm(DriverTestCase, unittest.TestCase):
 
-    def test_srun_command(self):
+    @classmethod
+    def setUpClass(cls):
+        cls.SLURM_ALLOC_NODE = 'n3'
+        cls.SLURM_UT_DIR = tempfile.mkdtemp(prefix='hpcbench-ut')
+        sbatch_ut = osp.join(cls.SLURM_UT_DIR, 'sbatch-ut')
+        with open(sbatch_ut, 'w') as ostr:
+            ostr.write(textwrap.dedent("""\
+                #!/bin/bash -e
+                # output a job id
+                while [[ "$1" == -* ]] ; do shift ; done
+                export SLURMD_NODENAME={node}
+                source $@ > slurm-12345.out 2>&1
+                echo "12345"
+                """.format(node=cls.SLURM_ALLOC_NODE)))
+            st = os.stat(sbatch_ut)
+            os.chmod(sbatch_ut, st.st_mode | stat.S_IEXEC)
+        srun_ut = osp.join(cls.SLURM_UT_DIR, 'srun-ut')
+        with open(srun_ut, 'w') as ostr:
+            ostr.write(textwrap.dedent("""\
+                #!/bin/bash -e
+                # skip options
+                while [[ "$1" == -* ]] ; do shift ; done
+                exec $@
+                """))
+            st = os.stat(srun_ut)
+            os.chmod(srun_ut, st.st_mode | stat.S_IEXEC)
+        os.environ['PATH'] = (cls.SLURM_UT_DIR + os.pathsep +
+                              os.environ['PATH'])
+        super(cls, cls).setUpClass()
+
+    def test_sbatch_command(self):
         self.assertTrue(osp.isdir(TestSlurm.CAMPAIGN_PATH))
-        for tag in ['uc1', 'uc2']:
+        for tag in ['uc2']:
             hpcb_f = osp.join(
                 TestSlurm.CAMPAIGN_PATH,
                 TestSlurm.driver.node,
@@ -25,6 +60,7 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
             )
             with open(hpcb_f) as f:
                 hpcb = yaml.safe_load(f)
+            self.assertEqual(hpcb['jobid'], 12345)
             sbatch = hpcb['sbatch']
             sbatch_f = osp.join(
                 TestSlurm.CAMPAIGN_PATH,
@@ -36,6 +72,30 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
             with open(sbatch_f) as f:
                 sbatch_content = f.readlines()
             self.assertFalse(sbatch_content[-1].find(tag) == -1)
+            child_hpcbench_root = osp.join(
+                TestSlurm.CAMPAIGN_PATH,
+                TestSlurm.driver.node,
+                tag, hpcb['children'][0])
+            child_metrics_f = osp.join(
+                child_hpcbench_root,
+                self.SLURM_ALLOC_NODE,
+                tag,
+                'test-slurm2',
+                'standard',
+                'metrics.json'
+            )
+            self.assertTrue(osp.isfile(child_metrics_f),
+                            "Not file: " + child_metrics_f)
+            with open(child_metrics_f) as istr:
+                data = json.load(istr)
+            self.assertEqual(data[0]['metrics']['dummy'], 42.0)
+
+    @classmethod
+    def tearDownClass(cls):
+        length = len(cls.SLURM_UT_DIR + os.pathsep)
+        os.environ['PATH'] = os.environ['PATH'][length:]
+        shutil.rmtree(cls.SLURM_UT_DIR)
+        super(cls, cls).tearDownClass()
 
 
 class TestSbatchTemplate(unittest.TestCase):

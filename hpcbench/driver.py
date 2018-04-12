@@ -283,11 +283,15 @@ class SbatchDriver(Enumerator):
         self.tag = tag
         now = datetime.datetime.now()
         sbatch_filename = '{tag}-%Y%m%d-%H%M%S.sbatch'
-        cmd = 'ben-sh --srun {tag} -n $SLURMD_NODENAME -o {tag}-%Y%m%d-%H%M%S'
+        cmd = ('ben-sh --srun={tag} '
+               + '-n $SLURMD_NODENAME '
+               + '--output-dir={tag}-%Y%m%d-%H%M%S '
+               + self.parent.parent.campaign_file)
         self.sbatch_filename = now.strftime(sbatch_filename)
         self.sbatch_filename = self.sbatch_filename.format(tag=tag)
-        self.sbatch_cmd = now.strftime(cmd)
-        self.sbatch_cmd = self.sbatch_cmd.format(tag=tag)
+        self.sbatch_outdir = self.sbatch_filename[:-7]
+        self.hpcbench_cmd = now.strftime(cmd)
+        self.hpcbench_cmd = self.hpcbench_cmd.format(tag=tag)
         self.sbatch_args = self.campaign.process.get('sbatch', {})
 
     @cached_property
@@ -319,7 +323,10 @@ class SbatchDriver(Enumerator):
     def __call__(self, **kwargs):
         with open(self.sbatch_filename, 'w') as sbatch:
             self._create_sbatch(sbatch)
-        return dict(sbatch=self.sbatch_filename)
+        sbatch_jobid = self._execute_sbatch()
+        return dict(sbatch=self.sbatch_filename,
+                    jobid=sbatch_jobid,
+                    children=[self.sbatch_outdir])
 
     def _create_sbatch(self, ostr):
         """Write sbatch template to output stream
