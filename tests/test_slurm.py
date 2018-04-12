@@ -34,8 +34,8 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
                 source $@ > slurm-12345.out 2>&1
                 echo "12345"
                 """.format(node=cls.SLURM_ALLOC_NODE)))
-            st = os.stat(sbatch_ut)
-            os.chmod(sbatch_ut, st.st_mode | stat.S_IEXEC)
+        st = os.stat(sbatch_ut)
+        os.chmod(sbatch_ut, st.st_mode | stat.S_IEXEC)
         srun_ut = osp.join(cls.SLURM_UT_DIR, 'srun-ut')
         with open(srun_ut, 'w') as ostr:
             ostr.write(textwrap.dedent("""\
@@ -44,8 +44,8 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
                 while [[ "$1" == -* ]] ; do shift ; done
                 exec $@
                 """))
-            st = os.stat(srun_ut)
-            os.chmod(srun_ut, st.st_mode | stat.S_IEXEC)
+        st = os.stat(srun_ut)
+        os.chmod(srun_ut, st.st_mode | stat.S_IEXEC)
         os.environ['PATH'] = (cls.SLURM_UT_DIR + os.pathsep +
                               os.environ['PATH'])
         super(cls, cls).setUpClass()

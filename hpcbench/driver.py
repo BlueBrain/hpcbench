@@ -289,7 +289,7 @@ class SbatchDriver(Enumerator):
                + self.parent.parent.campaign_file)
         self.sbatch_filename = now.strftime(sbatch_filename)
         self.sbatch_filename = self.sbatch_filename.format(tag=tag)
-        self.sbatch_outdir = self.sbatch_filename[:-7]
+        self.sbatch_outdir = osp.splitext(self.sbatch_filename)[0]
         self.hpcbench_cmd = now.strftime(cmd)
         self.hpcbench_cmd = self.hpcbench_cmd.format(tag=tag)
         self.sbatch_args = self.campaign.process.get('sbatch', {})
@@ -938,7 +938,7 @@ class SrunExecutionDriver(ExecutionDriver):
 
         :rtype: list of string
         """
-        return self.campaign.process.get('srun', {})
+        return self.campaign.process.get('srun') or {}
 
     @cached_property
     def command(self):
@@ -947,7 +947,7 @@ class SrunExecutionDriver(ExecutionDriver):
         :return: list of string
         """
         srun_options = copy.copy(self.common_srun_options)
-        srun_options.update(self.parent.parent.parent.config.get('srun', {}))
+        srun_options.update(self.parent.parent.parent.config.get('srun') or {})
         srun_optlist = self._make_srun_arguments(srun_options)
         self._parse_srun_options(srun_optlist)
         # FIXME constraints needs to be redone properly
@@ -962,9 +962,9 @@ class SrunExecutionDriver(ExecutionDriver):
             if v is None:
                 continue
             elif v is True:  # specifically check if it is true
-                args += ['--{}'.format(k)]
+                args.append('--{}'.format(k))
             else:
-                args += ['--{}={}'.format(k, six.moves.shlex_quote(str(v)))]
+                args.append('--{}={}'.format(k, six.moves.shlex_quote(str(v))))
         return args
 
     def _parse_srun_options(self, options):

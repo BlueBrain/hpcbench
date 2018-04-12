@@ -16,8 +16,9 @@ from . import DriverTestCase
 class TestSrun(DriverTestCase, unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.SRUN_UT_DIR = tempfile.mkdtemp(prefix='hpcbench-ut')
-        srun_ut = osp.join(cls.SRUN_UT_DIR, 'srun-ut')
+        cls.SLURM_ALLOC_NODE = 'n3'
+        cls.SLURM_UT_DIR = tempfile.mkdtemp(prefix='hpcbench-ut')
+        srun_ut = osp.join(cls.SLURM_UT_DIR, 'srun-ut')
         with open(srun_ut, 'w') as ostr:
             ostr.write(textwrap.dedent("""\
                 #!/bin/bash -e
@@ -25,9 +26,21 @@ class TestSrun(DriverTestCase, unittest.TestCase):
                 while [[ "$1" == -* ]] ; do shift ; done
                 exec $@
                 """))
-            st = os.stat(srun_ut)
-            os.chmod(srun_ut, st.st_mode | stat.S_IEXEC)
-        os.environ['PATH'] = cls.SRUN_UT_DIR + os.pathsep + os.environ['PATH']
+        st = os.stat(srun_ut)
+        os.chmod(srun_ut, st.st_mode | stat.S_IEXEC)
+        sbatch_ut = osp.join(cls.SLURM_UT_DIR, 'sbatch-ut')
+        with open(sbatch_ut, 'w') as ostr:
+            ostr.write(textwrap.dedent("""\
+                #!/bin/bash -e
+                # output a job id
+                while [[ "$1" == -* ]] ; do shift ; done
+                export SLURMD_NODENAME={node}
+                source $@ > slurm-12345.out 2>&1
+                echo "12345"
+                """.format(node=cls.SLURM_ALLOC_NODE)))
+        st = os.stat(sbatch_ut)
+        os.chmod(sbatch_ut, st.st_mode | stat.S_IEXEC)
+        os.environ['PATH'] = cls.SLURM_UT_DIR + os.pathsep + os.environ['PATH']
         super(cls, cls).setUpClass()
 
     def test_srun_command(self):
@@ -73,7 +86,7 @@ class TestSrun(DriverTestCase, unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        length = len(cls.SRUN_UT_DIR + os.pathsep)
+        length = len(cls.SLURM_UT_DIR + os.pathsep)
         os.environ['PATH'] = os.environ['PATH'][length:]
-        shutil.rmtree(cls.SRUN_UT_DIR)
+        shutil.rmtree(cls.SLURM_UT_DIR)
         super(cls, cls).tearDownClass()
