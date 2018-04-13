@@ -51,6 +51,7 @@ class Metrics(object):  # pragma pylint: disable=too-few-public-methods
     Millisecond = Metric('ms', float)
     Second = Metric('s', float)
     MegaBytesPerSecond = Metric('MB/s', float)
+    GigaBytesPerSecond = Metric('GB/s', float)
     Cardinal = Metric('#', int)
     Byte = Metric('B', int)
     Flops = Metric('flop/s', float)
@@ -206,6 +207,8 @@ class Benchmark(with_metaclass(ABCMeta, object)):
             benchmark is part of.
             If a string is provided, then all nodes of the given tag will
             be used.
+            Note: this parameter is ignored if -C/--constraint
+            slurm option is used.
         * *shell* (optional boolean):
           when `shell` parameter is `True`, then the given command
           is considered as a shell command.

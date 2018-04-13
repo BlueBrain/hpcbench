@@ -1,0 +1,11 @@
+ STREAM Benchmark implementation in CUDA
+ Array size (double precision) = 536.87 MB
+ using 1024 threads per block, 65536 blocks
+ output in IEC units (KiB = 1024 B)
+
+Function      Rate (GiB/s)  Avg time(s)  Min time(s)  Max time(s)
+-----------------------------------------------------------------
+Copy:         746           0.00134171   0.00133991   0.00134277
+Scale:        745.7866      0.00134183   0.00134087   0.00134301
+Add:          784.5686      0.00191258   0.00191188   0.00191402
+Triad:        785.3521      0.00191215   0.00190997   0.00192785

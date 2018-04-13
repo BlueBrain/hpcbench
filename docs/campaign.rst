@@ -227,6 +227,15 @@ srun_options
 When the `srun` execution layer is enabled, a list of providing additional
 options given to the `srun` command.
 
+.. code-block:: yaml
+  :emphasize-lines: 4
+
+  benchmarks:
+    cpu:
+      osu:
+        srun_options: [-C, "uc1*6|uc2*6", -N, 12, --ntasks-per-node=36]
+        type: osu
+
 attempts (optional)
 ~~~~~~~~~~~~~~~~~~~
 Dictionary to specify the number of times a command must be executed before
@@ -401,6 +410,24 @@ The ``srun`` layer accepts the following keys:
       srun_options:
         - --account=project42
         - --partition=über-cluster
+
+executor_template (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Override default Jinja template used to generate
+shell-scripts in charge of executing benchmarks.
+Default value is:
+
+.. code-block:: shell
+  #!/bin/sh
+
+  {%- for var, value in environment.items() %}
+  export {{ var }}={{ value }}
+  {%- endfor %}
+  cd "{{ cwd }}"
+  exec {{ " ".join(command) }}
+
+If value does not start with shebang, then it is considered
+like a file location.
 
 Environment variable expansion
 ------------------------------

@@ -1,0 +1,17 @@
+process:
+    type: srun
+    commands:
+        srun: srun-ut
+    srun:
+        mpi: pmi2
+        exclusive: true
+        ntasks: 42
+benchmarks:
+    '*':
+        test-slurm:
+            type: fake
+            srun:
+                exclusive:
+            attributes:
+                input:
+                - "{process_count}"

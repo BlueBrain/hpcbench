@@ -25,7 +25,7 @@ from hpcbench.driver import (
     CampaignDriver,
     FixedAttempts,
     HostDriver,
-    SlurmExecutionDriver,
+    SrunExecutionDriver,
 )
 from hpcbench.toolbox.contextlib_ext import (
     capture_stdout,
@@ -119,7 +119,11 @@ class TestFakeBenchmark(AbstractBenchmarkTest, unittest.TestCase):
     def get_expected_metrics(self, category):
         return dict(
             performance=10.0,
-            standard_error=1.0
+            standard_error=1.0,
+            pairs=[
+                dict(first=1.5, second=True),
+                dict(first=3.0, second=False),
+            ],
         )
 
     def get_benchmark_categories(self):
@@ -228,14 +232,18 @@ class TestHostDriver(unittest.TestCase):
             build_info = bench.execution_matrix(None)[0]['metas']['build_info']
             self.assertEqual(build_info, bench.build_info)
 
-    def slurm(self, node='node01', tag='group_nodes', srun_nodes=1):
+    def slurm(self, **kwargs):
+        node = kwargs.get('node', 'node01')
+        tag = kwargs.get('tag', 'group_nodes')
+        srun_nodes = kwargs.get('srun_nodes', 1)
+        benchmark_config = kwargs.get('benchmark_config')
         execution = dict(
             command=['ls', '-la']
         )
         campaign_file = TestHostDriver.CAMPAIGN_FILE
         if srun_nodes is not None:
             execution.update(srun_nodes=srun_nodes)
-        return SlurmExecutionDriver(
+        return SrunExecutionDriver(
            FixedAttempts(
                 BenchmarkCategoryDriver(
                     BenchmarkDriver(
@@ -250,13 +258,25 @@ class TestHostDriver(unittest.TestCase):
                             tag
                         ),
                         namedtuple('benchmark', ['name'])(name='benchmark'),
-                        dict(),
+                        benchmark_config or dict(),
                     ),
                     'category'
                 ),
                 execution
             )
         )
+
+    def test_slurm_constraint(self):
+        """SLURM --constraint option disables node name resolution"""
+        slurm = self.slurm(benchmark_config=dict(
+            srun=dict(constraint="uc1*6|uc2*6")
+        ))
+        os.environ['SRUN'] = 'true'  # otherwise `find_executable` crashes
+        self.assertEqual(
+            slurm.command,
+            ['true', "--constraint='uc1*6|uc2*6'", 'ls', '-la']
+        )
+        os.environ.pop('SRUN')
 
     @classmethod
     def tearDownClass(cls):

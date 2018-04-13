@@ -16,9 +16,9 @@ from cached_property import cached_property
 import six
 import yaml
 
+from hpcbench import jinja_environment
 from hpcbench.campaign import from_file as campaign_from_file
 from hpcbench.driver import write_yaml_report
-from hpcbench.report import ENV
 from hpcbench.toolbox.contextlib_ext import mkdtemp, pushd
 from hpcbench.toolbox.process import find_executable
 
@@ -124,7 +124,7 @@ class BeNet(CampaignHolder):
     def _build_installer(self):
         self.log.info('Generating installer script %s',
                       BeNet.REMOTE_BENCH_RUNNER)
-        template = ENV.get_template(self.installer_template)
+        template = jinja_environment.get_template(self.installer_template)
         prelude = ''
         if self.campaign.network.installer_prelude_file:
             with open(self.campaign.network.installer_prelude_file) as istr:

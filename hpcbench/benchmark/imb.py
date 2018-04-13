@@ -16,18 +16,30 @@ from hpcbench.toolbox.process import find_executable
 
 
 class IMBExtractor(MetricsExtractor):
+    def __init__(self):
+        self.with_all_data = False
+
     """Abstract class for IMB benchmark metrics extractor
     """
     @cached_property
     def metrics(self):
-        return dict(minb_lat=Metrics.Microsecond,
-                    minb_lat_bytes=Metrics.Byte,
-                    min_lat=Metrics.Microsecond,
-                    min_lat_bytes=Metrics.Byte,
-                    maxb_bw=Metrics.MegaBytesPerSecond,
-                    maxb_bw_bytes=Metrics.Byte,
-                    max_bw=Metrics.MegaBytesPerSecond,
-                    max_bw_bytes=Metrics.Byte)
+        common = dict(
+            minb_lat=Metrics.Microsecond,
+            minb_lat_bytes=Metrics.Byte,
+            min_lat=Metrics.Microsecond,
+            min_lat_bytes=Metrics.Byte,
+            maxb_bw=Metrics.MegaBytesPerSecond,
+            maxb_bw_bytes=Metrics.Byte,
+            max_bw=Metrics.MegaBytesPerSecond,
+            max_bw_bytes=Metrics.Byte
+        )
+        if self.with_all_data:
+            common.update(raw=list(dict(
+                bytes=Metrics.Byte,
+                bandwidth=Metrics.MegaBytesPerSecond,
+                latency=Metrics.Microsecond,
+            )))
+        return common
 
     @abstractproperty
     def stdout_ignore_prior(self):
@@ -75,6 +87,7 @@ class IMBPingPongExtractor(IMBExtractor):
         self.s_bytes = []
         self.s_latency = []
         self.s_bandwidth = []
+        self.with_all_data = True
 
     def prelude(self):
         self.s_bytes = []
@@ -103,10 +116,20 @@ class IMBPingPongExtractor(IMBExtractor):
         maxb_bw, maxb_bw_b = self.s_bandwidth[-1], self.s_bytes[-1]
         max_bw, max_bw_b = max(zip(self.s_bandwidth, self.s_bytes),
                                key=itemgetter(0))
+        raw = []
+        for i in range(len(self.s_bytes)):
+            raw.append(
+                dict(
+                    bytes=self.s_bytes[i],
+                    latency=self.s_latency[i],
+                    bandwidth=self.s_bandwidth[i],
+                )
+            )
         return dict(minb_lat=minb_lat, minb_lat_bytes=minb_lat_b,
                     min_lat=min_lat, min_lat_bytes=min_lat_b,
                     maxb_bw=maxb_bw, maxb_bw_bytes=maxb_bw_b,
-                    max_bw=max_bw, max_bw_bytes=max_bw_b)
+                    max_bw=max_bw, max_bw_bytes=max_bw_b,
+                    raw=raw)
 
 
 class IMBAllToAllExtractor(IMBExtractor):
