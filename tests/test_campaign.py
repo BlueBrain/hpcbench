@@ -82,6 +82,27 @@ class TestCampaign(unittest.TestCase):
             ]
         )
 
+    def test_tags_tag_as_string(self):
+        config = self.new_config
+        config.network.tags['A'] = dict(tags='by_node')
+        filled_config = fill_default_campaign_values(config)
+        self.assertEqual(
+            filled_config.network.tags.A,
+            [dict(nodes=['node1', 'node2'])]
+        )
+
+    def test_tag_multiple_decl(self):
+        config = self.new_config
+        config.network.tags['A'] = dict(
+            tags='by_node',
+            nodes=['node1']
+        )
+        with self.assertRaises(Exception) as exc:
+            fill_default_campaign_values(config)
+        self.assertTrue(exc.exception.message.startswith(
+            "Tag 'A' is based on more than one criteria: "
+        ))
+
     def test_cyclic_tags(self):
         config = self.new_config
         config['network']['tags']['A'] = dict(

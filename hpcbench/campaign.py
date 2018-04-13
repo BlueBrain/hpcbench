@@ -225,7 +225,10 @@ class NetworkConfig(object):
         return list(eax)
 
     @classmethod
-    def _expand_tag_pattern(cls, pattern):
+    def _expand_tag_pattern(cls, tag, pattern):
+        if len(pattern) > 1:
+            msg = "Tag '{tag}' is based on more than one criteria: {types}"
+            raise Exception(msg.format(tag=tag, types=', '.join(pattern)))
         for mode in list(pattern):
             if mode == 'match':
                 pattern[mode] = re.compile(pattern[mode])
@@ -247,10 +250,12 @@ class NetworkConfig(object):
         for pattern in config[:]:
             # we work with a copy so we can modify the original
             # first expand all the other modes
-            cls._expand_tag_pattern(pattern)
+            cls._expand_tag_pattern(tag, pattern)
             # now let's go through that tags if they exist in this pattern
             if 'tags' in list(pattern):
                 tags = pattern['tags']
+                if isinstance(tags, six.string_types):
+                    tags = [tags]
                 for rectag in tags:
                     if rectag in expanded:
                         config += expanded[rectag]
@@ -268,6 +273,7 @@ class NetworkConfig(object):
                                         + 'is not defined.',
                                         tag, rectag)
                 pattern.pop('tags')  # we've expanded this, it can be deleted
+        config = [c for c in config if any(c)]
         expanded[tag] = config
 
     def _expand_tags(self):
@@ -278,7 +284,7 @@ class NetworkConfig(object):
                 config = [config]
             if NetworkConfig._is_leaf(config):
                 for pattern in config:
-                    NetworkConfig._expand_tag_pattern(pattern)
+                    NetworkConfig._expand_tag_pattern(tag, pattern)
                 expanded[tag] = config
             else:
                 recursive[tag] = config
