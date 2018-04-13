@@ -5,7 +5,8 @@ network:
     uc1:
       nodes: [n1, n2]
     uc2:
-      nodes: [n3, n4]
+      constraint: skylake
+
 
 process:
   type: slurm

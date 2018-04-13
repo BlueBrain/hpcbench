@@ -165,6 +165,8 @@ def default_campaign(campaign=None, expandcampvars=True):
     :return: object provided in parameter
     :rtype: dictionary
     """
+    campaign = campaign or nameddict()
+
     def _merger(_camp, _deft):
         for key in _deft.keys():
             if (key in _camp and isinstance(_camp[key], dict)
@@ -234,6 +236,13 @@ class NetworkConfig(object):
                 pattern[mode] = re.compile(pattern[mode])
             elif mode == 'nodes':
                 pattern[mode] = cls._expand_nodes(pattern[mode])
+            elif mode == 'constraint':
+                value = pattern[mode]
+                if not isinstance(value, six.string_types):
+                    msg = "Constraint tag '{tag}' "
+                    msg += "may be a string, not: {value}"
+                    msg = msg.format(tag=tag, value=repr(value))
+                    raise Exception(msg)
             elif mode == 'tags':
                 pass  # don't fail but ignore tags
             else:
@@ -269,11 +278,18 @@ class NetworkConfig(object):
                         cls._resolve(rectag, recconfig,
                                      expanded, recursive, visited)
                     else:  # rectag is nowhere to be found
-                        raise Exception('%s refers to %s, which '
-                                        + 'is not defined.',
-                                        tag, rectag)
+                        message = '%s refers to %s, which is not defined.'
+                        message = message % (tag, rectag)
+                        raise Exception(message)
                 pattern.pop('tags')  # we've expanded this, it can be deleted
         config = [c for c in config if any(c)]
+        if len(config) >= 2:
+            for rectag in config:
+                if 'constraint' in rectag:
+                    message = "Tag '%s': cannot combine constraint tags"
+                    message = message % tag
+                    raise Exception(message)
+
         expanded[tag] = config
 
     def _expand_tags(self):
