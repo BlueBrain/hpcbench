@@ -1,17 +1,23 @@
 """ben-sh - Execute a campaign
 
 Usage:
-  ben-sh [-v | -vv] [-n HOST] [-l LOGFILE] [-g] CAMPAIGN_FILE
+  ben-sh [-v | -vv] [-r TAG] [-n HOST] [-o OUTDIR] [-l LOGFILE]
+         [-g] CAMPAIGN_FILE
   ben-sh (-h | --help)
   ben-sh --version
 
 Options:
-  -n HOST           Specify node name. Default is localhost
-  -l --log=LOGFILE  Specify an option logfile to write to
-  -h --help         Show this screen
-  -g                Generate a default YAML campaign file
-  --version         Show version
-  -v -vv            Increase program verbosity
+  -n HOST                 Specify node name. Default is localhost
+  -o --output-dir=OUTDIR  Specify output directory, overwriting campaign file
+                          output_dir directive
+  -l --log=LOGFILE        Specify an option logfile to write to
+  -r --srun=TAG           Go into srun mode and run on one tag, which is used
+                          when ben-sh is called as a dependent process inside
+                          a SLURM job.
+  -h --help               Show this screen
+  -g                      Generate a default YAML campaign file
+  --version               Show version
+  -v -vv                  Increase program verbosity
 """
 
 import os.path as osp
@@ -32,8 +38,12 @@ def main(argv=None):
             Generator().write(ostr)
     else:
         node = arguments.get('-n')
+        output_dir = arguments.get('--output-dir')
+        srun_tag = arguments.get('--srun')
         driver = CampaignDriver(campaign_file=campaign_file,
-                                node=node)
+                                node=node,
+                                output_dir=output_dir,
+                                srun=srun_tag)
         driver()
         if argv is not None:
             return driver

@@ -62,6 +62,7 @@ DEFAULT_CAMPAIGN = dict(
     process=dict(
         type='local',
         config=dict(),
+        executor_template='executor.sh.jinja'
     ),
     tag=dict(),
     benchmarks={
