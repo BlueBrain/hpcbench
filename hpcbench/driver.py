@@ -59,6 +59,20 @@ JSON_METRICS_FILE = 'metrics.json'
 LOCALHOST = 'localhost'
 
 
+class ConstraintTag(object):
+    def __init__(self, name, constraint):
+        self._name = name
+        self._constraint = constraint
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def constraint(self):
+        return self._constraint
+
+
 def write_yaml_report(func):
     """Decorator used in campaign node post-processing
     """
@@ -191,6 +205,8 @@ class Network(object):
                     node for node in self.campaign.network.nodes
                     if value.match(node)
                 ]))
+            elif mode == 'constraint':
+                return ConstraintTag(tag, value)
             else:
                 assert mode == 'nodes'
                 nodes = nodes.union(set(value))
@@ -292,7 +308,15 @@ class SbatchDriver(Enumerator):
         self.sbatch_outdir = osp.splitext(self.sbatch_filename)[0]
         self.hpcbench_cmd = now.strftime(cmd)
         self.hpcbench_cmd = self.hpcbench_cmd.format(tag=tag)
-        self.sbatch_args = self.campaign.process.get('sbatch', {})
+
+    @cached_property
+    def sbatch_args(self):
+        sbatch_options = self.campaign.process.get('sbatch', {})
+        if 'constraint' not in sbatch_options:
+            tag = self.root.network.nodes(self.tag)
+            if isinstance(tag, ConstraintTag):
+                sbatch_options['constraint'] = tag.constraint
+        return sbatch_options
 
     @cached_property
     def children(self):
@@ -374,11 +398,13 @@ class HostDriver(Enumerator):
                                 kconfig.match(LOCALHOST)):
                             tags.add(tag)
                             break
-                    else:
-                        assert mode == 'nodes'
+                    elif mode == 'nodes':
                         if self.name in kconfig or LOCALHOST in kconfig:
                             tags.add(tag)
                             break
+                    elif mode == 'constraint':
+                        tags.add(tag)
+                        break
                 if tag in tags:
                     break
         return tags
@@ -953,6 +979,10 @@ class SrunExecutionDriver(ExecutionDriver):
         return self.campaign.process.get('srun') or {}
 
     @cached_property
+    def tag(self):
+        return self.parent.parent.parent.parent.name
+
+    @cached_property
     def command(self):
         """get command to execute
 
@@ -961,10 +991,6 @@ class SrunExecutionDriver(ExecutionDriver):
         srun_options = copy.copy(self.common_srun_options)
         srun_options.update(self.parent.parent.parent.config.get('srun') or {})
         srun_optlist = self._make_srun_arguments(srun_options)
-        self._parse_srun_options(srun_optlist)
-        # FIXME constraints needs to be redone properly
-        # if not args.constraint:
-        # args.append('--nodelist=' + ','.join(self.srun_nodes))
         command = super(SrunExecutionDriver, self).command
         return [self.srun] + srun_optlist + command
 
@@ -977,6 +1003,13 @@ class SrunExecutionDriver(ExecutionDriver):
                 args.append('--{}'.format(k))
             else:
                 args.append('--{}={}'.format(k, six.moves.shlex_quote(str(v))))
+        if not isinstance(self.root.network.nodes(self.tag), ConstraintTag):
+            # Expand nodelist if the tag is not a "constraint" one.
+            pargs = self._parse_srun_options(args)
+            if not pargs.constraint:
+                # Expand nodelist if --constraint option is not specified
+                # in srun options
+                args.append('--nodelist=' + ','.join(self.srun_nodes))
         return args
 
     def _parse_srun_options(self, options):
@@ -985,6 +1018,7 @@ class SrunExecutionDriver(ExecutionDriver):
         parser.add_argument('-C', '--constraint')
         args = parser.parse_known_args(options)
         self.command_expansion_vars['process_count'] = args[0].ntasks
+        return args[0]
 
     @cached_property
     def srun_nodes(self):
@@ -998,7 +1032,7 @@ class SrunExecutionDriver(ExecutionDriver):
             return count
         else:
             assert isinstance(count, int)
-            tag = self.parent.parent.parent.parent.name
+            tag = self.tag
         nodes = self._srun_nodes(tag, count)
         if 'srun_nodes' in self.execution:
             self.execution['srun_nodes'] = nodes

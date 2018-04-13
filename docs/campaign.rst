@@ -72,13 +72,13 @@ tags
 ~~~~
 Specify groups of nodes.
 
-A tag can be defined with either an exhaustive list or a regular expression.
+A tag can be defined with either an exhaustive list, a regular expression, or a SLURM constraint.
 
 For instance, given the set of nodes defined above, we can define the
 *cpu* and *gpu* tags as follow:
 
 .. code-block:: yaml
-  :emphasize-lines: 7,8,12
+  :emphasize-lines: 7,8,12,14
 
   network:
     nodes:
@@ -93,14 +93,20 @@ For instance, given the set of nodes defined above, we can define the
           - srv2
       gpu:
         match: gpu-.*
+      all-cpus:
+        constraint: skylake
 
-Both methods are being used:
+All methods are being used:
 
 * **nodes** expects an exhaustive list of nodes. The
   `ClusterShell <http://clustershell.readthedocs.io/en/latest/tools/nodeset.html#usage-basics>`_
   `NodeSet` syntax is also supported.
 
 * **match** expects a valid regular expression
+
+* **constraint** expects a string. This tag does not references node
+  names explicitely but instead delegates it to SLURM. Value of constraint tag
+  is given to the sbatch options thru the *--constraint* option.
 
 ssh_config_file
 ~~~~~~~~~~~~~~~
@@ -418,8 +424,8 @@ shell-scripts in charge of executing benchmarks.
 Default value is:
 
 .. code-block:: shell
-  #!/bin/sh
 
+  #!/bin/sh
   {%- for var, value in environment.items() %}
   export {{ var }}={{ value }}
   {%- endfor %}

@@ -19,6 +19,7 @@ from . import DriverTestCase
 
 
 class TestSlurm(DriverTestCase, unittest.TestCase):
+    CONSTRAINT = '#SBATCH --constraint=skylake\n'
 
     @classmethod
     def setUpClass(cls):
@@ -72,6 +73,7 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
             with open(sbatch_f) as f:
                 sbatch_content = f.readlines()
             self.assertFalse(sbatch_content[-1].find(tag) == -1)
+            self.assertIn(TestSlurm.CONSTRAINT, sbatch_content)
             child_hpcbench_root = osp.join(
                 TestSlurm.CAMPAIGN_PATH,
                 TestSlurm.driver.node,

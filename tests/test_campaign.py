@@ -81,6 +81,37 @@ class TestCampaign(unittest.TestCase):
             ]
         )
 
+    def test_constraint_tag(self):
+        config = default_campaign()
+        constraint = dict(constraint="skylake")
+        config.network.tags['foo'] = constraint
+        config = default_campaign(config)
+        self.assertEqual(config.network.tags.foo, [constraint])
+
+    def test_constraint_tag_is_a_string(self):
+        for invalid_constraint in [
+            ["skylake"],
+            dict(sky='lake')
+        ]:
+            config = default_campaign()
+            config.network.tags['foo'] = dict(constraint=invalid_constraint)
+            with self.assertRaises(Exception) as exc:
+                config = default_campaign(config)
+            self.assertTrue(str(exc.exception).startswith(
+                "Constraint tag 'foo' may be a string, not: "
+            ))
+
+    def test_cannot_mix_constraint_and_node_tags(self):
+        config = self.new_config
+        config.network.tags['Cons'] = dict(constraint="skylake")
+        config.network.tags['D'] = dict(tags=['by_node', 'Cons'])
+        with self.assertRaises(Exception) as exc:
+            config = default_campaign(config)
+        self.assertEqual(
+            str(exc.exception),
+            "Tag 'D': cannot combine constraint tags"
+        )
+
     def test_tags_tag_as_string(self):
         config = self.new_config
         config.network.tags['A'] = dict(tags='by_node')
@@ -98,7 +129,7 @@ class TestCampaign(unittest.TestCase):
         )
         with self.assertRaises(Exception) as exc:
             default_campaign(config)
-        self.assertTrue(exc.exception.message.startswith(
+        self.assertTrue(str(exc.exception).startswith(
             "Tag 'A' is based on more than one criteria: "
         ))
 
