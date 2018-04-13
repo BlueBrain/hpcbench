@@ -101,7 +101,7 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
 class TestSbatchTemplate(unittest.TestCase):
     SBATCH_PRELUDE = textwrap.dedent("""\
         #!/bin/bash
-        #SBATCH account={value}
+        #SBATCH --account={value}
         module load nix/spack
         spack load nix
     """)
