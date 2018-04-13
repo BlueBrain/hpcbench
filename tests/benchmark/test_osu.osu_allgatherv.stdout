@@ -1,0 +1,7 @@
+# OSU MPI Allgatherv Latency Test v5.3.2
+# Size       Avg Latency(us)
+64                      1.64
+128                     6.18
+256                     1.84
+512                     2.37
+1024                    3.06

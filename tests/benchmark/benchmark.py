@@ -34,6 +34,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
+    exposed_benchmark = True
+
     @abstractmethod
     def get_benchmark_clazz(self):
         """
@@ -258,3 +260,25 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
             list(benchmark.execution_matrix(self.exec_context)),
             exec_matrix
         )
+
+    def test_has_entrypoint(self):
+        """Benchmark must be specified in setup.py"""
+        if self.exposed_benchmark:
+            expected_module = inspect.getfile(self.get_benchmark_clazz())
+            expected_module = expected_module[len(os.getcwd()) + 1:]
+            expected_module = osp.splitext(expected_module)[0]
+            expected_module = expected_module.replace('/', '.')
+            with open('setup.py') as istr:
+                in_entrypoints_decl = False
+                module_found = False
+                for line in istr:
+                    if '[hpcbench.benchmarks]' in line:
+                        in_entrypoints_decl = True
+                    else:
+                        if in_entrypoints_decl:
+                            line = line.strip()
+                            module = line.split('=', 1)[-1].strip()
+                            if module == expected_module:
+                                module_found = True
+                message = "module '%s' is not declared" % expected_module
+                self.assertTrue(module_found, msg=message)
