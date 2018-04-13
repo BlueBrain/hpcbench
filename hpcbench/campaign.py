@@ -153,10 +153,10 @@ def from_file(campaign_file, expandcampvars=True):
     :rtype: dictionary
     """
     campaign = Configuration.from_file(campaign_file)
-    return fill_default_campaign_values(campaign, expandcampvars)
+    return default_campaign(campaign, expandcampvars)
 
 
-def fill_default_campaign_values(campaign, expandcampvars=True):
+def default_campaign(campaign=None, expandcampvars=True):
     """Fill an existing campaign with default
     values for optional keys
 
