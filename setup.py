@@ -79,6 +79,7 @@ setup(
 
         [hpcbench.benchmarks]
         babelstream = hpcbench.benchmark.babelstream
+        basic = hpcbench.benchmark.basic
         custream = hpcbench.benchmark.custream
         hpl = hpcbench.benchmark.hpl
         imb = hpcbench.benchmark.imb
@@ -87,6 +88,7 @@ setup(
         iperf = hpcbench.benchmark.iperf
         mdtest = hpcbench.benchmark.mdtest
         nvidia-bandwidthtest = hpcbench.benchmark.nvidia
+        osu = hpcbench.benchmark.osu
         shoc = hpcbench.benchmark.shoc
         standard = hpcbench.benchmark.standard
         stream = hpcbench.benchmark.stream

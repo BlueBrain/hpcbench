@@ -111,6 +111,8 @@ class TestDriver(DriverTestCase, unittest.TestCase):
 
 
 class TestFakeBenchmark(AbstractBenchmarkTest, unittest.TestCase):
+    exposed_benchmark = False
+
     def get_benchmark_clazz(self):
         return FakeBenchmark
 
