@@ -11,6 +11,26 @@ It is made of 3 top attributes, each of one being a dictionary:
 * **executables**: describe the commands to execute
 * **shells** (optional): provide more flexibility to build the commands to execute
 
+A trivial example
+-----------------
+
+Before getting into all the details, here's a basic standard benchmark configuration to get
+started with:
+
+.. code-block:: yaml
+
+  benchmarks:
+    '*':
+      simple:
+        type: standard
+        attributes:
+          executables:
+              - command: ["echo", "42"]
+          metrics:
+              the_answer_to_everything:
+                  match: "(.*)"
+                  type: Cardinal
+
 Metrics configuration reference
 -------------------------------
 

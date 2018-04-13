@@ -3,7 +3,7 @@ HPCBench Campaign file reference
 
 HPCBench uses a YAML file
 (see `YAML cookbook <http://yaml.org/YAML_for_ruby.html>`_)
-to describe a tests campaign.
+to describe a benchmark campaign.
 Topics of this reference page are organized by top-level key
 to reflect the structure of the Campaign file itself.
 
@@ -12,8 +12,8 @@ output_dir
 
 This top-level attribute specifies the output directory
 where HPCBench stores the benchmark results.
-Default value is "hpcbench-%Y%m%d-%H%M%S"
-You can also specify some variables enclosed in braces, among:
+The default value is "hpcbench-%Y%m%d-%H%M%S"
+You can also specify some variables enclosed in braces, specifically:
 
 * node: value of ben-sh "-n" option.
 
@@ -24,9 +24,9 @@ the directory, you can use: "hpcbench-{node}-$USER-%Y%m%d"
 Network configuration reference
 -------------------------------
 
-A Campaign is made of a set of nodes to benchmarks. Those nodes
-can be tagged to create groups, later used to
-filter nodes where certain benchmarks are executed on.
+A Campaign is made of a set of nodes that will be benchmarked. Those nodes
+can be tagged to create groups of nodes. The tags are used to constrain
+benchmarks to be run on subsets of nodes.
 
 nodes
 ~~~~~
@@ -72,13 +72,14 @@ tags
 ~~~~
 Specify groups of nodes.
 
-A tag can be defined with either an exhaustive list, a regular expression, or a SLURM constraint.
+A tag can be defined with an explicit node list, a regular expression of node names,
+a recursive to other tags, or a SLURM constraint.
 
 For instance, given the set of nodes defined above, we can define the
 *cpu* and *gpu* tags as follow:
 
 .. code-block:: yaml
-  :emphasize-lines: 7,8,12,14
+  :emphasize-lines: 7,8,12,14,16
 
   network:
     nodes:
@@ -95,6 +96,8 @@ For instance, given the set of nodes defined above, we can define the
         match: gpu-.*
       all-cpus:
         constraint: skylake
+      all:
+        tags: [cpu, gpu]
 
 All methods are being used:
 
@@ -103,6 +106,8 @@ All methods are being used:
   `NodeSet` syntax is also supported.
 
 * **match** expects a valid regular expression
+
+* **tags** expects a list of tag names
 
 * **constraint** expects a string. This tag does not references node
   names explicitely but instead delegates it to SLURM. The value of the
@@ -165,11 +170,9 @@ Benchmarks configuration reference
 The **benchmarks** section specifies benchmarks to execute
 on every tag.
 
-* key: the tag name. "*" matches all nodes described 
+* key: the tag name or `"*"`. `"*"` matches all nodes described
   in the *network.nodes* section.
 * value: a dictionary of name -> benchmark description.
-  Each key must be tag names, values is another
-  dictionary.
 
 .. code-block:: yaml
 
@@ -201,7 +204,7 @@ Benchmark name.
 attributes (optional)
 ~~~~~~~~~~~~~~~~~~~~~
 *kwargs** arguments given to the benchmark Python class constructor to
-override default behavior.
+override default behavior, which is defined in the benchmark class.
 
 .. code-block:: yaml
   :emphasize-lines: 5
@@ -228,19 +231,27 @@ be either a string or a list of string, for instance:
         exec_prefix: numactl -m 1
         type: stream
 
-srun_options
-~~~~~~~~~~~~
+srun (optional)
+~~~~~~~~~~~~~~~
 
-When the `srun` execution layer is enabled, a list of providing additional
-options given to the `srun` command.
+When hpcbench is run in `srun` or `slurm` benchmark execution mode, this key roots a list of
+options, which are passed to the `srun` command. Note that only the long form
+option names should be used (i.e. `--nodes` instead of `-N`). These options overwrite
+the global options provided in the :ref:`process <campaign-process>` section. To disable
+a global srun option simply declare the option without providing a value. if an option without
+value (e.g. `--exclusvie`) is to be used in `srun`, the key should be assigned to `true`.
 
 .. code-block:: yaml
-  :emphasize-lines: 4
+  :emphasize-lines: 4,7,8
 
   benchmarks:
     cpu:
       osu:
-        srun_options: [-C, "uc1*6|uc2*6", -N, 12, --ntasks-per-node=36]
+        srun:
+          nodes: 8
+          ntasks-per-node: 36
+          hint:
+          exclusive: true
         type: osu
 
 attempts (optional)
@@ -282,7 +293,7 @@ All executions are present in the report but only metrics of the last run are re
 sort hpcbench.yaml reports. ``reverse`` is optional and allows to reverse the sort order.
 In this example, the report with the smallest latency is picked.
 
-The dynamic way allow you to execute the same command over and over again
+The dynamic way allows you to execute the same command over and over again
 until a certain metric converges. The convergence condition is either fixed
 with the ``epsilon`` parameter or relative with ``percent``.
 
@@ -326,7 +337,7 @@ environment (optional)
 ~~~~~~~~~~~~~~~~~~~~~~
 A dictionary to add environment variables.
 Any boolean values; true, false, yes not, need to be enclosed in quotes to ensure
-they are not converted to True or False by YAML parse.
+they are not converted to python True or False values by the YAML parse.
 
 .. code-block:: yaml
   :emphasize-lines: 5
@@ -345,7 +356,8 @@ Specifies a custom working directory.
 
 metrics (optional)
 ~~~~~~~~~~~~~~~~~~
-Additional metrics to put in the benchmark report.
+Additional metrics to put in the benchmark report, which will be exported along the
+measured values. This is useful to provide information about the benchmark parameters or build.
 
 .. code-block:: yaml
   :emphasize-lines: 5-6
@@ -383,10 +395,12 @@ This section specifies conditions to filter benchmarks execution.
       - HPCBENCH_CACHE
 
 * **cpu_numactl_0** benchmark needs the ``HPCBENCH_MCDRAM`` environment
-  to be defined for being executed.
+  variable to be defined for being executed.
 * **cpu_numactl_1** benchmark needs either ``HPCBENCH_MCDRAM`` or
   ``HPCBENCH_CACHE`` environment variables to defined for being executed.
 *  **disk** benchmark will be executed in all cases.
+
+.. _campaign-process:
 
 Process configuration reference
 -------------------------------
@@ -396,27 +410,47 @@ type (optional)
 ~~~~~~~~~~~~~~~
 A string indicating the execution layer. Possible values are:
 
-* ``local`` (default) to spawn processes where ``ben-sh`` is running.
-* ``srun`` to use `srun <https://slurm.schedmd.com/srun.html>`_ to launch
-  processes.
+* ``local`` (default) directs HPCbench to spawn child processes where ``ben-sh``
+  is running.
+* ``slurm`` will use `SLURM <https://slurm.schedmd.com>`_ mode. This will cause HPCBench
+  to generate for each tag in the network, which is used by at least one benchmark, one **sbatch**
+  file. The batch file is then submitted to the scheduler. By default this batch file will invoke
+  hpcbench on the allocated nodes and execute the benchmarks for this tag.
+* ``srun`` will use `srun <https://slurm.schedmd.com/srun.html>`_ to launch the benchmark
+  processes. When HPCBench is being executed inside the self-generated batch script, it will
+  use by default the ``srun`` mode to run the benchmarks.
 
-config (optional)
-~~~~~~~~~~~~~~~~~
-This dictionary provides the execution layer configuration.
+commands (optional)
+~~~~~~~~~~~~~~~~~~~
 
-The ``srun`` layer accepts the following keys:
+This dictionary allows setting alternative `srun` or `sbatch` commands or absolute paths to
+the binaries.
 
-* ``srun`` (optional) a string indicating the path to srun executable
-* ``srun_options`` a list of string providing the options given to every srun commands. It is the proper place to specify the account name for instance.
+.. code-block:: yaml
+  :emphasize-lines: 3
+
+  process:
+    type: slurm
+    commands:
+      sbatch: /opt/slurm/bin/sbatch
+      srun: /opt/slrum/bin/sbatch
+
+srun and sbatch (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ``srun`` and ``sbatch`` dictionaries provide configurations foe the respective SLURM
+commands.
+
 
 .. code-block:: yaml
 
   process:
-    type: srun
-    config:
-      srun_options:
-        - --account=project42
-        - --partition=über-cluster
+    type: slurm
+    sbatch:
+      account: users
+      partition: über-cluster
+      mail-type: ALL
+    srun:
+      mpi: pmi2
 
 executor_template (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -446,19 +480,19 @@ For example, suppose the shell contains EMAIL=root@cscs.ch and you supply this c
 .. code-block:: yaml
 
   process:
-    type: srun
-    config:
-      srun_options:
-        - --email=$EMAIL
-        - --partition=über-cluster
+    type: slurm
+    sbatch:
+      email=$EMAIL
+      partition=über-cluster
 
 
-When you run ben-sh with this configuration, the program looks for the EMAIL
+When you run ben-sh with this configuration, HPCBench will look for the EMAIL
 environment variable in the shell and substitutes its value in.
 
 If an environment variable is not set, substitution fails and an exception is raised.
 
-Both $VARIABLE and ${VARIABLE} syntax are supported. Additionally,  it is possible to provide inline default values using typical shell syntax:
+Both $VARIABLE and ${VARIABLE} syntax are supported. Additionally, it is possible
+to provide inline default values using typical shell syntax:
 
 ${VARIABLE:-default} will evaluate to default if VARIABLE is unset or empty in the environment.
 ${VARIABLE-default} will evaluate to default only if VARIABLE is unset in the environment.

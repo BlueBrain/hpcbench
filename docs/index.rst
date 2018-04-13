@@ -11,17 +11,20 @@ HPCBench Documentation
 HPCBench is a Python package that allows you to specify and execute benchmarks. It provides:
 
 * an API to describe how to execute benchmarks utilities and gather metrics.
-* A way to describe tests campaigns in a YAML format.
-* command line executable to execute your campaigns, and use generated metrics for
-  various usage:
+* A way to describe benchmark campaigns in YAML format.
+* command line utilities to execute your campaigns, and post-process generated metrics in
+  various ways:
 
+   * Merging metrics from different campaigns
+   * Exporting metrics in CSV format
+   * Exporting data to Elasticsearch
    * Plotting with matplotlib
    * PDF report generation
-   * Elasticsearch / Kibana integration
 
-HPCBench does not support benchmark softwares installation.
+HPCBench assumes that the various benchmark tools/binaries are managed elsewhere and does
+not provide features for building and maintaining benchmark software.
 
-This Python package is still in pre-alpha stage, and not suitable for production.
+NB: This Python package is still in pre-alpha stage, and not suitable for production.
 
 Installation
 ============
@@ -43,7 +46,7 @@ To upgrade HPCBench with pip::
 Dependencies
 ------------
 
-HPCBench support 2.7, and 3.4+.
+HPCBench supports both python 2.7 and 3.4+.
 
 
 Overview
@@ -52,19 +55,21 @@ Overview
 CLI
 ---
 
-**HPCBench** provides a set of command line utilities:
+The main interface through which **HPCbench** is used is a set of command
+line utilities:
 
 * ben-sh: Execute a tests campaign on your workstation
+* ben-csv: Extract metrics of an existing campaign in csv format
 * ben-umb: Extract metrics of an existing campaign
-* ben-plot: Draw figures of an existing campaign
 * ben-elastic: Push campaign data to Elasticsearch
 * ben-nett: Execute a tests campaign on a cluster
 * ben-merge: Merge campaign output directories
+* ben-plot: Draw figures of an existing campaign
 * ben-tpl: Generate HPCBench plugin scaffolds,
-  see :ref:`usage <ben-tpl-usage>`.
+  see :ref:`usage <ben-tpl-usage>` for more information on plugin generation.
 
 **ben-sh** and **ben-nett** expect a YAML file describing the campaign to execute.
-Structure of this YAML file is detailed in the :doc:`campaign file reference <campaign>`.
+The structure of this YAML file is detailed in the :doc:`campaign file reference <campaign>`.
 
 Campaign YAML description
 -------------------------
@@ -79,18 +84,23 @@ Campaign YAML description
 API
 ---
 
-HPCBench API purpose is to provide an unified layer:
+The purpose of the HPCBench API is to provide a consistent and unified layer:
 
 * to execute, and parse results of existing benchmarks utilities (Linpack, IOR, ...)
 * to use extracted metrics to build figures
 
-More information in the :doc:`module reference <modules>`
+Both system benchmarks (e.g. STREAM, linpack), as well as software benchmarks should be
+implemented using this API. Most users parametrize benchmarks in the above-mentioned
+campaign YAML file. More advanced users will want to implement their own benchmarks based
+on the API.
+
+For more information check the :doc:`module reference <modules>`
 
 Getting Started
 ===============
 
-As of now, only a few benchmark utilities are supported. This section assumes that
-you installed ``sysbench`` utility on your workstation.
+As of now, only a few benchmarks are supported. This section assumes that
+you have at least installed the ``sysbench`` utility on your workstation.
 
 Launch a campaign on your workstation
 -------------------------------------
@@ -114,6 +124,13 @@ Execute the following command::
 
 
 This will create a ``hpcbench-<date>`` in the directory with the benchmark's results.
+Although the user is not meant to be manually checking results inside the output directory
+at this point take a look at ``hpcbench-<date>/<hostname>/*/test/metrics.json``. You will
+find that this file contains the collected metrics data from sysbench. The raw logs and
+stdout's can be found further down the directory tree.
+
+**Note**: Do not manually edit files inside the output directory. HPCBench offers a number of
+utilities to export and post-process the collected results.
 
 Build the plots
 ~~~~~~~~~~~~~~~
@@ -122,10 +139,10 @@ You can use the ``ben-plot`` utility to generate figures from a campaign's data:
 
    $ ben-plot <path_to_created_directory>
 
-Some PNG will be generated in the given directory.
+A PNG will be generated in the given directory.
 
-Launch a campaign on a set of servers
--------------------------------------
+Launch a campaign on a set of nodes
+-----------------------------------
 
 The YAML config file is getting a little more complex. For instance create
 the following ``remote-campaign.yaml``::
@@ -138,14 +155,15 @@ the following ``remote-campaign.yaml``::
        test:
          type: sysbench
 
-You can add servers to the ``nodes`` section.
+You can add computer nodes to the ``nodes`` section.
 
 Launch the benchmark
 ~~~~~~~~~~~~~~~~~~~~
 
 Use the ``ben-nett`` utility to execute the campaign on every nodes.
-It uses SSH to submit jobs so you have to sure you can access those servers without passphrase. You can use the ``ssh_config_file`` key in YAML to specify a custom
-configuration (see) :doc:`campaign file reference <campaign>`)::
+It uses SSH to submit jobs so you have to make sure you can access those
+nodes without passphrase. For this you could use the ``ssh_config_file`` key in YAML to
+specify a custom configuration (see) :doc:`campaign file reference <campaign>`)::
 
    $ ben-nett remote-campaign.yaml
 
@@ -154,10 +172,11 @@ configuration (see) :doc:`campaign file reference <campaign>`)::
 How to create a new benchmark Python module?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is possible to augment the number of benchmarks utilities supported
-by HPCBench by writing Python code in a separate module.
+It is possible to create your own benchmark based on a tool that has not been so far supported
+by HPCBench. This is done by generating an external plugin scaffold using ``ben-tpl`` and
+implementing the benchmark execution and metrics parsing inside the generated classes.
 
-``ben-tpl`` is an utility which helps to create such modules.
+Here is the basic workflow:
 
 1. First create a default JSON file describing the Python module:
     ``ben-tpl benchmark -g config.json``
@@ -176,10 +195,10 @@ Prerequisites
 Docker
 ~~~~~~
 
-`Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ is required to execute unit-tests. The easiest way to proceed is
-to use Docker containers.
+`Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ is required to execute
+some of the unit-tests. The easiest way to accomplish this, is to use Docker containers.
 
-Quick'n dirty Docker installation::
+Quick'n'dirty Docker installation::
 
    $ curl -fsSL get.docker.com -o get-docker.sh
    $ sh get-docker.sh
@@ -191,7 +210,7 @@ Post-installation instructions to use Docker without root privileges (logout/log
    $ sudo groupadd docker
    $ sudo usermod -aG docker $USER
 
-Test your docker installation with
+Test your docker installation with::
 
     $ docker run --rm hello-world
 
@@ -205,7 +224,7 @@ Grab the source code::
   $ git clone https://github.com/tristan0x/hpcbench.git
   $ cd hpcbench
 
-It is then suggested to use a dedicated virtual environment. For that you can use
+We suggest you use a dedicated virtual environment. For that you can use
 either `virtualenv <https://virtualenv.pypa.io/en/stable/>`_ package or
 `pyenv <https://github.com/pyenv/pyenv>`_, which is even better.
 
@@ -214,7 +233,7 @@ With ``pyenv``::
   $ pyenv virtualenv hpcbench
   $ pyenv local hpcbench
 
-With ``virtualenv``::
+Alternatively, with ``virtualenv``::
 
    $ virtualenv .env
    $ . .env/bin/activate
@@ -224,8 +243,15 @@ Then::
   $ pip install tox
   $ tox -e py27
 
-``tox`` is configured to test HPCBench against different Python versions. Option
-``-e py27`` tells tox to only test against Python 2.7.
+``tox`` is configured to test HPCBench against different Python versions. To test against a
+specific python version you can supply it the ``-e`` parameter::
+
+  $ tox -e py27 --
+  $ tox -e py36 --
+
+The ``--tests`` parameter can be used to run only one specific unit test module or class::
+
+  $ tox  -e py36 -- --tests tests/test_driver.py
 
 Elasticsearch
 ~~~~~~~~~~~~~
@@ -262,13 +288,13 @@ Testing it all out
 ~~~~~~~~~~~~~~~~~~
 
 Unit-tests assume that Elasticsearch is running on localhost.
-You can define ``UT_ELASTICSEARCH_HOST`` environment variable to specify
+You can define the ``UT_ELASTICSEARCH_HOST`` environment variable to specify
 another location::
 
    $ ELASTICSEARCH_HOST=server01:9200 tox
 
-How to integrate a new benchmark utility in HPCBench repository?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+How to integrate a new benchmark utility in the HPCBench repository?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. First make sure you can properly build the project and tests pass successfully.
    It may be tempting to skip this part, but please don't.
@@ -279,17 +305,16 @@ How to integrate a new benchmark utility in HPCBench repository?
    ``hpcbench.MetricsExtractor`` classes.
 5. Register the new module in ``setup.py`` ``[hpcbench.benchmarks]`` entrypoint
    so that it can be found by HPCBench.
-6. Create a dedicate tests class in `tests/benchmark/` directory.
-   Purpose of this test is to make sure that:
-
+6. Create a dedicated unit test class in `tests/benchmark/` directory.
+   The purpose of this test is to make sure that:
    * your Benchmark class is properly defined, and usable by HPCBench.
    * your metric extractor is properly working, without having to launch the
      utility itself.
 7. To properly test your metrics extractors, some outputs of the benchmark utility
    will be added to the repository. For every category of your benchmark, create a
    file title ``tests/benchmark/<test_module_name>.<category>.stdout`` with the
-   benchmark utility output. These files will be automatically used.
-   Do not hesitate to take inspiration from ``tests/benchmark/test_sysbench.py``
+   benchmark utility's output. These files will be automatically used.
+   Do not hesitate to take inspiration from the ``tests/benchmark/test_sysbench.py``
    test module.
 
 8. Run the test-suites until it passes::
@@ -298,13 +323,13 @@ How to integrate a new benchmark utility in HPCBench repository?
 
 9. Submit a `pull-request <https://github.com/tristan0x/hpcbench>`_
 
-How to add a new plots to an existing benchmark?
+How to add a new plot to an existing benchmark?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. Install `hpcbench` on a server where the benchmark utility is installed.
 2. Execute a campaign on this server with ``ben-sh``.
 3. Retrieve the campaign data on your workstation.
-4. Setup development environment on your workstation.
+4. Setup the development environment on your workstation.
 5. Install the module in `editable` mode with the following command::
 
    $ pip install -e '.[PLOTTING]'
