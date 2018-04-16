@@ -130,7 +130,7 @@ class TestCampaign(unittest.TestCase):
         with self.assertRaises(Exception) as exc:
             default_campaign(config)
         self.assertTrue(str(exc.exception).startswith(
-            "Tag 'A' is based on more than one criteria: "
+            "Tag 'A' is based on more than one criterion: "
         ))
 
     def test_cyclic_tags(self):

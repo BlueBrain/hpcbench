@@ -229,7 +229,7 @@ class NetworkConfig(object):
     @classmethod
     def _expand_tag_pattern(cls, tag, pattern):
         if len(pattern) > 1:
-            msg = "Tag '{tag}' is based on more than one criteria: {types}"
+            msg = "Tag '{tag}' is based on more than one criterion: {types}"
             raise Exception(msg.format(tag=tag, types=', '.join(pattern)))
         for mode in list(pattern):
             if mode == 'match':

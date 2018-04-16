@@ -105,8 +105,9 @@ All methods are being used:
 * **match** expects a valid regular expression
 
 * **constraint** expects a string. This tag does not references node
-  names explicitely but instead delegates it to SLURM. Value of constraint tag
-  is given to the sbatch options thru the *--constraint* option.
+  names explicitely but instead delegates it to SLURM. The value of the
+  constraint tag is given to the sbatch options through the
+  *--constraint* option.
 
 ssh_config_file
 ~~~~~~~~~~~~~~~
