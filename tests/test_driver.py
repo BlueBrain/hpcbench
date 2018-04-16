@@ -208,7 +208,7 @@ class TestHostDriver(unittest.TestCase):
 
     @unittest.skipIf('TRAVIS_TAG' in os.environ,
                      'objcopy version does not support --dump-section yet')
-    def test_builinfo(self):
+    def test_buildinfo(self):
         node = 'node01'
         tag = '*'
         campaign_file = TestHostDriver.CAMPAIGN_FILE

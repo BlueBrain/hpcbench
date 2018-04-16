@@ -134,3 +134,16 @@ def dict_map_kv(obj, func):
         return [dict_map_kv(e, func) for e in obj]
     else:
         return func(obj)
+
+
+def byteify(data, ignore_dicts=False):
+    if isinstance(data, six.text_type):
+        if six.PY2:
+            return data.encode('utf-8')
+        else:
+            return data
+    elif isinstance(data, list):
+        return [byteify(el) for el in data]
+    elif not ignore_dicts and isinstance(data, dict):
+        return {byteify(k, ignore_dicts=True): byteify(v)
+                for k, v in data.items()}

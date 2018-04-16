@@ -91,7 +91,7 @@ class BuildInfoBench(Benchmark):
                 run_path=None,
             )
         )
-        TestExtractBuildinfo.make_test_dummy('bibench')
+        TestExtractBuildinfo.make_dummy('bibench')
         self.exe_matrix = [dict(
                 category='main',
                 command=[osp.join(os.getcwd(), 'bibench')],

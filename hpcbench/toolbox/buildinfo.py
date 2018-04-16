@@ -9,6 +9,7 @@ except ImportError:
 import logging
 import subprocess
 
+from hpcbench.toolbox.collections_ext import byteify
 from hpcbench.toolbox.contextlib_ext import (
     mkdtemp,
     pushd,
@@ -51,7 +52,7 @@ def extract_build_info(exe_path, elf_section=ELF_SECTION):
 
         with open(BUILDINFO_FILE) as build_info_f:
             try:
-                build_info = json.load(build_info_f)
+                build_info = json.load(build_info_f, object_hook=byteify)
             except JSONDcdError as jsde:
                 LOGGER.warning('benchmark executable build is not valid json:')
                 LOGGER.warning(jsde.msg)
