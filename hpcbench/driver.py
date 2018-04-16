@@ -548,9 +548,9 @@ class BenchmarkCategoryDriver(Enumerator):
         executable = execution['command'][0]
         try:
             exepath = find_executable(executable, required=True)
-        except NameError as ne:
-            LOGGER.info("Could not find executable to examine for build info")
-            LOGGER.info(str(ne))
+        except NameError:
+            LOGGER.info("Could not find exe %s to examine for build info",
+                        executable)
         else:
             if magic.from_file(exepath).startswith('ELF'):
                 if 'metas' not in execution or execution['metas'] is None:
