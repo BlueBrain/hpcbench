@@ -548,16 +548,16 @@ class BenchmarkCategoryDriver(Enumerator):
         executable = execution['command'][0]
         try:
             exepath = find_executable(executable, required=True)
+        except NameError as ne:
+            LOGGER.info("Could not find executable to examine for build info")
+            LOGGER.info(str(ne))
+        else:
             if magic.from_file(exepath).startswith('ELF'):
                 if 'metas' not in execution or execution['metas'] is None:
                     execution['metas'] = dict()
                 execution['metas']['build_info'] = extract_build_info(exepath)
             else:
-                LOGGER.info('{xp} is not pointing to an ELF executable'.format(
-                            xp=exepath))
-        except NameError as ne:
-            LOGGER.info("Could not find executable to examine for build info")
-            LOGGER.info(str(ne))
+                LOGGER.info('%s is not pointing to an ELF executable', exepath)
 
     def _execute(self, **kwargs):
         runs = dict()

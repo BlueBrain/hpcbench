@@ -47,7 +47,7 @@ def extract_build_info(exe_path, elf_section=ELF_SECTION):
                                                          ofile=BUILDINFO_FILE),
                                  exe_path])
         if errno:  # just return the empty dict
-            LOGGER.warning('objcopy failed with errno {:d}'.format(errno))
+            LOGGER.warning('objcopy failed with errno %s', errno)
             return build_info
 
         with open(BUILDINFO_FILE) as build_info_f:

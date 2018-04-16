@@ -47,8 +47,8 @@ setup(
         'mock==2.0.0',
         'numpy==1.13.3',
         'PyYAML>=3.12',
+        'python-magic==0.4.15',
         'six==1.11',
-        'python-magic==0.4.15'
     ],
     extras_require=dict(
         PLOTTING=[
