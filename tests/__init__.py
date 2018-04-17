@@ -1,5 +1,4 @@
 import inspect
-import os
 import os.path as osp
 import shutil
 import sys
@@ -91,11 +90,14 @@ class BuildInfoBench(Benchmark):
                 run_path=None,
             )
         )
-        TestExtractBuildinfo.make_dummy('bibench')
+        temp_dir = tempfile.mkdtemp(prefix='hpcbench-ut')
+        bibench = osp.join(temp_dir, 'bibench')
+        TestExtractBuildinfo.make_dummy(bibench)
         self.exe_matrix = [dict(
-                category='main',
-                command=[osp.join(os.getcwd(), 'bibench')],
-                metas=dict())]
+            category='main',
+            command=[bibench],
+            metas=dict()
+        )]
 
     @property
     def in_campaign_template(self):
