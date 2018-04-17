@@ -27,22 +27,22 @@ class TestKwargSQL(unittest.TestCase):
     }
 
     def test_sequence_get(self):
-        self.assertEquals(list(kwargsql.get(self.d, 'nestedl__any__foo')),
-                          [1, 2])
+        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__any__foo')),
+                         [1, 2])
         # nested elements that produce an error are discarded from the result.
-        self.assertEquals(list(kwargsql.get(self.d, 'nestedl__any__bar')),
-                          [3])
-        self.assertEquals(list(kwargsql.get(self.d, 'nestedl__any__unknown')),
-                          [])
+        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__any__bar')),
+                         [3])
+        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__any__unknown')),
+                         [])
         # It makes not difference to call `any` or `each` is `kwargsql.get`
         # because it matters when there is an operation to perform on the
         # result data.
-        self.assertEquals(list(kwargsql.get(self.d, 'nestedl__each__foo')),
-                          [1, 2])
-        self.assertEquals(list(kwargsql.get(self.d, 'nestedl__each__bar')),
-                          [3])
-        self.assertEquals(list(kwargsql.get(self.d, 'nestedl__any__unknown')),
-                          [])
+        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__each__foo')),
+                         [1, 2])
+        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__each__bar')),
+                         [3])
+        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__any__unknown')),
+                         [])
 
     def test_sequence_logical(self):
         # at least one element of `nestedl` has the `foo` attribute
