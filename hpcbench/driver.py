@@ -280,6 +280,7 @@ class SlurmDriver(Enumerator):
         super(SlurmDriver, self).__init__(parent)
         self.campaign.process.setdefault('sbatch_template',
                                          self.SBATCH_JINJA)
+        LOGGER.info("We are in SLURM/SBATCH mode")
 
     @cached_property
     def children(self):
@@ -374,7 +375,10 @@ class SbatchDriver(Enumerator):
         sbatch_command = [sbatch, '--parsable', self.sbatch_filename]
         sbatch_out = subprocess.check_output(sbatch_command,
                                              universal_newlines=True)
-        return int(sbatch_out.split(';')[0])
+        jobid = sbatch_out.split(';')[0]
+        LOGGER.info("Submitted SBATCH job %s for tag %s",
+                    jobid, self.tag)
+        return int(jobid)
 
 
 class HostDriver(Enumerator):
