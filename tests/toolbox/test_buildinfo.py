@@ -2,6 +2,7 @@ import json
 import os
 import os.path as osp
 import subprocess
+import tempfile
 import unittest
 
 from hpcbench.toolbox.buildinfo import extract_build_info
@@ -33,15 +34,17 @@ class TestExtractBuildinfo(unittest.TestCase):
 
     @classmethod
     def make_dummy(cls, dummy='dummy'):
-        with open('dummy.c', 'w') as dummyf:
-            dummyf.write(DUMMY_C)
+        fd, c_file = tempfile.mkstemp(suffix='.c')
+        os.write(fd, DUMMY_C.encode('utf-8'))
+        os.close(fd)
         subprocess.check_call(['gcc', '-O0',
-                               '-o', dummy, 'dummy.c'])
-        with open('dummy.buildinfo', 'w') as dummybif:
-            dummybif.write(DUMMY_BUILDINFO)
+                               '-o', dummy, c_file])
+        fd, buildinfo_file = tempfile.mkstemp(suffix='.buildinfo')
+        os.write(fd, DUMMY_BUILDINFO.encode('utf-8'))
+        os.close(fd)
         subprocess.check_call(['objcopy', '-I', 'elf64-x86-64',
                                '-O', 'elf64-x86-64',
-                               '--add-section', 'build_info=dummy.buildinfo',
+                               '--add-section', 'build_info=' + buildinfo_file,
                                dummy])
 
     @classmethod
