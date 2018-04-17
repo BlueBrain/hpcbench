@@ -29,7 +29,12 @@ import types
 import uuid
 
 from cached_property import cached_property
-import magic
+try:
+    import magic
+except ImportError:
+    _HAS_MAGIC = False
+else:
+    _HAS_MAGIC = True
 import six
 import yaml
 
@@ -588,8 +593,11 @@ class BenchmarkCategoryDriver(Enumerator):
     def _execute(self, **kwargs):
         runs = dict()
         for execution, run_dir in self.children:
-            if 'shell' not in execution:
+            if _HAS_MAGIC and 'shell' not in execution:
                 self._add_build_info(execution)
+            else:
+                LOGGER.info("No build information recorded "
+                            + "(libmagic available: %s)", _HAS_MAGIC)
             runs.setdefault(execution['category'], []).append(run_dir)
             with pushd(run_dir, mkdir=True):
                 attempt_cls = self.attempt_run_class(execution)
