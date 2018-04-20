@@ -183,7 +183,6 @@ class MiniGEMM(Benchmark):
     """
     name = 'minigemm'
     description = "DGEMM mini benchmark"
-    DEFAULT_CATEGORY = 'gcc'
     COMPILE_PARAMS = dict(
         defines=dict(
     ))
@@ -199,8 +198,15 @@ class MiniGEMM(Benchmark):
     def execution_matrix(self, context):
         del context  # unused
         yield dict(
-            category=self.DEFAULT_CATEGORY,
-            command=['./minigemm']
+            category=self.name,
+            command=['./minigemm'],
+            environment=dict(
+                MKL_DYNAMIC='false',
+                OMP_NESTED='true',
+                OMP_PROC_BIND='spread,close',
+                OMP_NUM_THREADS='1',
+                MKL_NUM_THREADS='4',
+            ),
         )
 
     def _compile(self, execution):
