@@ -63,7 +63,8 @@ class Metrics(object):  # pragma pylint: disable=too-few-public-methods
     GigaBytesPerSecond = Metric('GB/s', float)
     Cardinal = Metric('#', int)
     Byte = Metric('B', int)
-    Flops = Metric('flop/s', float)
+    Flops = Metric('Flop/s', float)
+    GFlops = Metric('GFlop/s', float)
     Bool = Metric('bool', bool)
     Ops = Metric('op/s', float)
 
