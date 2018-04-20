@@ -83,6 +83,7 @@ setup(
         ionvme = hpcbench.benchmark.ionvme
         iperf = hpcbench.benchmark.iperf
         mdtest = hpcbench.benchmark.mdtest
+        minigemm = hpcbench.benchmark.minigemm
         nvidia-bandwidthtest = hpcbench.benchmark.nvidia
         osu = hpcbench.benchmark.osu
         shoc = hpcbench.benchmark.shoc
