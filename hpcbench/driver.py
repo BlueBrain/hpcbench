@@ -384,7 +384,7 @@ class SbatchDriver(Enumerator):
         sbatch_command = [sbatch, '--parsable', self.sbatch_filename]
         sbatch_out = subprocess.check_output(sbatch_command,
                                              universal_newlines=True)
-        jobid = sbatch_out.split(';')[0]
+        jobid = sbatch_out.split(';')[0].strip()
         LOGGER.info("Submitted SBATCH job %s for tag %s",
                     jobid, self.tag)
         return int(jobid)
