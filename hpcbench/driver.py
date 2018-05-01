@@ -327,10 +327,14 @@ class SbatchDriver(Enumerator):
             tag_sbatch_opts = self.campaign.benchmarks[
                 self.tag].get('sbatch', dict())
             sbatch_options.update(tag_sbatch_opts)
-        if 'constraint' not in sbatch_options:
-            tag = self.root.network.nodes(self.tag)
-            if isinstance(tag, ConstraintTag):
-                sbatch_options['constraint'] = tag.constraint
+        sbatch_options = build_slurm_arguments(sbatch_options)
+        nodes =  self.root.network.nodes(self.tag)
+        if not isinstance(nodes, ConstraintTag):
+            pargs = parse_constraint_in_args(sbatch_options)
+            if not pargs.constraint:
+                # Expand nodelist if --constraint option is not specified
+                # in srun options
+                sbatch_options.append('--nodelist=' + ','.join(nodes))
         return sbatch_options
 
     @cached_property
@@ -372,8 +376,7 @@ class SbatchDriver(Enumerator):
         :param ostr: opened file to write to
         """
         properties = dict(
-            sbatch_arguments={k: six.moves.shlex_quote(str(v))
-                              for k, v in self.sbatch_args.items()},
+            sbatch_arguments=self.sbatch_args,
             hpcbench_command=self.hpcbench_cmd
         )
         self.sbatch_template.stream(**properties).dump(ostr)
