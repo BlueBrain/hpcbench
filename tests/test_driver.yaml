@@ -4,5 +4,7 @@ network:
     - localhost
 benchmarks:
   '*':
+    sbatch:
+      nodes: 2
     test01:
       type: fake

@@ -320,6 +320,10 @@ class SbatchDriver(Enumerator):
     @cached_property
     def sbatch_args(self):
         sbatch_options = self.campaign.process.get('sbatch', {})
+        if self.tag in self.campaign.benchmarks:
+            tag_sbatch_opts = self.campaign.benchmarks[
+                self.tag].get('sbatch', dict())
+            sbatch_options.update(tag_sbatch_opts)
         if 'constraint' not in sbatch_options:
             tag = self.root.network.nodes(self.tag)
             if isinstance(tag, ConstraintTag):
@@ -438,6 +442,10 @@ class BenchmarkTagDriver(Enumerator):
         ]
 
     def _precondition_is_met(self, name):
+        if name == 'sbatch':
+            # this is a special name that does not denote a benchmark
+            # but tag-specific sbatch parameters
+            return False
         config = self.campaign.precondition.get(name)
         if config is None:
             return True

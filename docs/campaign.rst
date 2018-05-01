@@ -184,6 +184,30 @@ on every tag.
       check_ram
         type: random_ram_rw
 
+Tag specific sbatch parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When running in :ref:`SLURM mode<process-type>` a special `sbatch` dictionary can be used.
+This dictionary will be used when generating the sbatch file specific to this tag, allowing
+parameters to be overwritten.
+
+.. code-block:: yaml
+  :emphasize-lines: 9-11
+
+  process:
+    type: slurm
+    sbatch:
+      time: 01:00:00
+      tasks-per-node: 1
+
+  benchmarks:
+    cpu:
+      sbatch:
+        hint: compute_bound
+        tasks-per-node: 16
+      test_cpu:
+        type: sysbench
+
 Benchmark configuration reference
 ---------------------------------
 
@@ -405,6 +429,9 @@ This section specifies conditions to filter benchmarks execution.
 Process configuration reference
 -------------------------------
 This section specifies how ``ben-sh`` execute the benchmark commands.
+
+
+.. _process-type:
 
 type (optional)
 ~~~~~~~~~~~~~~~

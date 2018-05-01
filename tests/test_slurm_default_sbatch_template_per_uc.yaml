@@ -33,7 +33,7 @@ benchmarks:
   uc1:
     sbatch:
         # this value must be used in sbatch script
-        account: uc1
+        account: 43
     test-slurm:
       type: fake
   uc2:
