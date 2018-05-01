@@ -1,6 +1,6 @@
 #!/bin/bash
-{%- for name, value in sbatch_arguments.items() %}
-#SBATCH --{{name}}={{value}}
+{%- for option in sbatch_arguments %}
+#SBATCH {{option}}
 {%- endfor %}
 
 {{hpcbench_command}}
