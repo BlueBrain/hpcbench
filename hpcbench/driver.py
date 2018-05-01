@@ -7,7 +7,6 @@ from abc import (
     abstractmethod,
     abstractproperty,
 )
-import argparse
 from collections import (
     Mapping,
     namedtuple,
@@ -57,7 +56,11 @@ from . toolbox.contextlib_ext import (
 )
 from . toolbox.edsl import kwargsql
 from . toolbox.functools_ext import listify
-from . toolbox.process import find_executable
+from .toolbox.process import (
+    build_slurm_arguments,
+    find_executable,
+    parse_constraint_in_args,
+)
 
 LOGGER = logging.getLogger('hpcbench')
 YAML_REPORT_FILE = 'hpcbench.yaml'
@@ -1029,35 +1032,16 @@ class SrunExecutionDriver(ExecutionDriver):
         """
         srun_options = copy.copy(self.common_srun_options)
         srun_options.update(self.parent.parent.parent.config.get('srun') or {})
-        srun_optlist = self._make_srun_arguments(srun_options)
-        command = super(SrunExecutionDriver, self).command
-        return [self.srun] + srun_optlist + command
-
-    def _make_srun_arguments(self, optdict):
-        args = []
-        for k, v in optdict.items():
-            if v is None:
-                continue
-            elif v is True:  # specifically check if it is true
-                args.append('--{}'.format(k))
-            else:
-                args.append('--{}={}'.format(k, six.moves.shlex_quote(str(v))))
+        srun_optlist = build_slurm_arguments(srun_options)
         if not isinstance(self.root.network.nodes(self.tag), ConstraintTag):
-            # Expand nodelist if the tag is not a "constraint" one.
-            pargs = self._parse_srun_options(args)
+            pargs = parse_constraint_in_args(srun_optlist)
+            self.command_expansion_vars['process_count'] = pargs.ntasks
             if not pargs.constraint:
                 # Expand nodelist if --constraint option is not specified
                 # in srun options
-                args.append('--nodelist=' + ','.join(self.srun_nodes))
-        return args
-
-    def _parse_srun_options(self, options):
-        parser = argparse.ArgumentParser()
-        parser.add_argument('-n', '--ntasks', default=1)
-        parser.add_argument('-C', '--constraint')
-        args = parser.parse_known_args(options)
-        self.command_expansion_vars['process_count'] = args[0].ntasks
-        return args[0]
+                srun_optlist.append('--nodelist=' + ','.join(self.srun_nodes))
+        command = super(SrunExecutionDriver, self).command
+        return [self.srun] + srun_optlist + command
 
     @cached_property
     def srun_nodes(self):
