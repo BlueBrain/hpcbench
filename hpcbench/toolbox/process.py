@@ -1,9 +1,12 @@
 """Helper functions for processes
 """
+import argparse
 import os
 import os.path as osp
 import platform
 import subprocess
+
+import six
 
 
 def find_in_paths(name, paths):
@@ -65,3 +68,23 @@ def physical_cpus():
             if line.startswith('physical id'):
                 sockets.add(line.split(':')[-1].strip())
     return len(sockets)
+
+
+def build_slurm_arguments(argdict):
+    args = []
+    for k, v in argdict.items():
+        if v is None:
+            continue
+        elif v is True:  # specifically check if it is true
+            args.append('--{}'.format(k))
+        else:
+            args.append('--{}={}'.format(k, six.moves.shlex_quote(str(v))))
+    return args
+
+
+def parse_constraint_in_args(options):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-n', '--ntasks', default=1)
+    parser.add_argument('-C', '--constraint')
+    args = parser.parse_known_args(options)
+    return args[0]
