@@ -155,7 +155,7 @@ class TestSbatchTemplate(unittest.TestCase):
         self._test_template(
             'test_slurm_default_sbatch_template_per_uc.yaml',
             'uc1',
-            42
+            43
         )
 
         # fallback on default template in YAML
@@ -163,4 +163,12 @@ class TestSbatchTemplate(unittest.TestCase):
             'test_slurm_default_sbatch_template_per_uc.yaml',
             'unknown-uc',
             'forced'
+        )
+
+    def test_per_tag_sbatch_args(self):
+        """Override sbatch arguments in a benchmark tag"""
+        self._test_template(
+            'test_slurm_per_tag_sbatch_args.yaml',
+            'uc1',
+            43
         )

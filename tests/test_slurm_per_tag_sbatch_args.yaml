@@ -1,0 +1,34 @@
+network:
+  nodes:
+    - n[1-4]
+  tags:
+    uc1:
+      nodes: [n1, n2]
+    uc2:
+      nodes: [n3, n4]
+
+
+process:
+  type: slurm
+  commands:
+    sbatch: sbatch-ut
+    srun: srun-ut
+  sbatch:
+    account: 42
+  sbatch_template: |
+    #!/bin/bash
+    {%- for var, val in sbatch_arguments.items() %}
+    #SBATCH --{{var}}={{val}}
+    {%- endfor %}
+    module load nix/spack
+    spack load nix
+    {{ hpcbench_command }}
+
+benchmarks:
+  uc1:
+    sbatch:
+        account: 43
+    test-slurm:
+      srun:
+        tasks-per-node: 2
+      type: fake

@@ -320,8 +320,9 @@ def get_benchmark_types(campaign):
     :rtype: string generator
     """
     for benchmarks in campaign.benchmarks.values():
-        for benchmark in benchmarks.values():
-            yield benchmark.type
+        for name, benchmark in benchmarks.items():
+            if name != 'sbatch':  # exclude special sbatch name
+                yield benchmark.type
 
 
 def get_metrics(campaign):
