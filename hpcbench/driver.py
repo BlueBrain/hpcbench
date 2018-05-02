@@ -322,13 +322,15 @@ class SbatchDriver(Enumerator):
 
     @cached_property
     def sbatch_args(self):
+        nodes = self.root.network.nodes(self.tag)
         sbatch_options = self.campaign.process.get('sbatch', {})
+        if isinstance(nodes, ConstraintTag):
+            sbatch_options['constraint'] = nodes.constraint
         if self.tag in self.campaign.benchmarks:
             tag_sbatch_opts = self.campaign.benchmarks[
                 self.tag].get('sbatch', dict())
             sbatch_options.update(tag_sbatch_opts)
         sbatch_options = build_slurm_arguments(sbatch_options)
-        nodes =  self.root.network.nodes(self.tag)
         if not isinstance(nodes, ConstraintTag):
             pargs = parse_constraint_in_args(sbatch_options)
             if not pargs.constraint:
