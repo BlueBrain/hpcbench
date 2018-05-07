@@ -336,8 +336,18 @@ class SbatchDriver(Enumerator):
             if not pargs.constraint:
                 # Expand nodelist if --constraint option is not specified
                 # in srun options
-                sbatch_options.append('--nodelist=' + ','.join(nodes))
+                count = pargs.nodes or len(nodes)
+                sbatch_options.append(
+                    '--nodelist=' + ','.join(self._filter_nodes(nodes, count)))
         return sbatch_options
+
+    def _filter_nodes(self, nodes, count):
+        assert count <= len(nodes)
+        if count < len(nodes):
+            LOGGER.warning("Asking to run SBATCH job with "
+                           + "%d of %d declared nodes in tag",
+                           count, len(nodes))
+        return nodes[:count]
 
     @cached_property
     def children(self):
