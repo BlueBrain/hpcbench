@@ -84,7 +84,7 @@ def build_slurm_arguments(argdict):
 
 def parse_constraint_in_args(options):
     parser = argparse.ArgumentParser()
-    parser.add_argument('-N', '--nodes')
+    parser.add_argument('-N', '--nodes', type=int)
     parser.add_argument('-n', '--ntasks', default=1)
     parser.add_argument('-C', '--constraint')
     args = parser.parse_known_args(options)
