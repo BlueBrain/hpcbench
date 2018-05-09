@@ -1062,7 +1062,7 @@ class SrunExecutionDriver(ExecutionDriver):
     def srun_nodes(self):
         """Get list of nodes where to execute the command
         """
-        count = self.execution.get('srun_nodes', 1)
+        count = self.execution.get('srun_nodes', 0)
         if isinstance(count, six.string_types):
             tag = count
             count = 0
