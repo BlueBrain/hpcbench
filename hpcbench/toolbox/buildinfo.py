@@ -41,13 +41,19 @@ def extract_build_info(exe_path, elf_section=ELF_SECTION):
     """
     build_info = {}
     with mkdtemp() as tempd, pushd(tempd):
-        errno = subprocess.call([OBJCOPY,
+        proc = subprocess.Popen([OBJCOPY,
                                  DUMP_SECTION,
                                  "{secn}={ofile}".format(secn=elf_section,
                                                          ofile=BUILDINFO_FILE),
-                                 exe_path])
-        if errno:  # just return the empty dict
-            LOGGER.warning('objcopy failed with errno %s', errno)
+                                 exe_path], stderr=subprocess.PIPE)
+        proc.wait()
+        errno = proc.returncode
+        stderr = proc.stderr.read()
+        if errno or len(stderr):  # just return the empty dict
+            LOGGER.warning('objcopy failed with errno %s.', errno)
+            if len(stderr):
+                LOGGER.warning('objcopy failed with following msg:\n%s',
+                               stderr)
             return build_info
 
         with open(BUILDINFO_FILE) as build_info_f:
