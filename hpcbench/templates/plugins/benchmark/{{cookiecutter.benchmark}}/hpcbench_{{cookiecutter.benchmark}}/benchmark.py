@@ -16,9 +16,9 @@ class {{ cookiecutter.benchmark | capitalize }}Extractor(MetricsExtractor):
             computation_time=Metric.Second
         )
 
-    def extract_metrics(self, outdir, metas):
+    def extract_metrics(self, metas):
         LINE_PATTERN = 'computation time: '
-        with open(self.stdout(outdir)) as istr:
+        with open(self.stdout) as istr:
             for line in istr:
                 line = line.rstrip()
                 if LINE_PATTERN in line:

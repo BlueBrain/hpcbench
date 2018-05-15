@@ -62,10 +62,10 @@ class StreamExtractor(MetricsExtractor):
         """
         return StreamExtractor.METRICS
 
-    def extract_metrics(self, outdir, metas):
+    def extract_metrics(self, metas):
         metrics = {}
         # parse stdout and extract desired metrics
-        with open(self.stdout(outdir)) as istr:
+        with open(self.stdout) as istr:
             for line in istr:
                 if line.strip() in self.STDOUT_IGNORE_PRIOR:
                     break
@@ -134,41 +134,3 @@ class Stream(Benchmark):
     @cached_property
     def metrics_extractors(self):
         return StreamExtractor()
-
-    @property
-    def plots(self):
-        return {
-            Stream.name: [
-                dict(
-                    name="{hostname} {category} timing",
-                    series=dict(
-                        metas=['thread'],
-                        metrics=[
-                            'copy_min_time', 'copy_avg_time',
-                            'copy_max_time', 'scale_min_time',
-                            'scale_avg_time', 'scale_max_time',
-                            'add_min_time', 'add_avg_time',
-                            'add_max_time', 'triad_min_time',
-                            'triad_avg_time', 'triad_max_time',
-                        ],
-
-                    ),
-                    plotter=Stream.plot_timing
-                ),
-            ]
-        }
-
-    @classmethod
-    def plot_timing(cls, plt, description, metas, metrics):
-        """Generate timings plot
-        """
-        del description  # unused
-        plt.plot(metas['threads'], metrics['copy_min_time'],
-                 'bs-', label='minimum')
-        plt.plot(metas['threads'], metrics['copy_avg_time'],
-                 'g^', label='average')
-        plt.plot(metas['threads'], metrics['copy_max_time'],
-                 'g^', label='maximum')
-        plt.legend(loc='upper right', frameon=False)
-        plt.xlabel('thread')
-        plt.ylabel("t (sec)")

@@ -44,8 +44,8 @@ class MDTestExtractor(MetricsExtractor):
                         yield kind + '_' + prefix + '_' + suffix, Metrics.Ops
         return dict(_pairs())
 
-    def extract_metrics(self, outdir, metas):
-        with open(self.stdout(outdir)) as istr:
+    def extract_metrics(self, metas):
+        with open(self.stdout) as istr:
             MDTestExtractor._seek_results(istr)
             return MDTestExtractor._extract_results(istr)
 

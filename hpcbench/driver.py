@@ -14,10 +14,12 @@ from collections import (
 import copy
 import datetime
 from functools import wraps
+import glob
 import json
 import logging
 import os
 import os.path as osp
+import re
 import shlex
 import shutil
 import socket
@@ -44,7 +46,6 @@ from . api import (
     Metric,
 )
 from . campaign import from_file
-from . plot import Plotter
 from . toolbox.buildinfo import extract_build_info
 from . toolbox.collections_ext import (
     dict_merge,
@@ -536,13 +537,6 @@ class BenchmarkCategoryDriver(Enumerator):
         self.benchmark = self.parent.benchmark
 
     @cached_property
-    def plot_files(self):
-        """Get path to the benchmark category plots files
-        """
-        for plot in self.benchmark.plots[self.category]:
-            yield osp.join(os.getcwd(), Plotter.get_filename(plot))
-
-    @cached_property
     def commands(self):
         """Get all commands of the benchmark category
 
@@ -587,9 +581,6 @@ class BenchmarkCategoryDriver(Enumerator):
         if "no_exec" not in kwargs:
             for run_dir in self._execute(**kwargs):
                 yield run_dir
-        elif 'plot' in kwargs:
-            for plot in self.benchmark.plots.get(self.category):
-                self._generate_plot(plot, self.category)
         else:
             self._extract_metrics(**kwargs)
 
@@ -662,16 +653,6 @@ class BenchmarkCategoryDriver(Enumerator):
         with open(JSON_METRICS_FILE) as istr:
             return yaml.safe_load(istr)
 
-    def _generate_plot(self, desc, category):
-        with open(JSON_METRICS_FILE) as istr:
-            metrics = json.load(istr)
-        plotter = Plotter(
-            metrics,
-            category=category,
-            hostname=self.node
-        )
-        plotter(desc)
-
 
 class MetricsDriver(object):
     """Abstract representation of metrics already
@@ -696,13 +677,47 @@ class MetricsDriver(object):
             extractors = all_extractors
         if not isinstance(extractors, list):
             extractors = [extractors]
-        metrics = self.report.setdefault('metrics', {})
-        for extractor in extractors:
-            run_metrics = extractor.extract(os.getcwd(),
-                                            self.report.get('metas'))
-            MetricsDriver._check_metrics(extractor.metrics, run_metrics)
-            metrics.update(run_metrics)
+        all_metrics = self.report.setdefault('metrics', [])
+        for log in self.logs:
+            metrics = {}
+            for extractor in extractors:
+                with extractor.context(log.path, log.log_prefix):
+                    run_metrics = extractor.extract(self.report.get('metas'))
+                    MetricsDriver._check_metrics(extractor.metrics,
+                                                 run_metrics)
+                    metrics.update(run_metrics)
+            rc = dict(context=log.context, measurement=metrics)
+            all_metrics.append(rc)
         return self.report
+
+    @property
+    def logs(self):
+
+        class LocalLog(namedtuple('LocalLog', ['path', 'log_prefix'])):
+            @property
+            def context(self):
+                return dict(executor='local')
+
+        class SrunLog(namedtuple('SrunLog',
+                                 ['path', 'log_prefix', 'node', 'rank'])):
+            @property
+            def context(self):
+                return dict(executor='slurm', node=self.node, rank=self.rank)
+
+        if self.report['executor'] == 'local':
+            yield LocalLog(path=os.getcwd(), log_prefix='')
+        else:
+            STDOUT_RE_PATTERN = r'slurm-(\w+)-(\w+)\.stdout'
+            STDOUT_RE = re.compile(STDOUT_RE_PATTERN)
+            for file in glob.glob('slurm-*-*.stdout'):
+                match = STDOUT_RE.match(file)
+                if match:
+                    node, rank = match.groups()
+                    yield SrunLog(path=os.getcwd(), log_prefix=file[:-6],
+                                  node=node, rank=rank)
+                else:
+                    logging.warn('"%s" does not match regular expression "%s"',
+                                 file, STDOUT_RE_PATTERN)
 
     @classmethod
     def _check_metrics(cls, schema, metrics):
@@ -872,7 +887,8 @@ class DynamicAttempts(FixedAttempts):
 
     def _metric_converged(self, data_n1, data_n):
         def get_metric(report):
-            return report['metrics'][self.metric]
+            # Only use first command result
+            return report['metrics'][0]['measurement'][self.metric]
         value_n1 = get_metric(data_n1)
         value_n = get_metric(data_n)
         if self.epsilon is not None:
@@ -983,8 +999,8 @@ class ExecutionDriver(Leaf):
 
     @write_yaml_report
     def __call__(self, **kwargs):
-        with open('stdout.txt', 'w') as stdout, \
-                open('stderr.txt', 'w') as stderr:
+        with open('stdout', 'w') as stdout, \
+                open('stderr', 'w') as stderr:
             cwd = self.execution.get('cwd')
             if cwd is not None:
                 ctx = self.parent.parent.parent.exec_context
@@ -1001,15 +1017,10 @@ class ExecutionDriver(Leaf):
         report = dict(
             exit_status=exit_status,
             benchmark=self.benchmark.name,
+            executor=type(self).name,
         )
         report.update(self.execution)
         report.update(command=self.command)
-        benchmark_config = self.parent.parent.parent.config
-        metrics = benchmark_config.get('metrics', {})
-        if not isinstance(metrics, Mapping):
-            raise Exception('"metrics" benchmark option must be a dict')
-        if metrics:
-            report.update(metrics=dict(**metrics))
         return report
 
 
@@ -1033,7 +1044,12 @@ class SrunExecutionDriver(ExecutionDriver):
 
         :rtype: list of string
         """
-        return self.campaign.process.get('srun') or {}
+        default = self.campaign.process.get('srun') or {}
+        default.update(
+            output='slurm-%N-%t.stdout',
+            error='slurm-%N-%t.error',
+        )
+        return default
 
     @cached_property
     def tag(self):

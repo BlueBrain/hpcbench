@@ -4,6 +4,7 @@
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 from collections import namedtuple
+import contextlib
 import os.path as osp
 
 from six import with_metaclass
@@ -82,14 +83,24 @@ class MetricsExtractor(with_metaclass(ABCMeta, object)):
         """
         raise NotImplementedError  # pragma: no cover
 
+    @contextlib.contextmanager
+    def context(self, outdir, log_prefix):
+        try:
+            self._outdir = outdir
+            self._log_prefix = log_prefix
+            yield
+        finally:
+            self._log_prefix = None
+            self._outdir = None
+
     @abstractmethod
-    def extract_metrics(self, outdir, metas):
+    def extract_metrics(self, metas):
         """Extract metrics from benchmark output
 
         :return: ``dict of metric_name: metric_value``
 
         ``metric_value`` type should be the one specified in
-        the ``metrics`` member funtion.
+        the ``metrics`` member function.
         """
         raise NotImplementedError  # pragma: no cover
 
@@ -100,8 +111,8 @@ class MetricsExtractor(with_metaclass(ABCMeta, object)):
         """
         return True
 
-    def extract(self, outdir, metas):
-        metrics = self.extract_metrics(outdir, metas)
+    def extract(self, metas):
+        metrics = self.extract_metrics(metas)
         if self.check_metrics:
             self._check_metrics(metrics)
         return metrics
@@ -111,27 +122,25 @@ class MetricsExtractor(with_metaclass(ABCMeta, object)):
         if any(unset_metrics):
             raise UnexpectedMetricsException(unset_metrics, metrics)
 
-    @classmethod
-    def stdout(cls, outdir):
+    @property
+    def stdout(self):
         """Get path to the file containing stdout written
         by benchmark command
 
-        :param outdir: absolute path to the benchmark output directory
         :return: path to standard output file
         :rtype: string
         """
-        return osp.join(outdir, 'stdout.txt')
+        return osp.join(self._outdir, self._log_prefix + 'stdout')
 
-    @classmethod
-    def stderr(cls, outdir):
+    @property
+    def stderr(self):
         """Get path to the file containing stderr written
         by benchmark command
 
-        :param outdir: absolute path to the benchmark output directory
         :return: path to error output file
         :rtype: string
         """
-        return osp.join(outdir, 'stderr.txt')
+        return osp.join(self._outdir, self._log_prefix + 'stderr')
 
 
 class Benchmark(with_metaclass(ABCMeta, object)):
@@ -290,33 +299,6 @@ class Benchmark(with_metaclass(ABCMeta, object)):
 
         """
         raise NotImplementedError  # pragma: no cover
-
-    @property
-    def plots(self):
-        """Describe figures to generate
-
-        :return: figure descriptions of every category
-        :rtype: ``dict of string -> list of dict``
-
-        Every dictionary is a figure's description, containing
-        the following keys:
-
-        * *name*: string providing figure's name
-
-        * *series*: dictionary describing data required to draw the figure,
-          made of 2 keys:
-
-            * *metas*: string list of metas to retrieve.
-              Data series are sorted by metas by default.
-              If meta's name starts with '-',
-              then series are sorted in descending order.
-
-            * *metrics*: list of metrics to use.
-
-        * *plotter*:
-            callable object that will be given metrics to plot
-        """
-        return {}
 
     @classmethod
     def get_subclass(cls, name):

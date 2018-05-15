@@ -44,10 +44,10 @@ class IONVMEExtractor(MetricsExtractor):
     def prelude(self):
         self.s_bandwidth.clear()
 
-    def extract_metrics(self, outdir, metas):
+    def extract_metrics(self, metas):
         # parse stdout and extract desired metrics
         self.prelude()
-        with open(self.stderr(outdir)) as istr:
+        with open(self.stderr) as istr:
             for line in istr:
                 if line.strip() == self.STDOUT_IGNORE_PRIOR:
                     break

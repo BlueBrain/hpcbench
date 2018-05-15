@@ -33,10 +33,10 @@ class BasicExtractor(MetricsExtractor):
         """
         return self._metrics
 
-    def extract_metrics(self, outdir, metas):
+    def extract_metrics(self, metas):
         metrics = {}
         # parse stdout and extract desired metrics
-        with open(self.stdout(outdir)) as istr:
+        with open(self.stdout) as istr:
             for line in istr:
                 list_word = line.split()
                 key = list_word[0]

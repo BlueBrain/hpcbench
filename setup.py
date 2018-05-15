@@ -50,11 +50,6 @@ setup(
         'python-magic==0.4.15',
         'six==1.11',
     ],
-    extras_require=dict(
-        PLOTTING=[
-            'matplotlib==2.0.2',
-        ],
-    ),
     include_package_data=True,
     package_data={
         'hpcbench': [
@@ -73,7 +68,6 @@ setup(
         ben-elastic = hpcbench.cli.benelastic:main
         ben-merge = hpcbench.cli.benmerge:main
         ben-nett = hpcbench.cli.bennett:main
-        ben-plot = hpcbench.cli.benplot:main [PLOTTING]
         ben-sh = hpcbench.cli.bensh:main
         ben-tpl = hpcbench.cli.bentpl:main
         ben-umb = hpcbench.cli.benumb:main

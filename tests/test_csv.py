@@ -17,6 +17,7 @@ from . import FakeBenchmark
 class TestCSV(unittest.TestCase):
 
     OUTFILE = 'output.csv'
+    PERFORMANCE_METRIC = 'metrics.0.measurement.performance'
 
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp(prefix='hpcbench-ut')
@@ -32,7 +33,7 @@ class TestCSV(unittest.TestCase):
                 csv_exporter.export()
                 with open(self.OUTFILE, 'r') as f:
                     table = [row for row in csv.DictReader(f)]
-                    metric_perf = {float(p['metrics.performance'])
+                    metric_perf = {float(p[self.PERFORMANCE_METRIC])
                                    for p in table}
                     self.assertEqual(metric_perf, set(FakeBenchmark.INPUTS))
 
@@ -42,7 +43,8 @@ class TestCSV(unittest.TestCase):
             bencsv.main(['--output', self.OUTFILE, bench.campaign_path])
             with open(osp.join(bench.campaign_path, self.OUTFILE), 'r') as f:
                 table = [row for row in csv.DictReader(f)]
-                metric_perf = {float(p['metrics.performance']) for p in table}
+                metric_perf = {float(p[self.PERFORMANCE_METRIC])
+                               for p in table}
                 self.assertEqual(metric_perf, set(FakeBenchmark.INPUTS))
 
     @classmethod

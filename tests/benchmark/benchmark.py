@@ -87,7 +87,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
         for file_ in os.listdir(test_dir):
             if file_.startswith(prefix):
                 src_file = osp.join(test_dir, file_)
-                dest = file_[len(prefix):] + '.txt'
+                dest = file_[len(prefix):]
                 if osp.isfile(src_file):
                     self.logger.info('using file: %s', src_file)
                     shutil.copy(src_file, dest)
@@ -146,11 +146,12 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
                     with open(YAML_REPORT_FILE, 'w') as ostr:
                         yaml.dump(dict(
                             category=category,
-                            metas=metas
+                            metas=metas,
+                            executor='local',
                         ), ostr)
                     md = MetricsDriver('test-category', benchmark)
                     report = md()
-                    parsed_metrics = report.get('metrics', {})
+                    parsed_metrics = report['metrics'][0]['measurement']
                     self.assertEqual(parsed_metrics, next(expected_metrics))
 
     def test_has_description(self):

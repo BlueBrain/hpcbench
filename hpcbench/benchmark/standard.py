@@ -5,7 +5,6 @@ from collections import Mapping
 import copy
 from functools import reduce
 import itertools
-import os.path as osp
 import re
 
 from cached_property import cached_property
@@ -313,22 +312,20 @@ class StdExtractor(MetricsExtractor):
         eax = {}
         for name, config in six.iteritems(self._metrics):
             from_ = self._get_property(config, 'from',
-                                       default=StdBenchmark.DEFAULT_FROM)
+                                       default=self.stdout)
             eax.setdefault(from_, {})[name] = config
         return eax
 
     @listify(wrapper=dict)
-    def extract_metrics(self, outdir, metas):
+    def extract_metrics(self, metas):
         return itertools.chain.from_iterable(
-            six.iteritems(self._metrics_from_file(outdir, from_,
+            six.iteritems(self._metrics_from_file(from_,
                                                   metrics, metas))
             for from_, metrics in six.iteritems(self.froms)
         )
 
-    def _metrics_from_file(self, outdir, file, metrics, metas):
-        if file in {'stdout', 'stderr'}:
-            file += '.txt'
-        with open(osp.join(outdir, file)) as istr:
+    def _metrics_from_file(self, file, metrics, metas):
+        with open(file) as istr:
             return self._metrics_from_stream(istr, metrics, metas)
 
     def _metrics_from_stream(self, istr, metrics, metas):

@@ -102,6 +102,10 @@ def flatten_dict(dic, parent_key='', sep='.'):
         new_key = parent_key + sep + key if parent_key else key
         if isinstance(value, collections.MutableMapping):
             items.extend(flatten_dict(value, new_key, sep=sep).items())
+        elif isinstance(value, list):
+            for idx, elt in enumerate(value):
+                items.extend(flatten_dict(elt, new_key + sep + str(idx),
+                                          sep=sep).items())
         else:
             items.append((new_key, value))
     return dict(items)

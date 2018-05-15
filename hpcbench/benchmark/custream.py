@@ -61,10 +61,10 @@ class CUDAStreamExtractor(MetricsExtractor):
         """
         return CUDAStreamExtractor.METRICS
 
-    def extract_metrics(self, outdir, metas):
+    def extract_metrics(self, metas):
         metrics = {}
         # parse stdout and extract desired metrics
-        with open(self.stdout(outdir)) as istr:
+        with open(self.stdout) as istr:
             for line in istr:
                 if line.strip() in self.STDOUT_IGNORE_PRIOR:
                     break
@@ -130,49 +130,3 @@ class CUDAStream(Benchmark):
     @cached_property
     def metrics_extractors(self):
         return CUDAStreamExtractor()
-
-    @property
-    def plots(self):
-        return {
-            CUDAStream.name: [
-                dict(
-                    name="{hostname} {category} bandwidth",
-                    series=dict(
-                        metas=['blocksizes'],
-                        metrics=[
-                            'copy_bandwidth',
-                            'scale_bandwidth',
-                            'add_bandwidth',
-                            'triad_bandwidth',
-                            # 'copy_min_time', 'copy_avg_time',
-                            # 'copy_max_time', 'scale_min_time',
-                            # 'scale_avg_time', 'scale_max_time',
-                            # 'add_min_time', 'add_avg_time',
-                            # 'add_max_time', 'triad_min_time',
-                            # 'triad_avg_time', 'triad_max_time',
-                        ],
-
-                    ),
-                    plotter=CUDAStream.plot_bandwidth
-                ),
-            ]
-        }
-
-    @classmethod
-    def plot_bandwidth(cls, plt, description, metas, metrics):
-        """Generate timings plot
-        """
-        del description  # unused
-        xpos = range(len(metas['blocksizes']))
-        plt.bar([x - 0.3 for x in xpos], metrics['copy_bandwidth'], width=0.2,
-                label='copy')
-        plt.bar([x - 0.1 for x in xpos], metrics['scale_bandwidth'],
-                width=0.2, label='scale')
-        plt.bar([x + 0.1 for x in xpos], metrics['add_bandwidth'], width=0.2,
-                label='add')
-        plt.bar([x + 0.3 for x in xpos], metrics['triad_bandwidth'], width=0.2,
-                label='triad')
-        plt.legend(loc='upper right', frameon=False)
-        plt.xticks(xpos, [str(t) for t in metas['blocksizes']])
-        plt.xlabel('threads / block')
-        plt.ylabel("time (s)")

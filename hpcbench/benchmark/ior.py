@@ -109,10 +109,10 @@ class Extractor(MetricsExtractor):
                 metrics[name] = desc['metric']
         return metrics
 
-    def extract_metrics(self, outdir, metas):
+    def extract_metrics(self, metas):
         columns = None
         metrics = {}
-        with open(self.stdout(outdir)) as istr:
+        with open(self.stdout) as istr:
             Extractor._skip_output_header(istr)
             for line in istr:
                 line = line.strip()

@@ -24,7 +24,7 @@ class TestSrun(DriverTestCase, unittest.TestCase):
                 #!/bin/bash -e
                 # skip options
                 while [[ "$1" == -* ]] ; do shift ; done
-                exec $@
+                exec $@ >slurm-localhost-1.stdout 2>slurm-localhost-1.stderr
                 """))
         st = os.stat(srun_ut)
         os.chmod(srun_ut, st.st_mode | stat.S_IEXEC)
@@ -35,7 +35,7 @@ class TestSrun(DriverTestCase, unittest.TestCase):
                 # output a job id
                 while [[ "$1" == -* ]] ; do shift ; done
                 export SLURMD_NODENAME={node}
-                source $@ > slurm-12345.out 2>&1
+                source $@ >slurm-localhost-1.stdout 2>slurm-localhost-1.stderr
                 echo "12345"
                 """.format(node=cls.SLURM_ALLOC_NODE)))
         st = os.stat(sbatch_ut)
@@ -58,7 +58,7 @@ class TestSrun(DriverTestCase, unittest.TestCase):
                         "Not file: " + aggregated_metrics_f)
         with open(aggregated_metrics_f) as istr:
             data = json.load(istr)
-        self.assertEqual(data[0]['metrics']['performance'], 42.0)
+        self.assertEqual(self._srun_metrics(data)['performance'], 42.0)
 
     def test_srun_dependent(self):
         yaml_file = 'test_srun_dependent.yaml'
@@ -82,7 +82,11 @@ class TestSrun(DriverTestCase, unittest.TestCase):
                         "Not file: " + aggregated_metrics_f)
         with open(aggregated_metrics_f) as istr:
             data = json.load(istr)
-        self.assertEqual(data[0]['metrics']['performance'], 42.0)
+        self.assertEqual(self._srun_metrics(data)['performance'], 42.0)
+
+    @staticmethod
+    def _srun_metrics(report):
+        return report[0]['metrics'][0]['measurement']
 
     @classmethod
     def tearDownClass(cls):
