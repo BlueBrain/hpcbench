@@ -33,7 +33,7 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
                 # output a job id
                 while [[ "$1" == -* ]] ; do shift ; done
                 export SLURMD_NODENAME={node}
-                source $@
+                source $@ > slurm-12345.out 2>&1
                 echo "12345"
                 """.format(node=cls.SLURM_ALLOC_NODE)))
         st = os.stat(sbatch_ut)
