@@ -30,9 +30,9 @@ class IPERFExtractor(MetricsExtractor):
             retransmits=Metrics.Cardinal,
         )
 
-    def extract_metrics(self, outdir, metas):
+    def extract_metrics(self, metas):
         bits_in_mb = float(8 * 1024 * 1024)
-        with open(self.stdout(outdir)) as istr:
+        with open(self.stdout) as istr:
             data = json.load(istr)
         if not data['intervals']:
             raise Exception('Missing "intervals" in JSON: ')

@@ -378,23 +378,6 @@ cwd (optional)
 ~~~~~~~~~~~~~~
 Specifies a custom working directory.
 
-metrics (optional)
-~~~~~~~~~~~~~~~~~~
-Additional metrics to put in the benchmark report, which will be exported along the
-measured values. This is useful to provide information about the benchmark parameters or build.
-
-.. code-block:: yaml
-  :emphasize-lines: 5-6
-
-  benchmarks:
-    '*':
-      test_cpu:
-        type: sysbench
-        metrics:
-          family: kaby_lake
-          l1_cache: 32
-          l2_cache: 256
-
 Precondition configuration reference
 ------------------------------------
 This section specifies conditions to filter benchmarks execution.

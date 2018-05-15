@@ -19,7 +19,7 @@ class CwdTest(DriverTestCase, unittest.TestCase):
         with open(aggregated_metrics_f) as istr:
             resp = json.load(istr)
             run0 = resp[0]
-            metrics = run0['metrics']
+            metrics = run0['metrics'][0]['measurement']
             self.assertEqual(
                 metrics['path'],
                 '/tmp/hpcbench-ut/test_cwd/{node}/{tag}'.format(

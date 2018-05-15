@@ -50,10 +50,10 @@ class IMBExtractor(MetricsExtractor):
         """get metrics names"""
         return set(self.metrics)
 
-    def extract_metrics(self, outdir, metas):
+    def extract_metrics(self, metas):
         # parse stdout and extract desired metrics
         self.prelude()
-        with open(self.stdout(outdir)) as istr:
+        with open(self.stdout) as istr:
             for line in istr:
                 if line.strip() == self.stdout_ignore_prior:
                     break

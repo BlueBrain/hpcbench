@@ -76,10 +76,10 @@ class HPLExtractor(MetricsExtractor):
         """
         return HPLExtractor.METRICS
 
-    def extract_metrics(self, outdir, metas):
+    def extract_metrics(self, metas):
         metrics = {}
         # parse stdout and extract desired metrics
-        with open(self.stdout(outdir)) as istr:
+        with open(self.stdout) as istr:
             for line in istr:
                 if line.strip() == HPLExtractor.STDOUT_IGNORE_PRIOR:
                     break

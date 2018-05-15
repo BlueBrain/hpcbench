@@ -18,7 +18,6 @@ HPCBench is a Python package that allows you to specify and execute benchmarks. 
    * Merging metrics from different campaigns
    * Exporting metrics in CSV format
    * Exporting data to Elasticsearch
-   * Plotting with matplotlib
    * PDF report generation
 
 HPCBench assumes that the various benchmark tools/binaries are managed elsewhere and does
@@ -64,7 +63,6 @@ line utilities:
 * ben-elastic: Push campaign data to Elasticsearch
 * ben-nett: Execute a tests campaign on a cluster
 * ben-merge: Merge campaign output directories
-* ben-plot: Draw figures of an existing campaign
 * ben-tpl: Generate HPCBench plugin scaffolds,
   see :ref:`usage <ben-tpl-usage>` for more information on plugin generation.
 
@@ -131,15 +129,6 @@ stdout's can be found further down the directory tree.
 
 **Note**: Do not manually edit files inside the output directory. HPCBench offers a number of
 utilities to export and post-process the collected results.
-
-Build the plots
-~~~~~~~~~~~~~~~
-
-You can use the ``ben-plot`` utility to generate figures from a campaign's data::
-
-   $ ben-plot <path_to_created_directory>
-
-A PNG will be generated in the given directory.
 
 Launch a campaign on a set of nodes
 -----------------------------------
@@ -322,24 +311,6 @@ How to integrate a new benchmark utility in the HPCBench repository?
    $ tox
 
 9. Submit a `pull-request <https://github.com/tristan0x/hpcbench>`_
-
-How to add a new plot to an existing benchmark?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-1. Install `hpcbench` on a server where the benchmark utility is installed.
-2. Execute a campaign on this server with ``ben-sh``.
-3. Retrieve the campaign data on your workstation.
-4. Setup the development environment on your workstation.
-5. Install the module in `editable` mode with the following command::
-
-   $ pip install -e '.[PLOTTING]'
-
-6. Now you can test your plotting methods with the following command::
-
-   $ .env/bin/ben-plot PATH_TO_CAMPAIGN
-
-   The command uses the current working-copy to render figures of the campaign.
-   So every change your make is taken into account immediately.
 
 LICENSE
 =======

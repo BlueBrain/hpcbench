@@ -9,13 +9,13 @@ import tempfile
 import unittest
 
 from cached_property import cached_property
+import six
 import yaml
 
 from hpcbench.api import Benchmark
 from hpcbench.cli import (
     bendoc,
     benelastic,
-    benplot,
     benumb,
 )
 from hpcbench.driver import (
@@ -71,21 +71,6 @@ class TestDriver(DriverTestCase, unittest.TestCase):
         self.assertIsNotNone(TestDriver.CAMPAIGN_PATH)
         benumb.main(TestDriver.CAMPAIGN_PATH)
         # FIXME add checks
-
-    def test_03_plot(self):
-        self.test_02_number()
-        self.assertIsNotNone(TestDriver.CAMPAIGN_PATH)
-        benplot.main(TestDriver.CAMPAIGN_PATH)
-        plot_file_f = osp.join(
-            TestDriver.CAMPAIGN_PATH,
-            TestDriver.driver.node,
-            '*',
-            'test01',
-            'main',
-            '7b9d424b038a9c89bf48c0b183864e61b1'
-            '724a109b8f2d9d756b594f8f29b861.png'
-        )
-        self.assertTrue(osp.isfile(plot_file_f))
 
     def test_04_report(self):
         self.assertIsNotNone(TestDriver.CAMPAIGN_PATH)
@@ -274,9 +259,14 @@ class TestHostDriver(unittest.TestCase):
             srun=dict(constraint="uc1*6|uc2*6")
         ))
         os.environ['SRUN'] = 'true'  # otherwise `find_executable` crashes
-        self.assertEqual(
+        six.assertCountEqual(
+            self,
             slurm.command,
-            ['true', "--constraint='uc1*6|uc2*6'", 'ls', '-la']
+            ['true',
+             '--output=slurm-%N-%t.stdout',
+             '--error=slurm-%N-%t.error',
+             "--constraint='uc1*6|uc2*6'",
+             'ls', '-la']
         )
         os.environ.pop('SRUN')
 

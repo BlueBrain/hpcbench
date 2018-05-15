@@ -51,8 +51,8 @@ class BabelStreamExtractor(MetricsExtractor):
         return eax
 
     @listify(wrapper=dict)
-    def extract_metrics(self, outdir, metas):
-        with open(self.stdout(outdir)) as istr:
+    def extract_metrics(self, metas):
+        with open(self.stdout) as istr:
             istr.readline()
             istr.readline()
             reader = csv.DictReader(istr, delimiter=',')

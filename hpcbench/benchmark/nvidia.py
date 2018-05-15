@@ -65,8 +65,8 @@ class NvidiaP2pBandwidthLatencyTestExtractor(MetricsExtractor):
             yield (metric, unit)
 
     @listify(wrapper=dict)
-    def extract_metrics(self, outdir, metas):
-        with open(self.stdout(outdir)) as istr:
+    def extract_metrics(self, metas):
+        with open(self.stdout) as istr:
             while True:
                 try:
                     line = next(istr)
@@ -102,9 +102,9 @@ class NvidiaBandwidthTestExtractor(MetricsExtractor):
             yield label, Metrics.MegaBytesPerSecond
 
     @listify(wrapper=dict)
-    def extract_metrics(self, outdir, metas):
+    def extract_metrics(self, metas):
         eax = {}
-        with open(self.stdout(outdir)) as istr:
+        with open(self.stdout) as istr:
             skip_content = True
             for line in istr:
                 if skip_content:

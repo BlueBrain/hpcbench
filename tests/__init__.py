@@ -41,7 +41,7 @@ class NullExtractor(MetricsExtractor):
     def metrics(self):
         return dict()
 
-    def extract_metrics(self, outdir, metas):
+    def extract_metrics(self, metas):
         return dict()
 
 
@@ -61,8 +61,8 @@ class FakeExtractor(MetricsExtractor):
             metrics.update(path=Metric('', str))
         return metrics
 
-    def extract_metrics(self, outdir, metas):
-        with open(self.stdout(outdir)) as istr:
+    def extract_metrics(self, metas):
+        with open(self.stdout) as istr:
             content = istr.readlines()
             metrics = dict(
                 performance=float(content[0].strip()),

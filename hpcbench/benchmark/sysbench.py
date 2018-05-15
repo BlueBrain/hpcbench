@@ -41,10 +41,10 @@ class CpuExtractor(MetricsExtractor):
         """
         return self._metrics
 
-    def extract_metrics(self, outdir, metas):
+    def extract_metrics(self, metas):
         metrics = {}
         # parse stdout and extract desired metrics
-        with open(self.stdout(outdir)) as istr:
+        with open(self.stdout) as istr:
             for line in istr:
                 if line.strip() == self.STDOUT_IGNORE_PRIOR:
                     break
@@ -127,38 +127,3 @@ class Sysbench(Benchmark):
     @cached_property
     def metrics_extractors(self):
         return CpuExtractor()
-
-    @property
-    def plots(self):
-        return {
-            Sysbench.FEATURE_CPU: [
-                dict(
-                    name="{hostname} {category} timing",
-                    #  for_each=['max_prime'],  TODO
-                    select=dict(
-                        metas__max_prime=30
-                    ),
-                    series=dict(
-                        metas=['-threads'],
-                        metrics=['minimum', 'average',
-                                 'maximum', 'percentile95'],
-                    ),
-                    plotter=Sysbench.plot_timing
-                ),
-            ]
-        }
-
-    @classmethod
-    def plot_timing(cls, plt, description, metas, metrics):
-        """Generate timings plot
-        """
-        del description  # unused
-        plt.plot(metas['threads'], metrics['minimum'],
-                 'r--', label='minimum')
-        plt.plot(metas['threads'], metrics['maximum'],
-                 'bs-', label='maximum')
-        plt.plot(metas['threads'], metrics['average'],
-                 'g^', label='average')
-        plt.legend(loc='upper right', frameon=False)
-        plt.xlabel('threads')
-        plt.ylabel("t (sec)")
