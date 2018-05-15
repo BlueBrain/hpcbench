@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
 """
 
 COMPILE_SCRIPT = """#!/bin/bash -l
-module load intel-mkl
+module load nix/mkl
 g++ {defines} -O3 -std=c++11 -fopenmp  -m64 -I${{MKLROOT}}/include  \
     -L${{MKLROOT}}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 \
     -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -lm -ldl \
@@ -226,8 +226,6 @@ class MiniGEMM(Benchmark):
         proc = subprocess.run(['./compile.sh'],
                               stderr=subprocess.PIPE, stdout=subprocess.PIPE,
                               shell=True)
-        print(proc.stdout)
-        print(proc.stderr)
 
 
     def pre_execute(self, execution):
