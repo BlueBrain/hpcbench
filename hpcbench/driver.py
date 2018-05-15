@@ -690,22 +690,22 @@ class MetricsDriver(object):
             all_metrics.append(rc)
         return self.report
 
+    class LocalLog(namedtuple('LocalLog', ['path', 'log_prefix'])):
+        @property
+        def context(self):
+            return dict(executor='local')
+
+    class SrunLog(namedtuple('SrunLog',
+                             ['path', 'log_prefix', 'node', 'rank'])):
+        @property
+        def context(self):
+            return dict(executor='slurm', node=self.node, rank=self.rank)
+
     @property
     def logs(self):
 
-        class LocalLog(namedtuple('LocalLog', ['path', 'log_prefix'])):
-            @property
-            def context(self):
-                return dict(executor='local')
-
-        class SrunLog(namedtuple('SrunLog',
-                                 ['path', 'log_prefix', 'node', 'rank'])):
-            @property
-            def context(self):
-                return dict(executor='slurm', node=self.node, rank=self.rank)
-
         if self.report['executor'] == 'local':
-            yield LocalLog(path=os.getcwd(), log_prefix='')
+            yield MetricsDriver.LocalLog(path=os.getcwd(), log_prefix='')
         else:
             STDOUT_RE_PATTERN = r'slurm-(\w+)-(\w+)\.stdout'
             STDOUT_RE = re.compile(STDOUT_RE_PATTERN)
@@ -713,8 +713,10 @@ class MetricsDriver(object):
                 match = STDOUT_RE.match(file)
                 if match:
                     node, rank = match.groups()
-                    yield SrunLog(path=os.getcwd(), log_prefix=file[:-6],
-                                  node=node, rank=rank)
+                    yield MetricsDriver.SrunLog(path=os.getcwd(),
+                                                log_prefix=file[:-6],
+                                                node=node,
+                                                rank=rank)
                 else:
                     logging.warn('"%s" does not match regular expression "%s"',
                                  file, STDOUT_RE_PATTERN)

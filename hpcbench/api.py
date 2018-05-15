@@ -85,6 +85,11 @@ class MetricsExtractor(with_metaclass(ABCMeta, object)):
 
     @contextlib.contextmanager
     def context(self, outdir, log_prefix):
+        """Setup instance to extract metrics from the proper run
+
+        :param outdir: run directory
+        :param log_prefix: log filenames prefix
+        """
         try:
             self._outdir = outdir
             self._log_prefix = log_prefix
