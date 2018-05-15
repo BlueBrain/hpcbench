@@ -42,7 +42,7 @@ setup(
         'cached-property==1.3.1',
         'cookiecutter==1.6.0',
         'docopt==0.6.2',
-        'elasticsearch==6.0.0',
+        'elasticsearch==6.2.0',
         'jinja2==2.10',
         'mock==2.0.0',
         'numpy==1.13.3',
