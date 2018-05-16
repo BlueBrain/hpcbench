@@ -17,7 +17,7 @@ from hpcbench.api import (
     Metric)
 
 
-class BasicExtractor(MetricsExtractor):
+class GemmExtractor(MetricsExtractor):
 
     METRICS = dict(
         time=Metrics.Second,
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
 
 COMPILE_SCRIPT = """#!/bin/bash -l
 module load nix/mkl
-g++ {defines} -O3 -std=c++11 -fopenmp  -m64 -I${{MKLROOT}}/include  \
+g++ {opts} -O3 -std=c++11 -fopenmp  -m64 -I${{MKLROOT}}/include  \
     -L${{MKLROOT}}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 \
     -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -lm -ldl \
     -o minigemm minigemm.cpp
@@ -190,10 +190,12 @@ class MiniGEMM(Benchmark):
     def __init__(self):
         super(MiniGEMM, self).__init__(
             attributes=dict(
-            theoretical_peak="",
             compile=self.COMPILE_PARAMS
         ))
 
+    @cached_property
+    def compile(self):
+        return self.attributes['compile']
 
     def execution_matrix(self, context):
         del context  # unused
@@ -212,15 +214,9 @@ class MiniGEMM(Benchmark):
     def _compile(self, execution):
         with open('minigemm.cpp', 'w') as ostr:
             print(SOURCE, file=ostr)
-        defines = []
-        for name,val in self.attributes['compile']['defines'].items():
-            if val is None:
-                defines.append('-D{}'.format(name))
-            else:
-                defines.append('-D{}={}'.format(name, val))
-        define_str = ' '.join(defines)
+        opt_str = ' '.join(self.compile)
         with open('compile.sh','w') as ostr:
-            print(COMPILE_SCRIPT.format(defines=define_str), file=ostr)
+            print(COMPILE_SCRIPT.format(opts=opt_str), file=ostr)
         st = os.stat('compile.sh')
         os.chmod('compile.sh', st.st_mode | stat.S_IEXEC)
         proc = subprocess.run(['./compile.sh'],
@@ -233,5 +229,5 @@ class MiniGEMM(Benchmark):
 
     @cached_property
     def metrics_extractors(self):
-        return BasicExtractor()
+        return GemmExtractor()
 
