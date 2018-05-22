@@ -401,12 +401,28 @@ class SbatchDriver(Enumerator):
         commands = self.campaign.process.get('commands', {})
         sbatch = find_executable(commands.get('sbatch', 'sbatch'))
         sbatch_command = [sbatch, '--parsable', self.sbatch_filename]
-        sbatch_out = subprocess.check_output(sbatch_command,
-                                             universal_newlines=True)
-        jobid = sbatch_out.split(';')[0].strip()
-        LOGGER.info("Submitted SBATCH job %s for tag %s",
-                    jobid, self.tag)
-        return int(jobid)
+        try:
+            sbatch_out = subprocess.check_output(sbatch_command,
+                                                 universal_newlines=True)
+        except subprocess.CalledProcessError as cpe:
+            LOGGER.error("SBATCH return non-zero exit status %d for tag %s",
+                         cpe.returncode, self.tag)
+            sbatch_out = cpe.output
+        jobidre = re.compile('^([\d]+)(?:;\S*)?$')
+        jobid = None
+        for line in sbatch_out.split('\n'):
+            res = jobidre.match(line)
+            if res is not None:
+                jobid = res.group(1)
+                LOGGER.info("Submitted SBATCH job %s for tag %s",
+                            jobid, self.tag)
+            else:
+                LOGGER.warning("SBATCH: %s", line)
+        if jobid is None:
+            LOGGER.error("SBATCH submission failed for tag %s", self.tag)
+            return -1
+        else:
+            return int(jobid)
 
 
 class HostDriver(Enumerator):
