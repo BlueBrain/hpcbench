@@ -44,6 +44,7 @@ from . api import (
     Benchmark,
     ExecutionContext,
     Metric,
+    NoMetricException,
 )
 from . campaign import from_file
 from . toolbox.buildinfo import extract_build_info
@@ -698,12 +699,20 @@ class MetricsDriver(object):
             metrics = {}
             for extractor in extractors:
                 with extractor.context(log.path, log.log_prefix):
-                    run_metrics = extractor.extract(self.report.get('metas'))
-                    MetricsDriver._check_metrics(extractor.metrics,
-                                                 run_metrics)
-                    metrics.update(run_metrics)
-            rc = dict(context=log.context, measurement=metrics)
-            all_metrics.append(rc)
+                    try:
+                        run_metrics = extractor.extract(self.report.get('metas'))
+                    except NoMetricException:
+                        pass
+                    else:
+                        MetricsDriver._check_metrics(extractor.metrics,
+                                                     run_metrics)
+                        metrics.update(run_metrics)
+            if metrics:
+                rc = dict(context=log.context, measurement=metrics)
+                all_metrics.append(rc)
+        if not any(all_metrics):
+            # at least one of the logs must provide metrics
+            raise NoMetricException()
         return self.report
 
     class LocalLog(namedtuple('LocalLog', ['path', 'log_prefix'])):

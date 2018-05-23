@@ -44,6 +44,9 @@ class OSUExtractor(MetricsExtractor):
                     break
             for line in istr:
                 self.process_line(line.strip())
+        if not any(self.s_raw_data):
+            # output did not contain metrics
+            return {}
         return self.epilog()
 
     @abstractmethod

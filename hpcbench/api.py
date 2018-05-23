@@ -31,6 +31,9 @@ ExecutionContext = namedtuple(
     ]
 )
 
+class NoMetricException(Exception):
+    pass
+
 
 class UnexpectedMetricsException(Exception):
     def __init__(self, unset_metrics, metrics):
@@ -123,6 +126,8 @@ class MetricsExtractor(with_metaclass(ABCMeta, object)):
         return metrics
 
     def _check_metrics(self, metrics):
+        if not metrics:
+            raise NoMetricException()
         unset_metrics = set(self.metrics) - set(metrics)
         if any(unset_metrics):
             raise UnexpectedMetricsException(unset_metrics, metrics)
