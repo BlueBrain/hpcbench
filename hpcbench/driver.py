@@ -361,6 +361,15 @@ class SbatchDriver(Enumerator):
     @property
     def sbatch_template(self):
         """:return Jinja sbatch template for the current tag"""
+        template = self.sbatch_template_str
+        if template.startswith('#!'):
+            # script is embedded in YAML
+            return jinja_environment.from_string(template)
+        return jinja_environment.get_template(template)
+
+    @property
+    def sbatch_template_str(self):
+        """:return Jinja sbatch template for the current tag as string"""
         templates = self.campaign.process.sbatch_template
         if isinstance(templates, Mapping):
             # find proper template according to the tag
@@ -371,11 +380,8 @@ class SbatchDriver(Enumerator):
                 template = self.parent.SBATCH_JINJA
         else:
             template = templates
-        if template.startswith('#!'):
-            # script is embedded in YAML
-            return jinja_environment.from_string(template)
-        return jinja_environment.get_template(template)
-
+        return template
+                
     @write_yaml_report
     def __call__(self, **kwargs):
         with open(self.sbatch_filename, 'w') as sbatch:
@@ -393,7 +399,16 @@ class SbatchDriver(Enumerator):
             sbatch_arguments=self.sbatch_args,
             hpcbench_command=self.hpcbench_cmd
         )
-        self.sbatch_template.stream(**properties).dump(ostr)
+        try:
+            self.sbatch_template.stream(**properties).dump(ostr)
+        except jinja2.exceptions.UndefinedError as e:
+            self.logger.error('Error while generating SBATCH template:')
+            self.logger.error('%%<--------' * 5)
+            for line in self.sbatch_template_str.splitlines():
+                self.logger.error(line)
+            self.logger.error('%%<--------' * 5)
+            self.logger.error('  Template properties: %s', properties)
+            raise
 
     def _execute_sbatch(self):
         """Schedule the sbatch file using the sbatch command
