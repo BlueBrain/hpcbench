@@ -4,10 +4,13 @@ import os
 import os.path as osp
 import shutil
 import stat
+import subprocess
 import tempfile
 import textwrap
 import unittest
 
+import mock
+from mock import Mock
 import yaml
 
 from hpcbench.driver import (
@@ -33,6 +36,7 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
                 # output a job id
                 while [[ "$1" == -* ]] ; do shift ; done
                 export SLURMD_NODENAME={node}
+                echo "Starting job"
                 source $@ > slurm-12345.out 2>&1
                 echo "12345"
                 """.format(node=cls.SLURM_ALLOC_NODE)))
@@ -100,6 +104,31 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
         os.environ['PATH'] = os.environ['PATH'][length:]
         shutil.rmtree(cls.SLURM_UT_DIR)
         super(cls, cls).tearDownClass()
+
+
+class TestSbatchFail(DriverTestCase, unittest.TestCase):
+
+    check_output = Mock()
+    check_output.side_effect = subprocess.CalledProcessError(
+        42, 'sbatch-ut', output="Error")
+    find_exec = Mock()
+    find_exec.return_value = 'sbatch-ut'
+
+    @classmethod
+    @mock.patch('subprocess.check_output', check_output)
+    @mock.patch('hpcbench.driver.find_executable', find_exec)
+    def setUpClass(cls):
+        super(cls, cls).setUpClass()
+
+    def test_sbatch_fail(self):
+        hpcb_f = osp.join(
+            TestSbatchFail.CAMPAIGN_PATH,
+            TestSbatchFail.driver.node,
+            'uc2', 'hpcbench.yaml'
+        )
+        with open(hpcb_f) as f:
+            hpcb = yaml.safe_load(f)
+        self.assertEqual(hpcb['jobid'], -1)
 
 
 class TestSbatchTemplate(unittest.TestCase):
