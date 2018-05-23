@@ -346,9 +346,9 @@ class SbatchDriver(Enumerator):
     def _filter_nodes(self, nodes, count):
         assert count <= len(nodes)
         if count < len(nodes):
-            LOGGER.warning("Asking to run SBATCH job with "
-                           + "%d of %d declared nodes in tag",
-                           count, len(nodes))
+            self.logger.warning("Asking to run SBATCH job with "
+                                "%d of %d declared nodes in tag",
+                                count, len(nodes))
         return nodes[:count]
 
     @cached_property
@@ -403,11 +403,15 @@ class SbatchDriver(Enumerator):
         sbatch = find_executable(commands.get('sbatch', 'sbatch'))
         sbatch_command = [sbatch, '--parsable', self.sbatch_filename]
         try:
+            self.logger.debug('Executing command: %s',
+                              ' '.join(map(six.moves.shlex_quote,
+                                           sbatch_command)))
             sbatch_out = subprocess.check_output(sbatch_command,
                                                  universal_newlines=True)
         except subprocess.CalledProcessError as cpe:
-            LOGGER.error("SBATCH return non-zero exit status %d for tag %s",
-                         cpe.returncode, self.tag)
+            self.logger.error("SBATCH return non-zero exit"
+                              "status %d for tag %s",
+                              cpe.returncode, self.tag)
             sbatch_out = cpe.output
         jobidre = re.compile('^([\d]+)(?:;\S*)?$')
         jobid = None
@@ -415,12 +419,12 @@ class SbatchDriver(Enumerator):
             res = jobidre.match(line)
             if res is not None:
                 jobid = res.group(1)
-                LOGGER.info("Submitted SBATCH job %s for tag %s",
-                            jobid, self.tag)
+                self.logger.info("Submitted SBATCH job %s for tag %s",
+                                 jobid, self.tag)
             else:
-                LOGGER.warning("SBATCH: %s", line)
+                self.logger.warning("SBATCH: %s", line)
         if jobid is None:
-            LOGGER.error("SBATCH submission failed for tag %s", self.tag)
+            self.logger.error("SBATCH submission failed for tag %s", self.tag)
             return -1
         else:
             return int(jobid)
@@ -618,15 +622,16 @@ class BenchmarkCategoryDriver(Enumerator):
         try:
             exepath = find_executable(executable, required=True)
         except NameError:
-            LOGGER.info("Could not find exe %s to examine for build info",
-                        executable)
+            self.logger.info("Could not find exe %s to examine for build info",
+                             executable)
         else:
             if magic.from_file(exepath).startswith('ELF'):
                 if 'metas' not in execution or execution['metas'] is None:
                     execution['metas'] = dict()
                 execution['metas']['build_info'] = extract_build_info(exepath)
             else:
-                LOGGER.info('%s is not pointing to an ELF executable', exepath)
+                self.logger.info('%s is not pointing to an ELF executable',
+                                 exepath)
 
     def _execute(self, **kwargs):
         runs = dict()
@@ -634,8 +639,8 @@ class BenchmarkCategoryDriver(Enumerator):
             if _HAS_MAGIC and 'shell' not in execution:
                 self._add_build_info(execution)
             else:
-                LOGGER.info("No build information recorded "
-                            + "(libmagic available: %s)", _HAS_MAGIC)
+                self.logger.info("No build information recorded "
+                                 "(libmagic available: %s)", _HAS_MAGIC)
             runs.setdefault(execution['category'], []).append(run_dir)
             with pushd(run_dir, mkdir=True):
                 attempt_cls = self.attempt_run_class(execution)
