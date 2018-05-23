@@ -32,6 +32,11 @@ ExecutionContext = namedtuple(
 )
 
 
+class NoMetricException(Exception):
+    """Raised when a log does not contain any metric"""
+    pass
+
+
 class UnexpectedMetricsException(Exception):
     def __init__(self, unset_metrics, metrics):
         self.unset_metrics = unset_metrics
@@ -123,6 +128,8 @@ class MetricsExtractor(with_metaclass(ABCMeta, object)):
         return metrics
 
     def _check_metrics(self, metrics):
+        if not metrics:
+            raise NoMetricException()
         unset_metrics = set(self.metrics) - set(metrics)
         if any(unset_metrics):
             raise UnexpectedMetricsException(unset_metrics, metrics)
@@ -168,6 +175,14 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         :rtype: string
         """
         raise NotImplementedError  # pragma: no cover
+
+    @property
+    def metric_required(self):
+        """Whether a benchmark execution must emit metrics or not
+
+        :rtype: bool
+        """
+        return True
     # ---
 
     def __init__(self, attributes=None):

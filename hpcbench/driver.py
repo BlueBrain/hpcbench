@@ -30,6 +30,7 @@ import types
 import uuid
 
 from cached_property import cached_property
+import jinja2.exceptions
 try:
     import magic
 except ImportError:
@@ -44,6 +45,7 @@ from . api import (
     Benchmark,
     ExecutionContext,
     Metric,
+    NoMetricException,
 )
 from . campaign import from_file
 from . toolbox.buildinfo import extract_build_info
@@ -345,9 +347,9 @@ class SbatchDriver(Enumerator):
     def _filter_nodes(self, nodes, count):
         assert count <= len(nodes)
         if count < len(nodes):
-            LOGGER.warning("Asking to run SBATCH job with "
-                           + "%d of %d declared nodes in tag",
-                           count, len(nodes))
+            self.logger.warning("Asking to run SBATCH job with "
+                                "%d of %d declared nodes in tag",
+                                count, len(nodes))
         return nodes[:count]
 
     @cached_property
@@ -360,6 +362,15 @@ class SbatchDriver(Enumerator):
     @property
     def sbatch_template(self):
         """:return Jinja sbatch template for the current tag"""
+        template = self.sbatch_template_str
+        if template.startswith('#!'):
+            # script is embedded in YAML
+            return jinja_environment.from_string(template)
+        return jinja_environment.get_template(template)
+
+    @property
+    def sbatch_template_str(self):
+        """:return Jinja sbatch template for the current tag as string"""
         templates = self.campaign.process.sbatch_template
         if isinstance(templates, Mapping):
             # find proper template according to the tag
@@ -370,10 +381,7 @@ class SbatchDriver(Enumerator):
                 template = self.parent.SBATCH_JINJA
         else:
             template = templates
-        if template.startswith('#!'):
-            # script is embedded in YAML
-            return jinja_environment.from_string(template)
-        return jinja_environment.get_template(template)
+        return template
 
     @write_yaml_report
     def __call__(self, **kwargs):
@@ -392,7 +400,16 @@ class SbatchDriver(Enumerator):
             sbatch_arguments=self.sbatch_args,
             hpcbench_command=self.hpcbench_cmd
         )
-        self.sbatch_template.stream(**properties).dump(ostr)
+        try:
+            self.sbatch_template.stream(**properties).dump(ostr)
+        except jinja2.exceptions.UndefinedError:
+            self.logger.error('Error while generating SBATCH template:')
+            self.logger.error('%%<--------' * 5)
+            for line in self.sbatch_template_str.splitlines():
+                self.logger.error(line)
+            self.logger.error('%%<--------' * 5)
+            self.logger.error('Template properties: %s', properties)
+            raise
 
     def _execute_sbatch(self):
         """Schedule the sbatch file using the sbatch command
@@ -402,11 +419,15 @@ class SbatchDriver(Enumerator):
         sbatch = find_executable(commands.get('sbatch', 'sbatch'))
         sbatch_command = [sbatch, '--parsable', self.sbatch_filename]
         try:
+            self.logger.debug('Executing command: %s',
+                              ' '.join(map(six.moves.shlex_quote,
+                                           sbatch_command)))
             sbatch_out = subprocess.check_output(sbatch_command,
                                                  universal_newlines=True)
         except subprocess.CalledProcessError as cpe:
-            LOGGER.error("SBATCH return non-zero exit status %d for tag %s",
-                         cpe.returncode, self.tag)
+            self.logger.error("SBATCH return non-zero exit"
+                              "status %d for tag %s",
+                              cpe.returncode, self.tag)
             sbatch_out = cpe.output
         jobidre = re.compile('^([\d]+)(?:;\S*)?$')
         jobid = None
@@ -414,12 +435,12 @@ class SbatchDriver(Enumerator):
             res = jobidre.match(line)
             if res is not None:
                 jobid = res.group(1)
-                LOGGER.info("Submitted SBATCH job %s for tag %s",
-                            jobid, self.tag)
+                self.logger.info("Submitted SBATCH job %s for tag %s",
+                                 jobid, self.tag)
             else:
-                LOGGER.warning("SBATCH: %s", line)
+                self.logger.warning("SBATCH: %s", line)
         if jobid is None:
-            LOGGER.error("SBATCH submission failed for tag %s", self.tag)
+            self.logger.error("SBATCH submission failed for tag %s", self.tag)
             return -1
         else:
             return int(jobid)
@@ -617,15 +638,16 @@ class BenchmarkCategoryDriver(Enumerator):
         try:
             exepath = find_executable(executable, required=True)
         except NameError:
-            LOGGER.info("Could not find exe %s to examine for build info",
-                        executable)
+            self.logger.info("Could not find exe %s to examine for build info",
+                             executable)
         else:
             if magic.from_file(exepath).startswith('ELF'):
                 if 'metas' not in execution or execution['metas'] is None:
                     execution['metas'] = dict()
                 execution['metas']['build_info'] = extract_build_info(exepath)
             else:
-                LOGGER.info('%s is not pointing to an ELF executable', exepath)
+                self.logger.info('%s is not pointing to an ELF executable',
+                                 exepath)
 
     def _execute(self, **kwargs):
         runs = dict()
@@ -633,8 +655,8 @@ class BenchmarkCategoryDriver(Enumerator):
             if _HAS_MAGIC and 'shell' not in execution:
                 self._add_build_info(execution)
             else:
-                LOGGER.info("No build information recorded "
-                            + "(libmagic available: %s)", _HAS_MAGIC)
+                self.logger.info("No build information recorded "
+                                 "(libmagic available: %s)", _HAS_MAGIC)
             runs.setdefault(execution['category'], []).append(run_dir)
             with pushd(run_dir, mkdir=True):
                 attempt_cls = self.attempt_run_class(execution)
@@ -683,6 +705,7 @@ class MetricsDriver(object):
     @write_yaml_report
     def __call__(self, **kwargs):
         cat = self.report.get('category')
+        metas = self.report.get('metas')
         all_extractors = self.benchmark.metrics_extractors
         if isinstance(all_extractors, Mapping):
             if cat not in all_extractors:
@@ -698,12 +721,20 @@ class MetricsDriver(object):
             metrics = {}
             for extractor in extractors:
                 with extractor.context(log.path, log.log_prefix):
-                    run_metrics = extractor.extract(self.report.get('metas'))
-                    MetricsDriver._check_metrics(extractor.metrics,
-                                                 run_metrics)
-                    metrics.update(run_metrics)
-            rc = dict(context=log.context, measurement=metrics)
-            all_metrics.append(rc)
+                    try:
+                        run_metrics = extractor.extract(metas)
+                    except NoMetricException:
+                        pass
+                    else:
+                        MetricsDriver._check_metrics(extractor.metrics,
+                                                     run_metrics)
+                        metrics.update(run_metrics)
+            if metrics:
+                rc = dict(context=log.context, measurement=metrics)
+                all_metrics.append(rc)
+        if self.benchmark.metric_required and not all_metrics:
+            # at least one of the logs must provide metrics
+            raise NoMetricException()
         return self.report
 
     class LocalLog(namedtuple('LocalLog', ['path', 'log_prefix'])):
