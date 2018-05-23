@@ -30,6 +30,7 @@ import types
 import uuid
 
 from cached_property import cached_property
+import jinja2.exceptions
 try:
     import magic
 except ImportError:
@@ -381,7 +382,7 @@ class SbatchDriver(Enumerator):
         else:
             template = templates
         return template
-                
+
     @write_yaml_report
     def __call__(self, **kwargs):
         with open(self.sbatch_filename, 'w') as sbatch:
@@ -401,13 +402,13 @@ class SbatchDriver(Enumerator):
         )
         try:
             self.sbatch_template.stream(**properties).dump(ostr)
-        except jinja2.exceptions.UndefinedError as e:
+        except jinja2.exceptions.UndefinedError:
             self.logger.error('Error while generating SBATCH template:')
             self.logger.error('%%<--------' * 5)
             for line in self.sbatch_template_str.splitlines():
                 self.logger.error(line)
             self.logger.error('%%<--------' * 5)
-            self.logger.error('  Template properties: %s', properties)
+            self.logger.error('Template properties: %s', properties)
             raise
 
     def _execute_sbatch(self):
@@ -704,6 +705,7 @@ class MetricsDriver(object):
     @write_yaml_report
     def __call__(self, **kwargs):
         cat = self.report.get('category')
+        metas = self.report.get('metas')
         all_extractors = self.benchmark.metrics_extractors
         if isinstance(all_extractors, Mapping):
             if cat not in all_extractors:
@@ -720,7 +722,7 @@ class MetricsDriver(object):
             for extractor in extractors:
                 with extractor.context(log.path, log.log_prefix):
                     try:
-                        run_metrics = extractor.extract(self.report.get('metas'))
+                        run_metrics = extractor.extract(metas)
                     except NoMetricException:
                         pass
                     else:
@@ -730,7 +732,7 @@ class MetricsDriver(object):
             if metrics:
                 rc = dict(context=log.context, measurement=metrics)
                 all_metrics.append(rc)
-        if not any(all_metrics):
+        if self.benchmark.metric_required and not all_metrics:
             # at least one of the logs must provide metrics
             raise NoMetricException()
         return self.report

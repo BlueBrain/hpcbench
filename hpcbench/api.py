@@ -31,7 +31,9 @@ ExecutionContext = namedtuple(
     ]
 )
 
+
 class NoMetricException(Exception):
+    """Raised when a log does not contain any metric"""
     pass
 
 
@@ -173,6 +175,14 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         :rtype: string
         """
         raise NotImplementedError  # pragma: no cover
+
+    @property
+    def metric_required(self):
+        """Whether a benchmark execution must emit metrics or not
+
+        :rtype: bool
+        """
+        return True
     # ---
 
     def __init__(self, attributes=None):

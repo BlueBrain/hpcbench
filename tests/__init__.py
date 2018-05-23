@@ -84,6 +84,8 @@ class BuildInfoBench(Benchmark):
         fake benchmark for testing build info extraction
     '''
 
+    metric_required = False
+
     def __init__(self):
         super(BuildInfoBench, self).__init__(
             attributes=dict(
