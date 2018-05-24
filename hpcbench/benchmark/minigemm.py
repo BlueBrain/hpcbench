@@ -172,10 +172,31 @@ int main(int argc, char **argv) {
 
 COMPILE_SCRIPT = """#!/bin/bash -l
 module load nix/mkl
-g++ {opts} -O3 -std=c++11 -fopenmp  -m64 -I${{MKLROOT}}/include  \
-    -L${{MKLROOT}}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 \
-    -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -lm -ldl \
-    -o minigemm minigemm.cpp
+make DEFINES="{opts}"
+"""
+
+MAKEFILE = """CXX=g++
+DEFINES=
+CXXFLAGS=-O3 -std=c++11 -fopenmp -I${MKLROOT}/include
+LDFLAGS=-std=c++11 -fopenmp  -m64 -L${MKLROOT}/lib \
+        -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core -lgomp \
+        -lpthread -lm -ldl
+
+CPPFILES=minigemm.cpp
+OBJ=$(CPPFILES:.cpp=.o)
+
+all: minigemm
+
+.cpp.o: $<
+    $(CXX) -c $< $(DEFINES) $(CXXFLAGS)
+
+minigemm: $(OBJ)
+    $(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
+
+clean:
+    $(RM) minigemm *.o
+
+.PHONY: clean
 
 """
 
@@ -214,14 +235,14 @@ class MiniGEMM(Benchmark):
     def _compile(self, execution):
         with open('minigemm.cpp', 'w') as ostr:
             print(SOURCE, file=ostr)
+        with open('Makefile', 'w') as ostr:
+            print(MAKEFILE, file=ostr)
         opt_str = ' '.join(self.compile)
         with open('compile.sh', 'w') as ostr:
             print(COMPILE_SCRIPT.format(opts=opt_str), file=ostr)
         st = os.stat('compile.sh')
         os.chmod('compile.sh', st.st_mode | stat.S_IEXEC)
-        proc = subprocess.run(['./compile.sh'],
-                              stderr=subprocess.PIPE, stdout=subprocess.PIPE,
-                              shell=True)
+        ret = subprocess.call(['./compile.sh'], shell=True)
 
     def pre_execute(self, execution):
         self._compile(execution)
