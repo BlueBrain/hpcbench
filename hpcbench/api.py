@@ -246,6 +246,11 @@ class Benchmark(with_metaclass(ABCMeta, object)):
           is considered as a shell command.
         * *cwd* (optional):
           directory where the command is executed.
+        * *expected_exit_statuses* (optional):
+          list or set of statuses the command is expected to exit
+          to consider it successful.
+          Metrics won't be extracted if command fails.
+          Default value is: {0}
 
         Execution context: for every command, a dedicated output directory
         is created and the current working directory changed to this directory

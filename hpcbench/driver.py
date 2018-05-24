@@ -844,8 +844,9 @@ class FixedAttempts(Enumerator):
         def _wrap(**kwargs):
             driver = self.execution_layer()
             driver(**kwargs)
-            mdriver = MetricsDriver(self.campaign, self.benchmark)
-            mdriver(**kwargs)
+            if self.report['command_succeeded']:
+                mdriver = MetricsDriver(self.campaign, self.benchmark)
+                mdriver(**kwargs)
             return self.report
         return _wrap
 
@@ -1068,6 +1069,12 @@ class ExecutionDriver(Leaf):
             benchmark=self.benchmark.name,
             executor=type(self).name,
         )
+
+        expected_es = self.execution.get('expected_exit_statuses', {0})
+        report['command_succeeded'] = exit_status in expected_es
+        if not report['command_succeeded']:
+            self.logger.error('Command failed with exit status: %s',
+                              exit_status)
         report.update(self.execution)
         report.update(command=self.command)
         return report
