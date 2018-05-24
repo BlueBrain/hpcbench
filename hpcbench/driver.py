@@ -431,13 +431,13 @@ class SbatchDriver(Enumerator):
             sbatch_out = cpe.output
         jobidre = re.compile('^([\d]+)(?:;\S*)?$')
         jobid = None
-        for line in sbatch_out.split('\n'):
+        for line in sbatch_out.splitlines():
             res = jobidre.match(line)
             if res is not None:
                 jobid = res.group(1)
                 self.logger.info("Submitted SBATCH job %s for tag %s",
                                  jobid, self.tag)
-            else:
+            elif line:
                 self.logger.warning("SBATCH: %s", line)
         if jobid is None:
             self.logger.error("SBATCH submission failed for tag %s", self.tag)
