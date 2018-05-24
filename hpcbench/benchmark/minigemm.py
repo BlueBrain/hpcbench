@@ -188,13 +188,13 @@ OBJ=$(CPPFILES:.cpp=.o)
 all: minigemm
 
 .cpp.o: $<
-    $(CXX) -c $< $(DEFINES) $(CXXFLAGS)
+	$(CXX) -c $< $(DEFINES) $(CXXFLAGS)
 
 minigemm: $(OBJ)
-    $(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 
 clean:
-    $(RM) minigemm *.o
+	$(RM) minigemm *.o
 
 .PHONY: clean
 
@@ -242,7 +242,7 @@ class MiniGEMM(Benchmark):
             print(COMPILE_SCRIPT.format(opts=opt_str), file=ostr)
         st = os.stat('compile.sh')
         os.chmod('compile.sh', st.st_mode | stat.S_IEXEC)
-        ret = subprocess.call(['./compile.sh'], shell=True)
+        ret = subprocess.call(['./compile.sh'])
 
     def pre_execute(self, execution):
         self._compile(execution)
