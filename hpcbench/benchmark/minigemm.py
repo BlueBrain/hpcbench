@@ -171,16 +171,13 @@ int main(int argc, char **argv) {
 """
 
 COMPILE_SCRIPT = """#!/bin/bash -l
-module load nix/mkl
 make DEFINES="{opts}"
 """
 
-MAKEFILE = """CXX=g++
+MAKEFILE = """CXX=icpc
 DEFINES=
-CXXFLAGS=-O3 -std=c++11 -fopenmp -I${MKLROOT}/include
-LDFLAGS=-std=c++11 -fopenmp  -m64 -L${MKLROOT}/lib \
-        -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core -lgomp \
-        -lpthread -lm -ldl
+CXXFLAGS=-qopt-streaming-stores always -O3 -mkl -std=c++11 -qopenmp
+LDFLAGS=
 
 CPPFILES=minigemm.cpp
 OBJ=$(CPPFILES:.cpp=.o)
