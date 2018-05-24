@@ -20,7 +20,7 @@ __all__ = [
 Metric = namedtuple("Metric", "unit type")
 
 
-ExecutionContext = namedtuple(
+class ExecutionContext(namedtuple(
     "ExecutionContext",
     [
         "node",
@@ -29,7 +29,10 @@ ExecutionContext = namedtuple(
         "logger",
         "srun_options",
     ]
-)
+)):
+    @property
+    def implicit_nodes(self):
+        return not isinstance(self.nodes, list)
 
 
 class NoMetricException(Exception):

@@ -252,13 +252,17 @@ class OSU(Benchmark):
         for category in self.categories:
             arguments = self.arguments.get(category) or []
             if category in {OSU.OSU_BW, OSU.OSU_LAT}:
-                for pair in OSU.host_pairs(context):
-                    yield dict(
-                        category=category,
-                        command=[find_executable(self.executable(category))]
-                        + arguments,
-                        srun_nodes=pair,
-                    )
+                if context.implicit_nodes:
+                    context.logger.warn('Category %s does not support '
+                                        'SLURM implicit nodes', category)
+                else:
+                    executable = find_executable(self.executable(category))
+                    for pair in OSU.host_pairs(context):
+                        yield dict(
+                            category=category,
+                            command=[executable] + arguments,
+                            srun_nodes=pair,
+                        )
             else:
                 yield dict(
                     category=category,
