@@ -2,19 +2,17 @@
 """
 from __future__ import print_function
 
-import os.path as osp
-
-import subprocess
-
 import os
 import stat
+import subprocess
+
 from cached_property import cached_property
 
 from hpcbench.api import (
     Benchmark,
+    Metric,
     Metrics,
-    MetricsExtractor,
-    Metric)
+    MetricsExtractor)
 
 
 class GemmExtractor(MetricsExtractor):
@@ -22,8 +20,9 @@ class GemmExtractor(MetricsExtractor):
     METRICS = dict(
         time=Metrics.Second,
         gflops=Metrics.GFlops,
-        checksum=Metric('#',float)
+        checksum=Metric('#', float)
     )
+
     @property
     def metrics(self):
         """ The metrics to be extracted.
@@ -31,9 +30,9 @@ class GemmExtractor(MetricsExtractor):
         """
         return self.METRICS
 
-    def extract_metrics(self, outdir, metas):
+    def extract_metrics(self, metas):
         # parse stdout and extract desired metrics
-        with open(self.stdout(outdir)) as istr:
+        with open(self.stdout) as istr:
             timel = istr.readline()
             time = float(timel.split()[-1][:-1])
             flopl = istr.readline()
@@ -46,6 +45,7 @@ class GemmExtractor(MetricsExtractor):
             checksum=chk
         )
         return metrics
+
 
 SOURCE = """#include <iostream>
 #include <chrono>
@@ -118,7 +118,8 @@ int main(int argc, char **argv) {
   #pragma omp parallel for schedule(static, 1) num_threads(nthreads)
   for (int ithrd = 0; ithrd < nthreads; ithrd++) {
     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-                m, n, k, alpha, As[ithrd], k, Bs[ithrd], n, beta, Cs[ithrd], n);
+                m, n, k, alpha, As[ithrd], k, Bs[ithrd], n,
+                beta, Cs[ithrd], n);
   }
 
   auto tstart = std::chrono::high_resolution_clock::now();
@@ -126,13 +127,15 @@ int main(int argc, char **argv) {
   for (int ithrd = 0; ithrd < nthreads; ithrd++) {
     for (int iter = 0; iter < niter; iter++) {
       cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-                  m, n, k, alpha, As[ithrd], k, Bs[ithrd], n, beta, Cs[ithrd], n);
+                  m, n, k, alpha, As[ithrd], k, Bs[ithrd], n,
+                  beta, Cs[ithrd], n);
     }
   }
   auto tend = std::chrono::high_resolution_clock::now();
 
   std::chrono::duration<double> tdiff = tend - tstart;
-  std::cout << "Time elapsed for " << niter << " iterations: " << tdiff.count() << "s\\n";
+  std::cout << "Time elapsed for " << niter << " iterations: "
+            << tdiff.count() << "s\\n";
   std::cout << gflop/tdiff.count() << " GFLOP/s\\n";
 
 #ifdef DBG_PRINT
@@ -183,14 +186,11 @@ class MiniGEMM(Benchmark):
     """
     name = 'minigemm'
     description = "DGEMM mini benchmark"
-    COMPILE_PARAMS = dict(
-        defines=dict(
-    ))
+    COMPILE_PARAMS = []
 
     def __init__(self):
         super(MiniGEMM, self).__init__(
-            attributes=dict(
-            compile=self.COMPILE_PARAMS
+              attributes=dict(compile=self.COMPILE_PARAMS
         ))
 
     @cached_property
@@ -215,7 +215,7 @@ class MiniGEMM(Benchmark):
         with open('minigemm.cpp', 'w') as ostr:
             print(SOURCE, file=ostr)
         opt_str = ' '.join(self.compile)
-        with open('compile.sh','w') as ostr:
+        with open('compile.sh', 'w') as ostr:
             print(COMPILE_SCRIPT.format(opts=opt_str), file=ostr)
         st = os.stat('compile.sh')
         os.chmod('compile.sh', st.st_mode | stat.S_IEXEC)
@@ -223,11 +223,9 @@ class MiniGEMM(Benchmark):
                               stderr=subprocess.PIPE, stdout=subprocess.PIPE,
                               shell=True)
 
-
     def pre_execute(self, execution):
         self._compile(execution)
 
     @cached_property
     def metrics_extractors(self):
         return GemmExtractor()
-
