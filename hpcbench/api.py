@@ -231,6 +231,8 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         * *environment* (optional):
             a dictionary providing additional environment variables
             to be given to the executed command
+        * *modules* (optional):
+            list of modules to load before executed the command.
         * *srun_nodes* (optional):
             When the `srun` execution layer is enabled,
             an integer providing the number of required nodes.

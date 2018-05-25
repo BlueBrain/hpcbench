@@ -596,6 +596,14 @@ class BenchmarkCategoryDriver(Enumerator):
             category = execution.get('category')
             if category != self.category:
                 continue
+            # Override `environment` if specified in YAML
+            yaml_env = self.config.get('environment')
+            if yaml_env:
+                execution['environment'] = yaml_env
+            # Override `modules` if specified in YAML
+            yaml_modules = self.config.get('modules')
+            if yaml_modules:
+                execution['modules'] = yaml_modules
             name = execution.get('name') or ''
             yield (
                 execution,
@@ -992,18 +1000,17 @@ class ExecutionDriver(Leaf):
 
     def _write_executor_script(self, ostr):
         """Write shell script in charge of executing the command"""
-        def merge_attributes(key):
-            env = self.execution.get(key) or {}
-            env.update(self.config.get(key) or {})
-            env = dict((var, six.moves.shlex_quote(str(value)))
-                       for var, value in env.items())
-            return env
-
+        environment = self.execution.get('environment') or {}
+        escaped_environment = dict(
+            (var, six.moves.shlex_quote(str(value)))
+            for var, value in environment.items()
+        )
+        modules = self.execution.get('modules') or []
         properties = dict(
             command=self.command,
             cwd=os.getcwd(),
-            modules=self.config.get('modules') or [],
-            environment=merge_attributes('environment'),
+            modules=modules,
+            environment=escaped_environment,
         )
         self._jinja_executor_template.stream(**properties).dump(ostr)
 

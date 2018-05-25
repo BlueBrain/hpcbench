@@ -362,6 +362,8 @@ environment (optional)
 A dictionary to add environment variables.
 Any boolean values; true, false, yes not, need to be enclosed in quotes to ensure
 they are not converted to python True or False values by the YAML parse.
+If specified, this section supersedes environment variables
+emitted by benchmark.
 
 .. code-block:: yaml
   :emphasize-lines: 5
@@ -373,6 +375,11 @@ they are not converted to python True or False values by the YAML parse.
         environment:
           TEST_ALL: 'true'
           LD_LIBRARY_PATH: /usr/local/lib64
+
+modules (optional)
+~~~~~~~~~~~~~~~~~~
+List of modules to load before executing the command.
+If specified, this section supersedes modules emitted by benchmark.
 
 cwd (optional)
 ~~~~~~~~~~~~~~
