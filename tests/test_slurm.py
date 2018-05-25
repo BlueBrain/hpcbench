@@ -158,10 +158,11 @@ class TestSbatchTemplate(unittest.TestCase):
         sbatch.close()
 
     def test_embedded_sbatch_template(self):
-        """Globaly override sbatch template"""
+        """Globally override sbatch template"""
         sbatch_str = "\n".join([
             "#SBATCH --account=42",
-            "#SBATCH --nodelist=n1,n2"
+            "#SBATCH --nodelist=n1,n2",
+            "#SBATCH --nodes=2",
         ])
         self._test_template(
             'test_slurm_embedded_sbatch_template.yaml',
@@ -173,7 +174,8 @@ class TestSbatchTemplate(unittest.TestCase):
         """Override sbatch template per UC"""
         sbatch_str = "\n".join([
             "#SBATCH --account=42",
-            "#SBATCH --nodelist=n1,n2"
+            "#SBATCH --nodelist=n1,n2",
+            "#SBATCH --nodes=2",
         ])
         self._test_template(
             'test_slurm_sbatch_template_per_uc.yaml',
@@ -193,7 +195,8 @@ class TestSbatchTemplate(unittest.TestCase):
         """Override sbatch template per UC with default value"""
         sbatch_str = "\n".join([
             "#SBATCH --account=43",
-            "#SBATCH --nodelist=n1,n2"
+            "#SBATCH --nodelist=n1,n2",
+            "#SBATCH --nodes=2",
         ])
 
         self._test_template(
@@ -203,7 +206,8 @@ class TestSbatchTemplate(unittest.TestCase):
         )
         sbatch_str = "\n".join([
             "#SBATCH --account=42",
-            "#SBATCH --nodelist=n3,n4"
+            "#SBATCH --nodelist=n3,n4",
+            "#SBATCH --nodes=2",
         ])
 
         # fallback on default template in YAML
@@ -217,7 +221,8 @@ class TestSbatchTemplate(unittest.TestCase):
         """Override sbatch arguments in a benchmark tag"""
         sbatch_str = "\n".join([
             "#SBATCH --account=43",
-            "#SBATCH --nodelist=n1,n2"
+            "#SBATCH --nodelist=n1,n2",
+            "#SBATCH --nodes=2",
         ])
         self._test_template(
             'test_slurm_per_tag_sbatch_args.yaml',

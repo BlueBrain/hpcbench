@@ -340,8 +340,10 @@ class SbatchDriver(Enumerator):
                 # Expand nodelist if --constraint option is not specified
                 # in srun options
                 count = pargs.nodes or len(nodes)
-                sbatch_options.append(
-                    '--nodelist=' + ','.join(self._filter_nodes(nodes, count)))
+                sbatch_options += [
+                    '--nodelist=' + ','.join(self._filter_nodes(nodes, count)),
+                    '--nodes=' + str(count),
+                ]
         return sbatch_options
 
     def _filter_nodes(self, nodes, count):
@@ -1126,7 +1128,10 @@ class SrunExecutionDriver(ExecutionDriver):
             if not pargs.constraint:
                 # Expand nodelist if --constraint option is not specified
                 # in srun options
-                srun_optlist.append('--nodelist=' + ','.join(self.srun_nodes))
+                srun_optlist += [
+                    '--nodelist=' + ','.join(self.srun_nodes),
+                    '--nodes=' + str(len(self.srun_nodes)),
+                ]
         command = super(SrunExecutionDriver, self).command
         return [self.srun] + srun_optlist + command
 
