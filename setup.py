@@ -68,6 +68,7 @@ setup(
         ben-elastic = hpcbench.cli.benelastic:main
         ben-merge = hpcbench.cli.benmerge:main
         ben-nett = hpcbench.cli.bennett:main
+        ben-wait = hpcbench.cli.benwait:main
         ben-sh = hpcbench.cli.bensh:main
         ben-tpl = hpcbench.cli.bentpl:main
         ben-umb = hpcbench.cli.benumb:main
