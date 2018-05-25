@@ -24,7 +24,7 @@ from . import cli_common
 
 
 def main(argv=None):
-    """ben-elastic entry point"""
+    """ben-csv entry point"""
     arguments = cli_common(__doc__, argv=argv)
     campaign_path = arguments['CAMPAIGN-DIR']
     driver = CampaignDriver(campaign_path=campaign_path, expandcampvars=False)
