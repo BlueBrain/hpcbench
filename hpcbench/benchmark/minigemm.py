@@ -205,15 +205,27 @@ class MiniGEMM(Benchmark):
     name = 'minigemm'
     description = "DGEMM mini benchmark"
     COMPILE_PARAMS = []
+    DEFAULT_OPENMP_THREADS = 1
+    DEFAULT_NESTED_MKL_THREADS = 4
 
     def __init__(self):
         super(MiniGEMM, self).__init__(
-              attributes=dict(compile=self.COMPILE_PARAMS
+              attributes=dict(compile=self.COMPILE_PARAMS,
+                              omp_threads=self.DEFAULT_OPENMP_THREADS,
+                              mkl_threads=self.DEFAULT_NESTED_MKL_THREADS
         ))
 
     @cached_property
     def compile(self):
         return self.attributes['compile']
+
+    @cached_property
+    def omp_threads(self):
+        return str(self.attributes['omp_threads'])
+
+    @cached_property
+    def mkl_threads(self):
+        return str(self.attributes['mkl_threads'])
 
     def execution_matrix(self, context):
         del context  # unused
@@ -224,8 +236,8 @@ class MiniGEMM(Benchmark):
                 MKL_DYNAMIC='false',
                 OMP_NESTED='true',
                 OMP_PROC_BIND='spread,close',
-                OMP_NUM_THREADS='1',
-                MKL_NUM_THREADS='4',
+                OMP_NUM_THREADS=self.omp_threads,
+                MKL_NUM_THREADS=self.mkl_threads,
             ),
         )
 
