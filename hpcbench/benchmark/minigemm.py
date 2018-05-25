@@ -185,13 +185,13 @@ OBJ=$(CPPFILES:.cpp=.o)
 all: minigemm
 
 .cpp.o: $<
-	$(CXX) -c $< $(DEFINES) $(CXXFLAGS)
+    $(CXX) -c $< $(DEFINES) $(CXXFLAGS)
 
 minigemm: $(OBJ)
-	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
+    $(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 
 clean:
-	$(RM) minigemm *.o
+    $(RM) minigemm *.o
 
 .PHONY: clean
 
@@ -210,10 +210,10 @@ class MiniGEMM(Benchmark):
 
     def __init__(self):
         super(MiniGEMM, self).__init__(
-              attributes=dict(compile=self.COMPILE_PARAMS,
-                              omp_threads=self.DEFAULT_OPENMP_THREADS,
-                              mkl_threads=self.DEFAULT_NESTED_MKL_THREADS
-        ))
+            attributes=dict(compile=self.COMPILE_PARAMS,
+                            omp_threads=self.DEFAULT_OPENMP_THREADS,
+                            mkl_threads=self.DEFAULT_NESTED_MKL_THREADS
+                            ))
 
     @cached_property
     def compile(self):
@@ -253,7 +253,7 @@ class MiniGEMM(Benchmark):
         with open('minigemm.cpp', 'w') as ostr:
             print(SOURCE, file=ostr)
         with open('Makefile', 'w') as ostr:
-            print(MAKEFILE, file=ostr)
+            print(MAKEFILE.replace('    ', '\t'), file=ostr)
         opt_str = ' '.join(self.compile)
         with open('compile.sh', 'w') as ostr:
             print(COMPILE_SCRIPT.format(opts=opt_str), file=ostr)
