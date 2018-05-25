@@ -1,5 +1,10 @@
 #!/bin/sh
 
+module purge
+{%- for module in modules %}
+module load {{ module }}
+{%- endfor %}
+
 {%- for var, value in environment.items() %}
 export {{ var }}={{ value }}
 {%- endfor %}
