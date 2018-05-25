@@ -217,14 +217,22 @@ class MiniGEMM(Benchmark):
 
     @cached_property
     def compile(self):
+        """Add user defined compiler options
+        """
         return self.attributes['compile']
 
     @cached_property
     def omp_threads(self):
+        """Set the number of OpenMP threads used,
+        typically equals the number of NUMA domains
+        """
         return str(self.attributes['omp_threads'])
 
     @cached_property
     def mkl_threads(self):
+        """Set the number of MKL threads used,
+        typically equals the number of cores per NUMA domain
+        """
         return str(self.attributes['mkl_threads'])
 
     def execution_matrix(self, context):
@@ -251,7 +259,7 @@ class MiniGEMM(Benchmark):
             print(COMPILE_SCRIPT.format(opts=opt_str), file=ostr)
         st = os.stat('compile.sh')
         os.chmod('compile.sh', st.st_mode | stat.S_IEXEC)
-        ret = subprocess.call(['./compile.sh'])
+        subprocess.check_call(['./compile.sh'])
 
     def pre_execute(self, execution):
         self._compile(execution)
