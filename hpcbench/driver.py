@@ -576,6 +576,7 @@ class BenchmarkCategoryDriver(Enumerator):
         super(BenchmarkCategoryDriver, self).__init__(parent, category)
         self.category = category
         self.benchmark = self.parent.benchmark
+        self.config = parent.config
 
     @cached_property
     def commands(self):
@@ -817,6 +818,7 @@ class FixedAttempts(Enumerator):
         super(FixedAttempts, self).__init__(parent)
         self.execution = execution
         self.paths = []
+        self.config = parent.config
 
     __call__ = Enumerator._call_without_report
 
@@ -969,6 +971,7 @@ class ExecutionDriver(Leaf):
         self.command_expansion_vars = dict(
             process_count=1
         )
+        self.config = parent.config
 
     @cached_property
     def _executor_script(self):
@@ -993,14 +996,18 @@ class ExecutionDriver(Leaf):
 
     def _write_executor_script(self, ostr):
         """Write shell script in charge of executing the command"""
+        def merge_attributes(key):
+            env = self.execution.get(key) or {}
+            env.update(self.config.get(key) or {})
+            env = dict((var, six.moves.shlex_quote(str(value)))
+                       for var, value in env.items())
+            return env
+
         properties = dict(
             command=self.command,
             cwd=os.getcwd(),
-            environment=dict(
-                (var, six.moves.shlex_quote(value))
-                for var, value in
-                (self.execution.get('environment') or {}).items()
-            ),
+            modules=self.config.get('modules') or [],
+            environment=merge_attributes('environment'),
         )
         self._jinja_executor_template.stream(**properties).dump(ostr)
 
@@ -1126,7 +1133,7 @@ class SrunExecutionDriver(ExecutionDriver):
         :return: list of string
         """
         srun_options = copy.copy(self.common_srun_options)
-        srun_options.update(self.parent.parent.parent.config.get('srun') or {})
+        srun_options.update(self.config.get('srun') or {})
         srun_optlist = build_slurm_arguments(srun_options)
         if not isinstance(self.root.network.nodes(self.tag), ConstraintTag):
             pargs = parse_constraint_in_args(srun_optlist)
