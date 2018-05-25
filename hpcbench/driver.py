@@ -47,7 +47,10 @@ from . api import (
     Metric,
     NoMetricException,
 )
-from . campaign import from_file
+from . campaign import (
+    from_file,
+    YAML_REPORT_FILE,
+)
 from . toolbox.buildinfo import extract_build_info
 from . toolbox.collections_ext import (
     dict_merge,
@@ -66,7 +69,6 @@ from .toolbox.process import (
 )
 
 LOGGER = logging.getLogger('hpcbench')
-YAML_REPORT_FILE = 'hpcbench.yaml'
 YAML_CAMPAIGN_FILE = 'campaign.yaml'
 JSON_METRICS_FILE = 'metrics.json'
 LOCALHOST = 'localhost'

@@ -11,6 +11,7 @@ import shutil
 import socket
 import uuid
 
+from cached_property import cached_property
 import six
 import yaml
 
@@ -24,6 +25,10 @@ from . toolbox.collections_ext import (
     nameddict,
 )
 from . toolbox.env import expandvars
+from . toolbox.functools_ext import listify
+
+
+YAML_REPORT_FILE = 'hpcbench.yaml'
 
 
 def pip_installer_url(version=None):
@@ -477,3 +482,99 @@ def merge_campaigns(output_campaign, *campaigns):
     """
     for campaign in campaigns:
         CampaignMerge(output_campaign, campaign).merge()
+
+
+class ReportNode(collections.Mapping):
+    """Navigate across hpcbench.yaml files of a campaign
+    """
+    def __init__(self, path):
+        """
+        :param path: path to an existing campaign directory
+        :type path: str
+        """
+        self._path = path
+
+    @property
+    def path(self):
+        """get path given in constructor
+        :rtype: str
+        """
+        return self._path
+
+    @property
+    def report(self):
+        """get path to the hpcbench.yaml report
+        :rtype: str
+        """
+        return osp.join(self._path, YAML_REPORT_FILE)
+
+    @cached_property
+    def data(self):
+        """get content of hpcbench.yaml
+        :rtype: dict
+        """
+        with open(self.report) as istr:
+            return yaml.safe_load(istr)
+
+    @cached_property
+    @listify(wrapper=dict)
+    def children(self):
+        """get children node referenced as `children` in the
+        report.
+        :rtype: dict with name (str) -> node (ReportNode)
+        """
+        for child in self.data.get('children', []):
+            if osp.exists(osp.join(self.path, child, YAML_REPORT_FILE)):
+                yield child, self.__class__(osp.join(self.path, child))
+
+    def collect(self, key, recursive=True, with_path=False):
+        """Generator function traversing
+        tree structure to collect values of a specified key.
+
+        :param key: the key report to look for
+        :type key: str
+        :param recursive: look for key in children nodes
+        :type recursive: bool
+        :param with_path: whether the yield values if a tuple
+        of 2 elements containing report-path and the value
+        or simply the value.
+        :type with_path: bool
+
+        :rtype: generator providing either values or
+        tuples of 2 elements containing report path and value
+        depending on with_path parameter
+        """
+        if key in self.data:
+            if with_path:
+                yield (self.path, self.data[key])
+            else:
+                yield self.data[key]
+        if recursive:
+            for child in self.children.values():
+                for value in child.collect(key, True, with_path=with_path):
+                    yield value
+
+    def collect_one(self, *args, **kwargs):
+        """Same as `collect` but expects to have only one result.
+
+        :return: the only result directly, not the generator like `collect`.
+        """
+        generator = self.collect(*args, **kwargs)
+        try:
+            value = next(generator)
+        except StopIteration:
+            raise Exception("Expected exactly one value don't have any")
+        try:
+            next(generator)
+        except StopIteration:
+            return value
+        raise Exception('Expected exactly one value but have more')
+
+    def __getitem__(self, item):
+        return self.data[item]
+
+    def __len__(self):
+        return len(self.data)
+
+    def __iter__(self):
+        return iter(self.data)

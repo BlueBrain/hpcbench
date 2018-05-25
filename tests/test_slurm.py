@@ -1,5 +1,4 @@
 from io import StringIO
-import json
 import os
 import os.path as osp
 import shutil
@@ -11,8 +10,8 @@ import unittest
 
 import mock
 from mock import Mock
-import yaml
 
+from hpcbench.campaign import ReportNode
 from hpcbench.driver import (
     CampaignDriver,
     SbatchDriver,
@@ -59,43 +58,21 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
     def test_sbatch_command(self):
         self.assertTrue(osp.isdir(TestSlurm.CAMPAIGN_PATH))
         for tag in ['uc2']:
-            hpcb_f = osp.join(
-                TestSlurm.CAMPAIGN_PATH,
-                TestSlurm.driver.node,
-                tag, 'hpcbench.yaml'
-            )
-            with open(hpcb_f) as f:
-                hpcb = yaml.safe_load(f)
-            self.assertEqual(hpcb['jobid'], 12345)
-            sbatch = hpcb['sbatch']
-            sbatch_f = osp.join(
-                TestSlurm.CAMPAIGN_PATH,
-                TestSlurm.driver.node,
-                tag, sbatch
-            )
+            root = ReportNode(TestSlurm.CAMPAIGN_PATH)
+            for path, jobid in root.collect('jobid', with_path=True):
+                if path.endswith(tag):
+                    break
+            self.assertEqual(jobid, 12345)
+            slurm_report = ReportNode(path)
+            sbatch_f = osp.join(path, slurm_report['sbatch'])
             self.assertTrue(osp.isfile(sbatch_f),
                             "Not file: " + sbatch_f)
             with open(sbatch_f) as f:
                 sbatch_content = f.readlines()
             self.assertFalse(sbatch_content[-1].find(tag) == -1)
             self.assertIn(TestSlurm.CONSTRAINT, sbatch_content)
-            child_hpcbench_root = osp.join(
-                TestSlurm.CAMPAIGN_PATH,
-                TestSlurm.driver.node,
-                tag, hpcb['children'][0])
-            child_metrics_f = osp.join(
-                child_hpcbench_root,
-                self.SLURM_ALLOC_NODE,
-                tag,
-                'test-slurm2',
-                'standard',
-                'metrics.json'
-            )
-            self.assertTrue(osp.isfile(child_metrics_f),
-                            "Not file: " + child_metrics_f)
-            with open(child_metrics_f) as istr:
-                data = json.load(istr)
-                dummy = kwargsql.get(data, '0__metrics__0__measurement__dummy')
+            data = slurm_report.collect_one('metrics')
+            dummy = kwargsql.get(data, '0__measurement__dummy')
             self.assertEqual(dummy, 42.0)
 
     @classmethod
@@ -121,14 +98,8 @@ class TestSbatchFail(DriverTestCase, unittest.TestCase):
         super(cls, cls).setUpClass()
 
     def test_sbatch_fail(self):
-        hpcb_f = osp.join(
-            TestSbatchFail.CAMPAIGN_PATH,
-            TestSbatchFail.driver.node,
-            'uc2', 'hpcbench.yaml'
-        )
-        with open(hpcb_f) as f:
-            hpcb = yaml.safe_load(f)
-        self.assertEqual(hpcb['jobid'], -1)
+        report = ReportNode(TestSbatchFail.CAMPAIGN_PATH)
+        self.assertEqual(list(report.collect('jobid')), [-1] * 2)
 
 
 class TestSbatchTemplate(unittest.TestCase):
