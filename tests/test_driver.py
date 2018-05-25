@@ -13,6 +13,7 @@ import six
 import yaml
 
 from hpcbench.api import Benchmark
+from hpcbench.campaign import ReportNode
 from hpcbench.cli import (
     bendoc,
     benelastic,
@@ -50,7 +51,7 @@ class TestDriver(DriverTestCase, unittest.TestCase):
 
     def test_run_01(self):
         self.assertTrue(osp.isdir(self.CAMPAIGN_PATH))
-        # simply ensure metrics have been generated
+        # ensure metrics have been generated
         aggregated_metrics_f = osp.join(
             TestDriver.CAMPAIGN_PATH,
             TestDriver.driver.node,
@@ -59,6 +60,10 @@ class TestDriver(DriverTestCase, unittest.TestCase):
             'main',
             'metrics.json'
         )
+        # use report API to ensure all commands succeeded
+        report = ReportNode(TestDriver.CAMPAIGN_PATH)
+        self.assertEqual(list(report.collect('command_succeeded')),
+                         [True] * 3)
         self.assertTrue(
             osp.isfile(aggregated_metrics_f),
             "Not file: " + aggregated_metrics_f
