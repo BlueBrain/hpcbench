@@ -1,0 +1,10 @@
+benchmarks:
+    '*':
+        override:
+            type: fake
+            modules:
+            - foo/bar
+            environment:
+                foo: bar
+            attributes:
+                input: [10]
