@@ -126,7 +126,7 @@ class BabelStream(Benchmark):
 
     def _command(self, device):
         cmd = [
-            find_executable(self.executable),
+            find_executable(self.executable, required=False),
             '--device',
             device
         ] + self.options

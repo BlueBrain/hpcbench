@@ -122,7 +122,7 @@ class CUDAStream(Benchmark):
         for nthreads in self.blocksizes:
             yield dict(
                 category=CUDAStream.name,
-                command=[find_executable(self.executable),
+                command=[find_executable(self.executable, required=False),
                          '-b', nthreads],
                 metas=dict(blocksizes=nthreads),
             )

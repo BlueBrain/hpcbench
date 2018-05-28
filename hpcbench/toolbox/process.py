@@ -32,7 +32,8 @@ def find_executable(name, names=None, required=True):
        >>> find_executable('sed', names=['gsed'])
 
     required: If True, then the function raises an Exception
-    if the program is not found.
+    if the program is not found else the function returns name if
+    the program is not found.
     """
     path_from_env = os.environ.get(name.upper())
     if path_from_env is not None:
@@ -47,6 +48,8 @@ def find_executable(name, names=None, required=True):
             return eax
     if required:
         raise NameError('Could not find %s executable' % name)
+    else:
+        return name
 
 
 def physical_cpus():

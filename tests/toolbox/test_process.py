@@ -11,13 +11,13 @@ class TestFindExecutable(unittest.TestCase):
         os.environ['ELLESSE'] = '/usr/bin/elesse'
         try:
             self.assertEqual(find_executable('ellesse'), '/usr/bin/elesse')
-            self.assertIsNone(find_executable('elaisse', ['elesse'],
-                              required=False))
+            self.assertEqual(find_executable('elaisse', ['elesse'],
+                                             required=False), 'elaisse')
         finally:
             os.environ.pop('ELLESSE')
 
     def test_process_not_found(self):
-        self.assertIsNone(find_executable('ellesse', required=False))
+        self.assertEqual(find_executable('ellesse', required=False), 'ellesse')
         with self.assertRaises(NameError):
             find_executable('ellesse')
             find_executable('ellesse', ['elaisse'])

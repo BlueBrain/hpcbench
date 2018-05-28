@@ -248,7 +248,7 @@ class NvidiaBandwidthTest(Benchmark):
     @property
     def _command(self):
         cmd = [
-            find_executable(self.executable),
+            find_executable(self.executable, required=False),
             '--device',
             str(self.device),
             '--mode',

@@ -109,7 +109,7 @@ class SHOC(Benchmark):
     @property
     def command(self):
         return [
-            find_executable(self.executable), '-cuda',
+            find_executable(self.executable, required=False), '-cuda',
             '-d', self.device,
             '-s', self.size,
         ] + self.options

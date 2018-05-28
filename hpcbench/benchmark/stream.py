@@ -123,7 +123,7 @@ class Stream(Benchmark):
         for thread in self.threads:
             yield dict(
                 category=Stream.name,
-                command=[find_executable(self.executable)],
+                command=[find_executable(self.executable, required=False)],
                 metas=dict(threads=thread),
                 environment=dict(
                     OMP_NUM_THREADS=thread,
