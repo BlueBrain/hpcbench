@@ -6,11 +6,11 @@ Usage:
   ben-wait --version
 
 Options:
-  -l --log=LOGFILE                   Specify an option logfile to write to
-  -n <seconds>, --interval <seconds> Specify wait interval [default: 10]
-  -h --help                          Show this screen
-  --version                          Show version
-  -v -vv                             Increase program verbosity
+  -l --log=LOGFILE                    Specify an option logfile to write to.
+  -n <seconds>, --interval <seconds>  Specify wait interval [default: 10].
+  -h --help                           Show this screen.
+  --version                           Show version.
+  -v -vv                              Increase program verbosity.
 """
 
 import logging
