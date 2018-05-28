@@ -1,4 +1,4 @@
-# OSU MPI Allgather Latency Test v5.3.2
+# OSU MPI Alltoallv Latency Test v5.3.2
 # Size       Avg Latency(us)
 64                      8.64
 128                     1.31

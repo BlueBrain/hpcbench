@@ -28,7 +28,7 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
                 {'bytes': 64, 'latency': 3.84}
             ]
         ),
-        OSU.OSU_ALLGATHER: dict(
+        OSU.OSU_ALLTOALLV: dict(
             min_lat=1.31,
             min_lat_bytes=128,
             minb_lat=8.64,
@@ -54,6 +54,21 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
                 {'bytes': 1024, 'latency': 3.06}
             ]
         ),
+        OSU.OSU_MBW_MR: dict(
+            max_bw=4306.41,
+            max_mr=4205474.79,
+            max_bw_bytes=1024,
+            maxb_bw=4306.41,
+            maxb_mr=4205474.79,
+            maxb_bw_bytes=1024,
+            raw=[
+                {'bytes': 64, 'bandwidth': 489.18, 'msg_rate': 7643378.59},
+                {'bytes': 128, 'bandwidth': 998.25, 'msg_rate': 7798822.08},
+                {'bytes': 256, 'bandwidth': 1912.59, 'msg_rate': 7471067.52},
+                {'bytes': 512, 'bandwidth': 3080.21, 'msg_rate': 6016034.42},
+                {'bytes': 1024, 'bandwidth': 4306.41, 'msg_rate': 4205474.79}
+            ]
+        ),
     }
 
     def get_benchmark_clazz(self):
@@ -63,7 +78,7 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
         return TestOSU.EXPECTED_METRICS[category]
 
     def get_benchmark_categories(self):
-        return OSU.DEFAULT_CATEGORIES
+        return OSU.DEFAULT_CATEGORIES + ['osu_mbw_mr']
 
     @property
     def attributes(self):
@@ -73,7 +88,8 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
                 'node01',
                 'node03',
                 'node05',
-            ]
+            ],
+            categories=self.get_benchmark_categories()
         )
 
     @property
@@ -99,6 +115,11 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
                 category='osu_bw'
             ),
             dict(
+                command=['/path/to/fake'],
+                srun_nodes=['node01', 'node03', 'node05'],
+                category='osu_mbw_mr'
+            ),
+            dict(
                 command=['/path/to/fake', '-x', '200', '-i', '100'],
                 srun_nodes=['node03', 'node05'],
                 category='osu_latency'
@@ -106,7 +127,7 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
             dict(
                 command=['/path/to/fake', '-x', '200', '-i', '100'],
                 srun_nodes=['node01', 'node03', 'node05'],
-                category='osu_allgather'
+                category='osu_alltoallv'
             ),
             dict(
                 command=['/path/to/fake', '-x', '200', '-i', '100'],
