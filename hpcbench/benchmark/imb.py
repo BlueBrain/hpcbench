@@ -34,11 +34,11 @@ class IMBExtractor(MetricsExtractor):
             max_bw_bytes=Metrics.Byte
         )
         if self.with_all_data:
-            common.update(raw=list(dict(
+            common.update(raw=[dict(
                 bytes=Metrics.Byte,
                 bandwidth=Metrics.MegaBytesPerSecond,
                 latency=Metrics.Microsecond,
-            )))
+            )])
         return common
 
     @abstractproperty

@@ -806,6 +806,10 @@ class MetricsDriver(object):
                                                             type(value))
                 raise Exception(message)
             cls._check_metrics(metric, value)
+        else:
+            message = "benchmark metric {} is neither ".format(metric)
+            message += "a Metric, dict or list"
+            raise Exception(message)
 
 
 class FixedAttempts(Enumerator):

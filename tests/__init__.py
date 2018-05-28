@@ -5,6 +5,7 @@ import sys
 import tempfile
 from textwrap import dedent
 
+from cached_property import cached_property
 import six
 
 from hpcbench.api import (
@@ -49,13 +50,13 @@ class FakeExtractor(MetricsExtractor):
     def __init__(self, show_cwd=None):
         self.show_cwd = show_cwd
 
-    @property
+    @cached_property
     def metrics(self):
         metrics = dict(
             performance=Metric('m', float),
             standard_error=Metric('m', float),
-            pairs=list(dict(first=Metric('m', float),
-                            second=Metric('m', bool)))
+            pairs=[dict(first=Metric('m', float),
+                        second=Metric('m', bool))]
         )
         if self.show_cwd:
             metrics.update(path=Metric('', str))

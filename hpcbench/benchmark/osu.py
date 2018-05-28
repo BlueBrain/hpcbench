@@ -80,10 +80,10 @@ class OSUBWExtractor(OSUExtractor):
                     max_bw=Metrics.MegaBytesPerSecond,
                     maxb_bw_bytes=Metrics.Byte,
                     maxb_bw=Metrics.MegaBytesPerSecond,
-                    raw=list(dict(
+                    raw=[dict(
                         bytes=Metrics.Byte,
                         bandwidth=Metrics.MegaBytesPerSecond,
-                    )))
+                    )])
 
     @cached_property
     def stdout_ignore_prior(self):
@@ -120,10 +120,10 @@ class OSULatExtractor(OSUExtractor):
                     min_lat=Metrics.Microsecond,
                     minb_lat_bytes=Metrics.Byte,
                     minb_lat=Metrics.Microsecond,
-                    raw=list(dict(
+                    raw=[dict(
                         bytes=Metrics.Byte,
-                        latency=Metrics.Microsecond,
-                    )))
+                        latency=Metrics.Microsecond
+                    )])
 
     @cached_property
     def stdout_ignore_prior(self):
@@ -161,10 +161,10 @@ class OSUCollectiveLatExtractor(OSUExtractor):
                     min_lat=Metrics.Microsecond,
                     minb_lat_bytes=Metrics.Byte,
                     minb_lat=Metrics.Microsecond,
-                    raw=list(dict(
+                    raw=[dict(
                         bytes=Metrics.Byte,
                         latency=Metrics.Microsecond,
-                    )))
+                    )])
 
     @cached_property
     def stdout_ignore_prior(self):
