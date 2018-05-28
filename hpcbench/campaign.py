@@ -3,7 +3,9 @@
 import collections
 from contextlib import contextmanager
 import filecmp
+import functools
 import json
+import operator
 import os
 import os.path as osp
 import re
@@ -501,6 +503,17 @@ class ReportNode(collections.Mapping):
         """
         return self._path
 
+    @listify(wrapper=nameddict)
+    def path_context(self, path):
+        """Build of dictionary of fields extracted from
+        the given path"""
+        prefix = os.path.commonprefix([path, self._path])
+        path = path[len(prefix):]
+        path = path.strip(os.sep)
+        attrs = ['node', 'tag', 'benchmark', 'category', 'attempt']
+        for i, elt in enumerate(path.split(os.sep)):
+            yield attrs[i], elt
+
     @property
     def report(self):
         """get path to the hpcbench.yaml report
@@ -527,15 +540,15 @@ class ReportNode(collections.Mapping):
             if osp.exists(osp.join(self.path, child, YAML_REPORT_FILE)):
                 yield child, self.__class__(osp.join(self.path, child))
 
-    def collect(self, key, recursive=True, with_path=False):
+    def collect(self, *keys, **kwargs):
         """Generator function traversing
         tree structure to collect values of a specified key.
 
-        :param key: the key report to look for
+        :param keys: the keys to look for in the report
         :type key: str
-        :param recursive: look for key in children nodes
+        :keyword recursive: look for key in children nodes
         :type recursive: bool
-        :param with_path: whether the yield values if a tuple
+        :keyword with_path: whether the yield values if a tuple
         of 2 elements containing report-path and the value
         or simply the value.
         :type with_path: bool
@@ -544,14 +557,24 @@ class ReportNode(collections.Mapping):
         tuples of 2 elements containing report path and value
         depending on with_path parameter
         """
-        if key in self.data:
-            if with_path:
-                yield (self.path, self.data[key])
+        if not keys:
+            raise Exception('Missing key')
+        has_values = functools.reduce(
+            operator.__and__,
+            [key in self.data for key in keys],
+            True
+        )
+        if has_values:
+            values = tuple([self.data.get(key) for key in keys])
+            if len(values) == 1:
+                values = values[0]
+            if kwargs.get('with_path', False):
+                yield (self.path, values)
             else:
-                yield self.data[key]
-        if recursive:
+                yield values
+        if kwargs.get('recursive', True):
             for child in self.children.values():
-                for value in child.collect(key, True, with_path=with_path):
+                for value in child.collect(*keys, **kwargs):
                     yield value
 
     def collect_one(self, *args, **kwargs):
