@@ -1,0 +1,8 @@
+# OSU MPI Multiple Bandwidth / Message Rate Test v5.3.2
+# [ pairs: 1 ] [ window size: 64 ]
+# Size                  MB/s        Messages/s
+64                    489.18        7643378.59
+128                   998.25        7798822.08
+256                  1912.59        7471067.52
+512                  3080.21        6016034.42
+1024                 4306.41        4205474.79

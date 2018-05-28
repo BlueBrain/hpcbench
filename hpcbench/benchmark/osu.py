@@ -9,9 +9,9 @@ from cached_property import cached_property
 
 from hpcbench.api import (
     Benchmark,
+    Metric,
     Metrics,
-    MetricsExtractor,
-)
+    MetricsExtractor)
 from hpcbench.toolbox.process import find_executable
 
 
@@ -72,18 +72,19 @@ class OSUBWExtractor(OSUExtractor):
     )
 
     def __init__(self):
+        self._metrics = dict(max_bw_bytes=Metrics.Byte,
+                             max_bw=Metrics.MegaBytesPerSecond,
+                             maxb_bw_bytes=Metrics.Byte,
+                             maxb_bw=Metrics.MegaBytesPerSecond,
+                             raw=[dict(
+                                 bytes=Metrics.Byte,
+                                 bandwidth=Metrics.MegaBytesPerSecond,
+                             )])
         super(OSUBWExtractor, self).__init__()
 
     @cached_property
     def metrics(self):
-        return dict(max_bw_bytes=Metrics.Byte,
-                    max_bw=Metrics.MegaBytesPerSecond,
-                    maxb_bw_bytes=Metrics.Byte,
-                    maxb_bw=Metrics.MegaBytesPerSecond,
-                    raw=[dict(
-                        bytes=Metrics.Byte,
-                        bandwidth=Metrics.MegaBytesPerSecond,
-                    )])
+        return self._metrics
 
     @cached_property
     def stdout_ignore_prior(self):
@@ -102,6 +103,42 @@ class OSUBWExtractor(OSUExtractor):
                     max_bw=max_bw, max_bw_bytes=max_bw_b,
                     raw=[{'bytes': b, 'bandwidth': bw}
                          for b, bw in self.s_raw_data])
+
+
+class OSUMBWExtractor(OSUBWExtractor):
+    """Metrics extractor for osu_mbw_mr benchmark"""
+
+    BW_BANDWIDTH_MSGRATE_RE = re.compile(
+        r'^(\d+)[\s]+(\d*\.?\d+)[\s]+(\d*\.?\d+)'
+    )
+
+    def __init__(self):
+        super(OSUMBWExtractor, self).__init__()
+        msg_rate_metric = Metric('Msg/s', float)
+        msg_metrics = dict(max_mr=msg_rate_metric,
+                           maxb_mr=msg_rate_metric)
+        self._metrics.update(msg_metrics)
+        self._metrics['raw'][0]['msg_rate'] = msg_rate_metric
+
+    @cached_property
+    def stdout_ignore_prior(self):
+        return "# Size                  MB/s        Messages/s"
+
+    def process_line(self, line):
+        search = self.BW_BANDWIDTH_MSGRATE_RE.search(line)
+        if search:
+            self.s_raw_data.append((int(search.group(1)),
+                                    float(search.group(2)),
+                                    float(search.group(3))))
+
+    def epilog(self):
+        maxb_bw_b, maxb_bw, maxb_mr = self.s_raw_data[-1]
+        max_bw_b, max_bw, max_mr = max(self.s_raw_data, key=itemgetter(1))
+        return dict(maxb_bw=maxb_bw, maxb_mr=maxb_mr,
+                    maxb_bw_bytes=maxb_bw_b,
+                    max_bw=max_bw, max_mr=max_mr, max_bw_bytes=max_bw_b,
+                    raw=[{'bytes': b, 'bandwidth': bw, 'msg_rate': mr}
+                         for b, bw, mr in self.s_raw_data])
 
 
 class OSULatExtractor(OSUExtractor):
@@ -193,19 +230,29 @@ class OSU(Benchmark):
     """
     OSU_BW = 'osu_bw'
     OSU_LAT = 'osu_latency'
+    OSU_MBW_MR = 'osu_mbw_mr'
     OSU_ALLGATHER = 'osu_allgather'
     OSU_ALLGATHERV = 'osu_allgatherv'
+    OSU_ALLTOALL = 'osu_alltoall'
+    OSU_ALLTOALLV = 'osu_alltoallv'
+    OSU_REDUCE = 'osu_reduce'
+    OSU_ALLREDUCE = 'osu_allreduce'
     DEFAULT_CATEGORIES = [
         OSU_BW,
         OSU_LAT,
-        OSU_ALLGATHER,
         OSU_ALLGATHERV,
+        OSU_ALLTOALLV,
     ]
     DEFAULT_ARGUMENTS = {
         OSU_BW: ["-x", "200", "-i", "100"],
+        OSU_MBW_MR: [],
         OSU_LAT: ["-x", "200", "-i", "100"],
         OSU_ALLGATHER: ["-x", "200", "-i", "100"],
         OSU_ALLGATHERV: ["-x", "200", "-i", "100"],
+        OSU_ALLTOALL: ["-x", "200", "-i", "100"],
+        OSU_ALLTOALLV: ["-x", "200", "-i", "100"],
+        OSU_REDUCE: ["-x", "200", "-i", "100"],
+        OSU_ALLREDUCE: ["-x", "200", "-i", "100"],
     }
 
     def __init__(self):
@@ -295,6 +342,11 @@ class OSU(Benchmark):
         return {
             OSU.OSU_BW: OSUBWExtractor(),
             OSU.OSU_LAT: OSULatExtractor(),
+            OSU.OSU_MBW_MR: OSUMBWExtractor(),
             OSU.OSU_ALLGATHER: OSUCollectiveLatExtractor(),
             OSU.OSU_ALLGATHERV: OSUCollectiveLatExtractor(),
+            OSU.OSU_ALLTOALL: OSUCollectiveLatExtractor(),
+            OSU.OSU_ALLTOALLV: OSUCollectiveLatExtractor(),
+            OSU.OSU_REDUCE: OSUCollectiveLatExtractor(),
+            OSU.OSU_ALLREDUCE: OSUCollectiveLatExtractor(),
         }
