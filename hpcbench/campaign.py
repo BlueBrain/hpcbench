@@ -508,11 +508,12 @@ class ReportNode(collections.Mapping):
         """Build of dictionary of fields extracted from
         the given path"""
         prefix = os.path.commonprefix([path, self._path])
-        path = path[len(prefix):]
-        path = path.strip(os.sep)
+        relative_path = path[len(prefix):]
+        relative_path = relative_path.strip(os.sep)
         attrs = ['node', 'tag', 'benchmark', 'category', 'attempt']
-        for i, elt in enumerate(path.split(os.sep)):
+        for i, elt in enumerate(relative_path.split(os.sep)):
             yield attrs[i], elt
+        yield 'path', path
 
     @property
     def report(self):
