@@ -152,7 +152,7 @@ class HPL(Benchmark):
     @property
     def command(self):
         return [
-            find_executable(self.executable),
+            find_executable(self.executable, required=False),
         ] + self.options
 
     def execution_matrix(self, context):

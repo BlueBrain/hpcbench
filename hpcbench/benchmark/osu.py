@@ -256,7 +256,8 @@ class OSU(Benchmark):
                     context.logger.warn('Category %s does not support '
                                         'SLURM implicit nodes', category)
                 else:
-                    executable = find_executable(self.executable(category))
+                    executable = find_executable(self.executable(category),
+                                                 required=False)
                     for pair in OSU.host_pairs(context):
                         yield dict(
                             category=category,
@@ -266,7 +267,8 @@ class OSU(Benchmark):
             else:
                 yield dict(
                     category=category,
-                    command=[find_executable(self.executable(category))]
+                    command=[find_executable(self.executable(category),
+                                             required=False)]
                     + arguments,
                     srun_nodes=self.srun_nodes
                 )

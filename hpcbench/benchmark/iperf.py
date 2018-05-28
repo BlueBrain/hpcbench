@@ -110,7 +110,7 @@ class Iperf(Benchmark):
         yield dict(
             category=Iperf.DEFAULT_DEVICE,
             command=self.mpirun + [
-                find_executable(self.executable),
+                find_executable(self.executable, required=False),
                 '-c',
                 self.server,
                 '-J',

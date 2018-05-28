@@ -229,7 +229,7 @@ class IOR(Benchmark):
         cmd = dict(
             category=api,
             command=[
-                find_executable(self.executable),
+                find_executable(self.executable, required=False),
                 '-a', api,
                 '-b', str(self.block_size),
             ] + self.options,
