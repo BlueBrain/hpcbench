@@ -520,7 +520,7 @@ class BenchmarkTagDriver(Enumerator):
         if 'attributes' in conf:
             dict_merge(
                 benchmark.attributes,
-                conf['attributes']
+                conf['attributes'] or {}
             )
         return BenchmarkDriver(self, benchmark, conf)
 
@@ -597,12 +597,23 @@ class BenchmarkCategoryDriver(Enumerator):
             if category != self.category:
                 continue
             # Override `environment` if specified in YAML
-            yaml_env = self.config.get('environment')
-            if yaml_env:
-                execution['environment'] = yaml_env
+            if 'environment' in self.config:
+                yaml_env = self.config.get('environment')
+                if not yaml_env:
+                    # empty dict or None wipes environment
+                    execution['environment'] = {}
+                else:
+                    env = execution.setdefault('environment', {})
+                    for name, value in yaml_env.items():
+                        if value is None:
+                            env.pop(name, None)
+                        else:
+                            env[name] = value
+                    if not env:
+                        self.config.pop('environment')
             # Override `modules` if specified in YAML
-            yaml_modules = self.config.get('modules')
-            if yaml_modules:
+            if 'modules' in self.config:
+                yaml_modules = self.config['modules'] or []
                 execution['modules'] = yaml_modules
             name = execution.get('name') or ''
             yield (
@@ -1001,6 +1012,10 @@ class ExecutionDriver(Leaf):
     def _write_executor_script(self, ostr):
         """Write shell script in charge of executing the command"""
         environment = self.execution.get('environment') or {}
+        if not isinstance(environment, Mapping):
+            msg = 'Expected mapping for environment but got '
+            msg += str(type(environment))
+            raise Exception(msg)
         escaped_environment = dict(
             (var, six.moves.shlex_quote(str(value)))
             for var, value in environment.items()

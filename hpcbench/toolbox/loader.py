@@ -43,11 +43,6 @@ def load_eggs(entry_point_name):
 
         for entry in sorted(working_set.iter_entry_points(entry_point_name),
                             key=lambda entry: entry.name):
-            LOGGER.debug(
-                'Loading %s from %s',
-                entry.name,
-                entry.dist.location
-            )
             try:
                 entry.load(require=True)
             except Exception as exc:  # pylint: disable=broad-except
