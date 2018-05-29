@@ -57,14 +57,20 @@ SOURCE = """#include <iostream>
 
 #define ALPHA 1.0
 #define BETA 1.0
-#define NITER 100
+#define NITER 20
+#ifndef DIM_M
 #define DIM_M 8000
+#endif
+#ifndef DIM_K
 #define DIM_K 4096
+#endif
+#ifndef DIM_N
 #define DIM_N 4096
+#endif
 
 int main(int argc, char **argv) {
   double alpha, beta;
-  int m, n, k;
+  size_t m, n, k;
   int niter = NITER;
   int nthreads = omp_get_max_threads();
 #ifdef DBG_PRINT
@@ -78,7 +84,7 @@ int main(int argc, char **argv) {
 
   omp_set_max_active_levels(2);
 
-  double gflop = (2.0*m*k*n)*1e-9*niter*nthreads;
+  double gflop = (m*n*(2*k+2))*1e-9*niter*nthreads;
 
   auto As = (double**)malloc(nthreads*sizeof(double*));
   auto Bs = (double**)malloc(nthreads*sizeof(double*));
@@ -104,13 +110,13 @@ int main(int argc, char **argv) {
     auto A = As[ithrd];
     auto B = Bs[ithrd];
     auto C = Cs[ithrd];
-    for(int i = 0; i < m*k; ++i) {
+    for(size_t i = 0; i < m*k; ++i) {
       A[i] = 1.1*(i+1);
     }
-    for(int i = 0; i < k*n; ++i) {
+    for(size_t i = 0; i < k*n; ++i) {
       B[i] = 1.2*(i+2);
     }
-    for(int i = 0; i < m*n; ++i) {
+    for(size_t i = 0; i < m*n; ++i) {
       C[i] = 0.0;
     }
   }
@@ -149,18 +155,18 @@ int main(int argc, char **argv) {
 
   double chk;
   double sgn = 1.0;
-  for(int j = 0; j < nthreads; j++) {
+  for(int ithrd = 0; ithrd < nthreads; ithrd++) {
     for(int i = 0; i < m*n; ++i) {
       sgn *= -1.0;
-      chk += sgn*Cs[j][i];
+      chk += sgn*Cs[ithrd][i];
     }
   }
   std::cout << "Check value: " << chk << std::endl;
 
-  for(int j = 0; j < 2; j++) {
-    mkl_free(As[j]);
-    mkl_free(Bs[j]);
-    mkl_free(Cs[j]);
+  for(int ithrd = 0; ithrd < nthreads; ithrd++) {
+    mkl_free(As[ithrd]);
+    mkl_free(Bs[ithrd]);
+    mkl_free(Cs[ithrd]);
   }
   free(As);
   free(Bs);
@@ -244,8 +250,9 @@ class MiniGEMM(Benchmark):
                 MKL_DYNAMIC='false',
                 OMP_NESTED='true',
                 OMP_PROC_BIND='spread,close',
-                OMP_NUM_THREADS=self.omp_threads,
-                MKL_NUM_THREADS=self.mkl_threads,
+                OMP_PLACES='cores',
+                OMP_NUM_THREADS=','.join([self.omp_threads,
+                                          self.mkl_threads]),
             ),
         )
 
