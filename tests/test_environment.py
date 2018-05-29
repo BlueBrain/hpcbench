@@ -14,7 +14,7 @@ import six
 import yaml
 
 from hpcbench.api import Benchmark
-from hpcbench.campaign import ReportNode
+from hpcbench.campaign import from_file, ReportNode
 from hpcbench.toolbox.environment_modules import MODULECMD
 from . import DriverTestCase, NullExtractor
 
@@ -126,11 +126,14 @@ class TestEnvironment(DriverTestCase, unittest.TestCase):
         ostr = six.StringIO()
         print('#!/bin/sh', file=ostr)
         print(file=ostr)
-        print('module purge', file=ostr)
+        print('if type module >/dev/null; then', file=ostr)
+        print('    module purge', file=ostr)
         for module in modules:
-            print('module load ' + module, file=ostr)
+            print('    module load ' + module, file=ostr)
+        print('fi', file=ostr)
         for name, value in environment.items():
-            print('export', name + '=' + value, file=ostr)
+            value = six.moves.shlex_quote(value)
+            print('export', name + "=" + value, file=ostr)
         with contextlib.closing(ostr):
             return ostr.getvalue()
 
@@ -138,20 +141,25 @@ class TestEnvironment(DriverTestCase, unittest.TestCase):
     @mock.patch('subprocess.Popen', new=POPEN_MOCK)
     def setUpClass(cls):
         super(cls, cls).setUpClass()
+        cls.driver.logger.error(cls.CAMPAIGN_PATH)
 
     @cached_property
     def expected_env(self):
-        with open(self.get_campaign_file()) as istr:
-            return yaml.safe_load(istr)['expected_env']
+        return from_file(self.get_campaign_file())['expected_env']
 
     def test(self):
         report = ReportNode(self.CAMPAIGN_PATH)
         keys = ('modules', 'environment')
-        for path, env in report.collect(keys, with_path=True):
+        expected_tests = 12
+        tests = 0
+        for path, env in report.collect(*keys, with_path=True):
+            self.driver.logger.error('path: %s', path)
             context = report.path_context(path)
             self._check_campaign_report(context, env)
             self._check_shell_script(context)
             self._check_benchmark_hooks_environment(context)
+            tests += 1
+        self.assertEqual(tests, expected_tests)
 
     def _check_campaign_report(self, context, env):
         """Verify environment and modules specified in report"""
@@ -167,7 +175,10 @@ class TestEnvironment(DriverTestCase, unittest.TestCase):
         with open(shell_script) as istr:
             prelude = self._shell_prelude(**environment)
             script = istr.read()
-            self.assertTrue(script.startswith(prelude))
+            if not script.startswith(prelude):
+                print(script)
+                print(prelude)
+                self.assertTrue(False)
 
     def _check_benchmark_hooks_environment(self, context):
         """Check hook file written by benchmark

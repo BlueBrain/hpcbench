@@ -67,9 +67,24 @@ benchmarks:
             attributes:
                 environment:
                 FOO: BAR
+        dollar_in_variable:
+            type: environment
+            attributes:
+                environment:
+                  FOO: "$$BAR"
+        space_in_variable:
+            type: environment
+            attributes:
+                environment:
+                  FOO: foo bar
+        quotes_in_variable:
+            type: environment
+            attributes:
+                environment:
+                  FOO: "foo'\"bar"
 
 
-expected_results:
+expected_env:
     as_is:
         modules: []
         environment: {}
@@ -102,4 +117,16 @@ expected_results:
         modules: []
     empty_environment_wipes:
         environment: {}
+        modules: []
+    dollar_in_variable:
+        environment:
+            FOO: "$$BAR"
+        modules: []
+    quotes_in_variable:
+        environment:
+            FOO: "foo'\"bar"
+        modules: []
+    space_in_variable:
+        environment:
+            FOO: foo bar
         modules: []

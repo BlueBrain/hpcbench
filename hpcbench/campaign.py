@@ -566,7 +566,7 @@ class ReportNode(collections.Mapping):
             True
         )
         if has_values:
-            values = tuple([self.data.get(key) for key in keys])
+            values = tuple([self.data[key] for key in keys])
             if len(values) == 1:
                 values = values[0]
             if kwargs.get('with_path', False):
