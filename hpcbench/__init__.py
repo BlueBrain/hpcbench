@@ -9,7 +9,7 @@ jinja_environment = Environment(
     loader=PackageLoader('hpcbench', 'templates'),
     autoescape=select_autoescape(
         disabled_extensions=('txt',),
-        default_for_string=True,
+        default_for_string=False,
         default=True
     ),
 )
