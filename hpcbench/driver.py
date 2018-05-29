@@ -62,7 +62,7 @@ from . toolbox.contextlib_ext import (
     Timer,
 )
 from . toolbox.edsl import kwargsql
-from . toolbox.environment_modules import module
+from . toolbox.environment_modules import Module
 from . toolbox.functools_ext import listify
 from .toolbox.process import (
     build_slurm_arguments,
@@ -1094,7 +1094,7 @@ class ExecutionDriver(Leaf):
         env = copy.copy(os.environ)
         try:
             for mod in self.execution.get('modules') or []:
-                module('load', mod)
+                Module.load(mod)
             os.environ.update(self.execution.get('environment') or {})
             yield
         finally:

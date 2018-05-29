@@ -5,7 +5,6 @@ import glob
 import os
 import os.path as osp
 import re
-import subprocess
 import unittest
 
 from cached_property import cached_property
@@ -15,11 +14,8 @@ import yaml
 
 from hpcbench.api import Benchmark
 from hpcbench.campaign import from_file, ReportNode
-from hpcbench.toolbox.environment_modules import MODULECMD
+from hpcbench.toolbox.environment_modules import Module
 from . import DriverTestCase, NullExtractor
-
-
-ORIGINAL_POPEN = subprocess.Popen
 
 
 def popen_module_load(command, **kwargs):
@@ -31,17 +27,16 @@ def popen_module_load(command, **kwargs):
         ('os.environ["foo_bar"]="loaded"', '')
         >>>
     """
-    if command[0:3] != [MODULECMD, 'python', 'load']:
-        return ORIGINAL_POPEN(command, **kwargs)
-    else:
-        module = command[3]
-        env_var = EnvBenchmark.MODULE_TO_VAR_RE.sub('_', module)
-        python_code = 'os.environ["{}"] = "loaded"'.format(env_var)
+    if command[0:3] != [Module.MODULECMD, 'python', 'load']:
+        raise Exception("Mock used outside desired scope")
+    module = command[3]
+    env_var = EnvBenchmark.MODULE_TO_VAR_RE.sub('_', module)
+    python_code = 'os.environ["{}"] = "loaded"'.format(env_var)
 
-        class _popen():
-            def communicate(self):
-                return python_code, None
-        return _popen()
+    class _popen():
+        def communicate(self):
+            return python_code, None
+    return _popen()
 
 
 POPEN_MOCK = mock.Mock(side_effect=popen_module_load)
@@ -138,7 +133,7 @@ class TestEnvironment(DriverTestCase, unittest.TestCase):
             return ostr.getvalue()
 
     @classmethod
-    @mock.patch('subprocess.Popen', new=POPEN_MOCK)
+    @mock.patch('hpcbench.toolbox.environment_modules.Popen', new=POPEN_MOCK)
     def setUpClass(cls):
         super(cls, cls).setUpClass()
         cls.driver.logger.error(cls.CAMPAIGN_PATH)
