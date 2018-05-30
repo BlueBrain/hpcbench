@@ -9,6 +9,7 @@ import sys
 
 import six
 import yaml
+from yaml.representer import SafeRepresenter
 
 
 class nameddict(dict):  # pragma pylint: disable=invalid-name
@@ -151,3 +152,89 @@ def byteify(data, ignore_dicts=False):
     elif not ignore_dicts and isinstance(data, dict):
         return {byteify(k, ignore_dicts=True): byteify(v)
                 for k, v in data.items()}
+
+
+class FrozenDict(collections.Mapping):
+    """Read only dict"""
+
+    def __init__(self, *args, **kwargs):
+        self._d = dict(*args, **kwargs)
+        self._hash = None
+
+    def __iter__(self):
+        return iter(self._d)
+
+    def __len__(self):
+        return len(self._d)
+
+    def __getitem__(self, key):
+        return self._d[key]
+
+    def __getattr__(self, name):
+        return self._d[name]
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(' + repr(self._d) + ')'
+
+    def __str__(self):
+        return str(self._d)
+
+    def __hash__(self):
+        if self._hash is None:
+            self._hash = 0
+            for pair in self.iteritems():
+                self._hash ^= hash(pair)
+        return self._hash
+
+    def __eq__(self, obj):
+        if isinstance(obj, FrozenDict):
+            return self._d == obj._d
+        else:
+            return self._d == obj
+
+
+yaml.add_representer(FrozenDict, SafeRepresenter.represent_dict)
+
+
+class FrozenList(collections.Sequence):
+    """Read only list"""
+    def __init__(self, *args, **kwargs):
+        self._l = list(*args, **kwargs)
+
+    def __getitem__(self, i):
+        return self._l[i]
+
+    def __len__(self):
+        return len(self._l)
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(' + repr(self._l) + ')'
+
+    def __str__(self):
+        return str(self._l)
+
+    def __eq__(self, obj):
+        if isinstance(obj, FrozenList):
+            return self._l == obj._l
+        else:
+            return self._l == obj
+
+
+yaml.add_representer(FrozenList, SafeRepresenter.represent_list)
+
+
+def freeze(obj):
+    """Transform tree of dict and list in read-only
+    data structure.
+    dict instances are transformed to FrozenDict, lists
+    in FrozenList.
+    """
+    if isinstance(obj, collections.Mapping):
+        return FrozenDict({
+            freeze(k): freeze(v)
+            for k, v in six.iteritems(obj)
+        })
+    elif isinstance(obj, list):
+        return FrozenList([freeze(e) for e in obj])
+    else:
+        return obj

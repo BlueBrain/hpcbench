@@ -50,11 +50,14 @@ from . api import (
 )
 from . campaign import (
     from_file,
+    SBATCH_JINJA_TEMPLATE,
     YAML_REPORT_FILE,
 )
 from . toolbox.buildinfo import extract_build_info
 from . toolbox.collections_ext import (
     dict_merge,
+    FrozenDict,
+    FrozenList,
     nameddict,
 )
 from . toolbox.contextlib_ext import (
@@ -74,6 +77,8 @@ LOGGER = logging.getLogger('hpcbench')
 YAML_CAMPAIGN_FILE = 'campaign.yaml'
 JSON_METRICS_FILE = 'metrics.json'
 LOCALHOST = 'localhost'
+SEQUENCES = (list, FrozenList)
+MAPPINGS = (dict, FrozenDict)
 
 
 class ConstraintTag(object):
@@ -98,9 +103,9 @@ def write_yaml_report(func):
         now = datetime.datetime.now()
         with Timer() as timer:
             data = func(*args, **kwargs)
-            if isinstance(data, (list, types.GeneratorType)):
+            if isinstance(data, (SEQUENCES, types.GeneratorType)):
                 report = dict(children=list(map(str, data)))
-            elif isinstance(data, dict):
+            elif isinstance(data, MAPPINGS):
                 report = data
             else:
                 raise Exception('Unexpected data type: %s', type(data))
@@ -289,12 +294,8 @@ class CampaignDriver(Enumerator):
 class SlurmDriver(Enumerator):
     """Abstract representation of the campaign for the current cluster"""
 
-    SBATCH_JINJA = 'sbatch.jinja'
-
     def __init__(self, parent):
         super(SlurmDriver, self).__init__(parent)
-        self.campaign.process.setdefault('sbatch_template',
-                                         self.SBATCH_JINJA)
         LOGGER.info("We are in SLURM/SBATCH mode")
 
     @cached_property
@@ -330,7 +331,7 @@ class SbatchDriver(Enumerator):
     @cached_property
     def sbatch_args(self):
         nodes = self.root.network.nodes(self.tag)
-        sbatch_options = self.campaign.process.get('sbatch', {})
+        sbatch_options = dict(self.campaign.process.get('sbatch', {}))
         if isinstance(nodes, ConstraintTag):
             sbatch_options['constraint'] = nodes.constraint
         if self.tag in self.campaign.benchmarks:
@@ -384,7 +385,7 @@ class SbatchDriver(Enumerator):
             if template is None:
                 template = templates.get('*')
             if template is None:
-                template = self.parent.SBATCH_JINJA
+                template = SBATCH_JINJA_TEMPLATE
         else:
             template = templates
         return template
@@ -537,6 +538,7 @@ class BenchmarkDriver(Enumerator):
 
     @classmethod
     def _prepare_config(cls, config):
+        config = dict(config)
         config.setdefault('srun_options', [])
         if isinstance(config['srun_options'], six.string_types):
             config['srun_options'] = shlex.split(config['srun_options'])
@@ -616,15 +618,9 @@ class BenchmarkCategoryDriver(Enumerator):
             # Override `modules` if specified in YAML
             if 'modules' in self.config:
                 yaml_modules = self.config['modules'] or []
-                execution['modules'] = yaml_modules
+                execution['modules'] = list(yaml_modules)
             name = execution.get('name') or ''
-            yield (
-                execution,
-                osp.join(
-                    name,
-                    str(uuid.uuid4())
-                )
-            )
+            yield execution, osp.join(name, str(uuid.uuid4()))
 
     def child_builder(self, child):
         del child  # unused
@@ -1040,7 +1036,7 @@ class ExecutionDriver(Leaf):
         """:return command to execute inside the generated shell-script"""
         exec_prefix = self.parent.parent.parent.config.get('exec_prefix', [])
         command = self.execution['command']
-        if isinstance(command, list):
+        if isinstance(command, SEQUENCES):
             command = [arg.format(**self.command_expansion_vars)
                        for arg in command]
         else:
@@ -1055,9 +1051,9 @@ class ExecutionDriver(Leaf):
                 raise Exception(msg)
             eax = [exec_prefix + command]
         else:
-            if not isinstance(exec_prefix, list):
+            if not isinstance(exec_prefix, SEQUENCES):
                 exec_prefix = shlex.split(exec_prefix)
-            if not isinstance(command, list):
+            if not isinstance(command, SEQUENCES):
                 eax = exec_prefix + shlex.split(command)
             else:
                 eax = exec_prefix + command
@@ -1132,6 +1128,7 @@ class ExecutionDriver(Leaf):
             self.logger.error('Command failed with exit status: %s',
                               exit_status)
         report.update(self.execution)
+
         report.update(command=self.command)
         return report
 
@@ -1156,7 +1153,7 @@ class SrunExecutionDriver(ExecutionDriver):
 
         :rtype: list of string
         """
-        default = self.campaign.process.get('srun') or {}
+        default = dict(self.campaign.process.get('srun') or {})
         default.update(
             output='slurm-%N-%t.stdout',
             error='slurm-%N-%t.error',
@@ -1197,7 +1194,7 @@ class SrunExecutionDriver(ExecutionDriver):
         if isinstance(count, six.string_types):
             tag = count
             count = 0
-        elif isinstance(count, list):
+        elif isinstance(count, SEQUENCES):
             return count
         else:
             assert isinstance(count, int)

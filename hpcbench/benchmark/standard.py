@@ -15,6 +15,7 @@ from hpcbench.api import (
     Metrics,
     MetricsExtractor,
 )
+from hpcbench.toolbox.collections_ext import FrozenList
 from hpcbench.toolbox.functools_ext import listify
 
 
@@ -193,7 +194,7 @@ class Configuration(object):
     def _create_executable(self, cmd):
         shells = self.attributes.get('shells', [])
         for metas in self.shell_metas_set(cmd):
-            execution = copy.deepcopy(cmd)
+            execution = dict(cmd)
             execution['metas'] = metas
             if not shells:
                 execution['command'] = self._fmtcmd(
@@ -226,7 +227,7 @@ class Configuration(object):
                         yield Configuration._fill_default_execution(sexec)
 
     def _fmtcmd(self, command, metas):
-        if isinstance(command, list):
+        if isinstance(command, (FrozenList, list)):
             return [arg.format(**metas) for arg in command]
         return command.format(**metas)
 
