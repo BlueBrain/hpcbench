@@ -24,13 +24,11 @@ from hpcbench.report import render
 from . toolbox.collections_ext import (
     Configuration,
     dict_map_kv,
+    freeze,
     nameddict,
 )
 from . toolbox.env import expandvars
 from . toolbox.functools_ext import listify
-
-
-YAML_REPORT_FILE = 'hpcbench.yaml'
 
 
 def pip_installer_url(version=None):
@@ -52,6 +50,8 @@ def pip_installer_url(version=None):
     return 'hpcbench=={}'.format(version)
 
 
+YAML_REPORT_FILE = 'hpcbench.yaml'
+SBATCH_JINJA_TEMPLATE = 'sbatch.jinja'
 DEFAULT_CAMPAIGN = dict(
     output_dir="hpcbench-%Y%m%d-%H%M%S",
     network=dict(
@@ -69,7 +69,8 @@ DEFAULT_CAMPAIGN = dict(
     process=dict(
         type='local',
         config=dict(),
-        executor_template='executor.sh.jinja'
+        executor_template='executor.sh.jinja',
+        sbatch_template=SBATCH_JINJA_TEMPLATE,
     ),
     tag=dict(),
     benchmarks={
@@ -163,12 +164,16 @@ def from_file(campaign_file, expandcampvars=True):
     return default_campaign(campaign, expandcampvars)
 
 
-def default_campaign(campaign=None, expandcampvars=True):
+def default_campaign(campaign=None, expandcampvars=True, frozen=True):
     """Fill an existing campaign with default
     values for optional keys
 
     :param campaign: dictionary
+    :type campaign: str
     :param expandcampvars: should env variables be expanded? True by default
+    :type expandcampvars: bool
+    :param frozen: whether the returned data-structure is immutable or not
+    :type frozen: bool
     :return: object provided in parameter
     :rtype: dictionary
     """
@@ -198,9 +203,8 @@ def default_campaign(campaign=None, expandcampvars=True):
         campaign = nameddict(dict_map_kv(campaign, _expandvars))
     else:
         campaign = nameddict(campaign)
-
     NetworkConfig(campaign).expand()
-    return campaign
+    return freeze(campaign) if frozen else campaign
 
 
 class NetworkConfig(object):

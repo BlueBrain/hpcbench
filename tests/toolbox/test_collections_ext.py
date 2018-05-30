@@ -8,6 +8,8 @@ from hpcbench.toolbox.collections_ext import (
     dict_map_kv,
     dict_merge,
     flatten_dict,
+    FrozenDict,
+    FrozenList,
     nameddict,
 )
 
@@ -207,6 +209,51 @@ class TestDictMapKV(unittest.TestCase):
             dict_map_kv(obj, func),
             result
         )
+
+
+class TestFrozenDataStructures(unittest.TestCase):
+    def test_dict(self):
+        d = FrozenDict()
+        self.assertEqual(len(d), 0)
+        self.assertEqual(d, {})
+        self.assertEqual(str(d), '{}')
+        self.assertEqual(d, eval(repr(d)))
+
+        d = FrozenDict(foo=42)
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d, dict(foo=42))
+        self.assertEqual(str(d), "{'foo': 42}")
+        self.assertEqual(d, eval(repr(d)))
+
+        d = FrozenDict(d)
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d, dict(foo=42))
+        self.assertEqual(str(d), "{'foo': 42}")
+        self.assertEqual(d, eval(repr(d)))
+
+        self.assertEqual(d.foo, 42)
+        self.assertEqual(d['foo'], 42)
+        with self.assertRaises(TypeError):
+            d['foo'] = 43
+
+    def test_list(self):
+        fl = FrozenList()
+        self.assertEqual(len(fl), 0)
+        self.assertEqual(fl, [])
+        self.assertEqual(str(fl), '[]')
+        self.assertEqual(fl, eval(repr(fl)))
+
+        fl = FrozenList([42])
+        self.assertEqual(len(fl), 1)
+        self.assertEqual(fl, [42])
+        self.assertEqual(str(fl), '[42]')
+        self.assertEqual(fl, eval(repr(fl)))
+
+        self.assertEqual(fl[0], 42)
+        with self.assertRaises(TypeError):
+            fl[0] = 43
+        with self.assertRaises(TypeError):
+            fl += [42]
 
 
 if __name__ == '__main__':

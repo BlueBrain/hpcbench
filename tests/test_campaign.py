@@ -49,7 +49,7 @@ class TestVersion(unittest.TestCase):
 class TestCampaign(unittest.TestCase):
     @property
     def new_config(self):
-        config = default_campaign()
+        config = default_campaign(frozen=False)
         config['network']['tags'] = dict(
             by_node=dict(
                 nodes=['node1', 'node2']
@@ -82,7 +82,7 @@ class TestCampaign(unittest.TestCase):
         )
 
     def test_constraint_tag(self):
-        config = default_campaign()
+        config = default_campaign(frozen=False)
         constraint = dict(constraint="skylake")
         config.network.tags['foo'] = constraint
         config = default_campaign(config)
@@ -93,7 +93,7 @@ class TestCampaign(unittest.TestCase):
             ["skylake"],
             dict(sky='lake')
         ]:
-            config = default_campaign()
+            config = default_campaign(frozen=False)
             config.network.tags['foo'] = dict(constraint=invalid_constraint)
             with self.assertRaises(Exception) as exc:
                 config = default_campaign(config)
