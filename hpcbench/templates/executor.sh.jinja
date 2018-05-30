@@ -1,10 +1,11 @@
 #!/bin/sh
 
-module purge
-{%- for module in modules %}
-module load {{ module }}
-{%- endfor %}
-
+if type module >/dev/null; then
+    module purge
+    {%- for module in modules %}
+    module load {{ module }}
+    {%- endfor %}
+fi
 {%- for var, value in environment.items() %}
 export {{ var }}={{ value }}
 {%- endfor %}

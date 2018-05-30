@@ -10,6 +10,6 @@ jinja_environment = Environment(
     autoescape=select_autoescape(
         disabled_extensions=('txt',),
         default_for_string=False,
-        default=True
+        default=False
     ),
 )

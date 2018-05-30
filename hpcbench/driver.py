@@ -11,6 +11,7 @@ from collections import (
     Mapping,
     namedtuple,
 )
+import contextlib
 import copy
 import datetime
 from functools import wraps
@@ -61,6 +62,7 @@ from . toolbox.contextlib_ext import (
     Timer,
 )
 from . toolbox.edsl import kwargsql
+from . toolbox.environment_modules import Module
 from . toolbox.functools_ext import listify
 from .toolbox.process import (
     build_slurm_arguments,
@@ -1084,6 +1086,28 @@ class ExecutionDriver(Leaf):
         return subprocess.Popen([self._executor_script],
                                 stdout=stdout, stderr=stderr)
 
+    @contextlib.contextmanager
+    def module_env(self):
+        """Set current process environment according
+        to execution `environment` and `modules`
+        """
+        env = copy.copy(os.environ)
+        try:
+            for mod in self.execution.get('modules') or []:
+                Module.load(mod)
+            os.environ.update(self.execution.get('environment') or {})
+            yield
+        finally:
+            os.environ = env
+
+    def __execute(self, stdout, stderr):
+        with self.module_env():
+            self.benchmark.pre_execute(self.execution)
+        exit_status = self.popen(stdout, stderr).wait()
+        with self.module_env():
+            self.benchmark.post_execute(self.execution)
+        return exit_status
+
     @write_yaml_report
     def __call__(self, **kwargs):
         with open('stdout', 'w') as stdout, \
@@ -1093,14 +1117,9 @@ class ExecutionDriver(Leaf):
                 ctx = self.parent.parent.parent.exec_context
                 cwd = cwd.format(node=ctx.node, tag=ctx.tag)
                 with pushd(cwd):
-                    self.benchmark.pre_execute(self.execution)
-                    exit_status = self.popen(stdout, stderr).wait()
-                    self.benchmark.post_execute(self.execution)
-
+                    exit_status = self.__execute(stdout, stderr)
             else:
-                self.benchmark.pre_execute(self.execution)
-                exit_status = self.popen(stdout, stderr).wait()
-                self.benchmark.post_execute(self.execution)
+                exit_status = self.__execute(stdout, stderr)
         report = dict(
             exit_status=exit_status,
             benchmark=self.benchmark.name,
