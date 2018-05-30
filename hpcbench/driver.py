@@ -50,6 +50,7 @@ from . api import (
 )
 from . campaign import (
     from_file,
+    NodeSet,
     SBATCH_JINJA_TEMPLATE,
     YAML_REPORT_FILE,
 )
@@ -81,18 +82,7 @@ SEQUENCES = (list, FrozenList)
 MAPPINGS = (dict, FrozenDict)
 
 
-class ConstraintTag(object):
-    def __init__(self, name, constraint):
-        self._name = name
-        self._constraint = constraint
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def constraint(self):
-        return self._constraint
+ConstraintTag = namedtuple('ConstraintTag', ['name', 'constraint'])
 
 
 def write_yaml_report(func):
@@ -228,7 +218,11 @@ class Network(object):
                     if value.match(node)
                 ]))
             elif mode == 'constraint':
-                return ConstraintTag(tag, value)
+                slurm_nodes = os.environ.get('SLURM_JOB_NODELIST')
+                if slurm_nodes:
+                    nodes = NodeSet(slurm_nodes)
+                else:
+                    return ConstraintTag(tag, value)
             else:
                 assert mode == 'nodes'
                 nodes = nodes.union(set(value))
@@ -238,17 +232,23 @@ class Network(object):
 class CampaignDriver(Enumerator):
     """Abstract representation of an entire campaign"""
     def __init__(self, campaign_file=None, campaign_path=None,
+                 campaign=None,
                  node=None, output_dir=None, srun=None,
                  logger=None, expandcampvars=True):
         node = node or socket.gethostname()
-        if campaign_file and campaign_path:
-            raise Exception('Either campaign_file xor path can be specified')
+        if campaign_file and campaign_path and campaign:
+            raise Exception('Either campaign_file xor path xor'
+                            ' campaign can be specified')
         if campaign_path:
             campaign_file = osp.join(campaign_path, YAML_CAMPAIGN_FILE)
-        self.campaign_file = osp.abspath(campaign_file)
+        if campaign_file:
+            campaign = from_file(campaign_file, expandcampvars)
+            self.campaign_file = osp.abspath(campaign_file)
+        else:
+            self.campaign_file = None
         super(CampaignDriver, self).__init__(
             Top(
-                campaign=from_file(campaign_file, expandcampvars),
+                campaign=campaign,
                 node=node,
                 logger=logger or LOGGER,
                 root=self
