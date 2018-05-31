@@ -145,7 +145,7 @@ class TestEnvironment(DriverTestCase, unittest.TestCase):
     def test(self):
         report = ReportNode(self.CAMPAIGN_PATH)
         keys = ('modules', 'environment')
-        expected_tests = 12
+        expected_tests = 13
         tests = 0
         for path, env in report.collect(*keys, with_path=True):
             self.driver.logger.error('path: %s', path)

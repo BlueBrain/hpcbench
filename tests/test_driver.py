@@ -175,14 +175,11 @@ class TestHostDriver(unittest.TestCase):
         cls.CAMPAIGN_FILE = osp.join(cls.TEST_DIR, 'campaign.yaml')
         with open(cls.CAMPAIGN_FILE, 'w') as ostr:
             yaml.dump(cls.CAMPAIGN, ostr, default_flow_style=False)
-        cls.DRIVER = CampaignDriver(campaign_file=cls.CAMPAIGN_FILE)
+        cls.DRIVER = CampaignDriver(cls.CAMPAIGN_FILE)
 
     def host_driver(self, node):
         return HostDriver(
-            CampaignDriver(
-                campaign_file=TestHostDriver.CAMPAIGN_FILE,
-                node=node
-            ),
+            CampaignDriver(TestHostDriver.CAMPAIGN_FILE, node=node),
             node
         )
 
@@ -208,10 +205,7 @@ class TestHostDriver(unittest.TestCase):
                 BenchmarkDriver(
                     BenchmarkTagDriver(
                         HostDriver(
-                            CampaignDriver(
-                                campaign_file=campaign_file,
-                                node=node
-                            ),
+                            CampaignDriver(campaign_file, node=node),
                             node
                         ),
                         tag
@@ -241,10 +235,7 @@ class TestHostDriver(unittest.TestCase):
                     BenchmarkDriver(
                         BenchmarkTagDriver(
                             HostDriver(
-                                CampaignDriver(
-                                    campaign_file=campaign_file,
-                                    node=node
-                                ),
+                                CampaignDriver(campaign_file, node=node),
                                 node
                             ),
                             tag

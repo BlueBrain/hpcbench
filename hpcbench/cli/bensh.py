@@ -40,7 +40,7 @@ def main(argv=None):
         node = arguments.get('-n')
         output_dir = arguments.get('--output-dir')
         srun_tag = arguments.get('--srun')
-        driver = CampaignDriver(campaign_file=campaign_file,
+        driver = CampaignDriver(campaign_file,
                                 node=node,
                                 output_dir=output_dir,
                                 srun=srun_tag)

@@ -82,6 +82,13 @@ benchmarks:
             attributes:
                 environment:
                   FOO: "foo'\"bar"
+        remove_var:
+            type: environment
+            environment:
+                FOO:
+            attributes:
+                environment:
+                    FOO: bar
 
 
 expected_env:
@@ -129,4 +136,7 @@ expected_env:
     space_in_variable:
         environment:
             FOO: foo bar
+        modules: []
+    remove_var:
+        environment: {}
         modules: []

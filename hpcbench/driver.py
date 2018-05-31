@@ -231,21 +231,24 @@ class Network(object):
 
 class CampaignDriver(Enumerator):
     """Abstract representation of an entire campaign"""
-    def __init__(self, campaign_file=None, campaign_path=None,
-                 campaign=None,
+    def __init__(self, campaign,
                  node=None, output_dir=None, srun=None,
                  logger=None, expandcampvars=True):
         node = node or socket.gethostname()
-        if campaign_file and campaign_path and campaign:
-            raise Exception('Either campaign_file xor path xor'
-                            ' campaign can be specified')
-        if campaign_path:
-            campaign_file = osp.join(campaign_path, YAML_CAMPAIGN_FILE)
-        if campaign_file:
-            campaign = from_file(campaign_file, expandcampvars)
-            self.campaign_file = osp.abspath(campaign_file)
+        if isinstance(campaign, six.string_types):
+            campaign_path = osp.normpath(osp.abspath(campaign))
+            if osp.isdir(campaign_path):
+                self.existing_campaign = True
+                self.campaign_path = campaign_path
+                campaign_path = osp.join(campaign_path, YAML_CAMPAIGN_FILE)
+            else:
+                # YAML file
+                self.existing_campaign = False
+            campaign = from_file(campaign_path, expandcampvars)
+            self.campaign_file = campaign_path
         else:
-            self.campaign_file = None
+            self.existing_campaign = True
+            self.campaign_path = None
         super(CampaignDriver, self).__init__(
             Top(
                 campaign=campaign,
@@ -258,11 +261,8 @@ class CampaignDriver(Enumerator):
         self.filter_tag = srun
         if srun:  # overwrite process type and force srun when requested
             self.campaign.process.type = 'srun'
-        if campaign_path:
-            self.existing_campaign = True
-            self.campaign_path = campaign_path
-        else:
-            self.existing_campaign = False
+
+        if not self.existing_campaign:
             now = datetime.datetime.now()
             self.campaign_path = now.strftime(output_dir or
                                               self.campaign.output_dir)
