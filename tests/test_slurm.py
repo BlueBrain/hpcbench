@@ -114,9 +114,7 @@ class TestSbatchTemplate(unittest.TestCase):
                        assert_method=None):
         yaml_file = osp.join(osp.dirname(__file__), yaml_file)
         sbatch_driver = SbatchDriver(
-            SlurmDriver(
-                CampaignDriver(campaign_file=yaml_file)
-            ),
+            SlurmDriver(CampaignDriver(yaml_file)),
             uc
         )
         sbatch = StringIO()

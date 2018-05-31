@@ -16,10 +16,13 @@ from hpcbench.cli import bensh
 from hpcbench.driver import (
     BenchmarkCategoryDriver,
     BenchmarkDriver,
+    CampaignDriver,
+    ConstraintTag,
     ExecutionDriver,
     FixedAttempts,
     Top,
 )
+from hpcbench.toolbox.contextlib_ext import modified_environ
 
 
 LOGGER = logging.getLogger()
@@ -87,6 +90,15 @@ class TestCampaign(unittest.TestCase):
         config.network.tags['foo'] = constraint
         config = default_campaign(config)
         self.assertEqual(config.network.tags.foo, [constraint])
+
+    def test_network_nodes_with_constraint_tag(self):
+        config = default_campaign(frozen=False)
+        config.network.tags['foo'] = [dict(constraint="skylake")]
+        skylake = ConstraintTag('foo', 'skylake')
+        driver = CampaignDriver(campaign=config)
+        self.assertEqual(skylake, driver.network.nodes('foo'))
+        with modified_environ(SLURM_JOB_NODELIST="foo[0-1]"):
+            self.assertEqual(['foo0', 'foo1'], driver.network.nodes('foo'))
 
     def test_constraint_tag_is_a_string(self):
         for invalid_constraint in [

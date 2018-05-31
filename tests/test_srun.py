@@ -65,7 +65,7 @@ class TestSrun(DriverTestCase, unittest.TestCase):
         campaign_file = osp.join(osp.dirname(__file__), yaml_file)
         output_dir = osp.join(self.TEST_DIR, 'test_srun_uc2')
         node = 'n3'
-        driver = CampaignDriver(campaign_file=campaign_file,
+        driver = CampaignDriver(campaign_file,
                                 node=node,
                                 srun='uc2',
                                 output_dir=output_dir)
