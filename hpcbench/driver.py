@@ -240,11 +240,11 @@ class CampaignDriver(Enumerator):
             if osp.isdir(campaign_path):
                 self.existing_campaign = True
                 self.campaign_path = campaign_path
-                campaign_path = osp.join(campaign_path, YAML_CAMPAIGN_FILE)
+                campaign = osp.join(campaign, YAML_CAMPAIGN_FILE)
             else:
                 # YAML file
                 self.existing_campaign = False
-            campaign = from_file(campaign_path, expandcampvars)
+            campaign = from_file(campaign, expandcampvars)
             self.campaign_file = campaign_path
         else:
             self.existing_campaign = True
