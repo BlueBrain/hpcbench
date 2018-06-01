@@ -238,7 +238,10 @@ class IOR(Benchmark):
 
     def _execution_matrix(self, api):
         if self.path:
-            opath = ['-o', self.path]
+            if '-F' not in self.options:
+                opath = ['-o', self.path+'/data']
+            else:
+                opath = ['-o', self.path]
         else:
             opath = []
         cmd = dict(
