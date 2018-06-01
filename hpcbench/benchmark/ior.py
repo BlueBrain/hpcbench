@@ -2,6 +2,8 @@
 
     https://github.com/LLNL/ior
 """
+import os
+import os.path as osp
 import re
 import shlex
 
@@ -216,6 +218,15 @@ class IOR(Benchmark):
     def apis(self):
         """List of API to test"""
         return self.attributes['apis']
+
+    def pre_execute(self, execution):
+        """Make sure the named directory is created if possible"""
+        if self.path:
+            if not osp.exists(self.path):
+                os.mkdir(self.path)
+            else:
+                if not osp.isdir(self.path):
+                    raise FileExistsError
 
     @listify
     def execution_matrix(self, context):
