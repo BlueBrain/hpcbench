@@ -27,6 +27,7 @@ from . toolbox.collections_ext import (
     freeze,
     nameddict,
 )
+from . toolbox.contextlib_ext import pushd
 from . toolbox.env import expandvars
 from . toolbox.functools_ext import listify
 
@@ -342,20 +343,33 @@ def get_metrics(campaign):
     :return: metrics
     :rtype: dictionary generator
     """
+    from hpcbench.driver import SbatchDriver
+    from hpcbench.driver import CampaignDriver
     for hostname, host_driver in campaign.traverse():
         for tag, tag_driver in host_driver.traverse():
-            for suite, bench_obj in tag_driver.traverse():
-                for category, cat_obj in bench_obj.traverse():
-                    yield (
-                        dict(
-                            hostname=hostname,
-                            tag=tag,
-                            category=category,
-                            suite=suite,
-                            campaign_id=campaign.campaign.campaign_id,
-                        ),
-                        cat_obj.metrics
-                    )
+            if isinstance(tag_driver, SbatchDriver):
+                sbatch_dir = osp.join(
+                    campaign.campaign_path, hostname, tag)
+                report = ReportNode(sbatch_dir)
+                for child in report.children:
+                    campaign_path = osp.join(sbatch_dir, child)
+                    with pushd(campaign_path):
+                        campaign = CampaignDriver(campaign_path, srun=tag)
+                        for eax in get_metrics(campaign):
+                            yield eax
+            else:
+                for suite, bench_obj in tag_driver.traverse():
+                    for category, cat_obj in bench_obj.traverse():
+                        yield (
+                            dict(
+                                hostname=hostname,
+                                tag=tag,
+                                category=category,
+                                suite=suite,
+                                campaign_id=campaign.campaign.campaign_id,
+                            ),
+                            cat_obj.metrics
+                        )
 
 
 class CampaignMerge(object):
