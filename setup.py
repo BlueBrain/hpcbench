@@ -39,7 +39,7 @@ setup(
         'setuptools_scm==1.15.6',
     ],
     install_requires=[
-        'cached-property==1.3.1',
+        'cached-property==1.4.0',
         'cookiecutter==1.6.0',
         'docopt==0.6.2',
         'elasticsearch>=6.0.0',
