@@ -40,6 +40,7 @@ setup(
     ],
     install_requires=[
         'cached-property==1.3.1',
+        'clustershell>=1.8',
         'cookiecutter==1.6.0',
         'docopt==0.6.2',
         'elasticsearch>=6.0.0',
