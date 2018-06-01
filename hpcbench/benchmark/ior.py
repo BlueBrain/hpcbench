@@ -226,7 +226,7 @@ class IOR(Benchmark):
                 os.mkdir(self.path)
             else:
                 if not osp.isdir(self.path):
-                    raise FileExistsError
+                    raise IOError
 
     @listify
     def execution_matrix(self, context):
