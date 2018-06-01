@@ -318,7 +318,16 @@ class SbatchDriver(Enumerator):
         self.tag = tag
         now = datetime.datetime.now()
         sbatch_filename = '{tag}-%Y%m%d-%H%M%S.sbatch'
+        level = logging.getLogger().getEffectiveLevel()
+        verb = ''
+        if level == logging.NOTSET or level >= logging.WARNING:
+            verb = ''
+        elif level == logging.INFO:
+            verb = '-v '
+        elif level == logging.DEBUG:
+            verb = '-vv '
         cmd = ('ben-sh --srun={tag} '
+               + verb
                + '-n $SLURMD_NODENAME '
                + '--output-dir={tag}-%Y%m%d-%H%M%S '
                + self.parent.parent.campaign_file)
