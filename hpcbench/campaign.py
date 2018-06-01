@@ -14,12 +14,12 @@ import socket
 import uuid
 
 from cached_property import cached_property
+from ClusterShell.NodeSet import NodeSet
 import six
 import yaml
 
 import hpcbench
 from hpcbench.api import Benchmark
-from ClusterShell.NodeSet import NodeSet
 from hpcbench.report import render
 from . toolbox.collections_ext import (
     Configuration,
