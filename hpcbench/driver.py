@@ -318,7 +318,7 @@ class SbatchDriver(Enumerator):
         self.tag = tag
         now = datetime.datetime.now()
         sbatch_filename = '{tag}-%Y%m%d-%H%M%S.sbatch'
-        level = logging.getLogger().getEffectiveLevel()
+        level = self.logger.getEffectiveLevel()
         verb = ''
         if level == logging.NOTSET or level >= logging.WARNING:
             verb = ''
