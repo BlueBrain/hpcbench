@@ -26,28 +26,10 @@ class ESExporter(object):
         bool: 'boolean',
         float: 'float',
         int: 'long',
-        six.text_type: 'text',
+        six.text_type: 'keyword',
         str: 'keyword',
     }
     PROPERTIES_FIELD_TYPE = dict(date='date')
-
-    COMMON_INDEX_MAPPING = dict(
-        benchmark=dict(
-            type='text',
-        ),
-        category=dict(
-            type='text',
-        ),
-        date=dict(
-            type='date',
-        ),
-        elapsed=dict(
-            type='float',
-        ),
-        exit_status=dict(
-            type='short'
-        ),
-    )
 
     def __init__(self, path, hosts):
         """
@@ -161,13 +143,14 @@ class ESExporter(object):
         return fields
 
     @classmethod
-    def _get_dict_mapping(cls, prop, data):
+    def _get_dict_mapping(cls, prop, data, root=None):
         mapping = {}
         for name, value in data.items():
             if isinstance(value, (dict, collections.Mapping)):
-                dict_merge(mapping, cls._get_dict_mapping(name, value))
+                ctx = (root or tuple()) + (name,)
+                dict_merge(mapping, cls._get_dict_mapping(name, value, ctx))
             else:
-                dict_merge(mapping, cls._get_field_mapping(name, value))
+                dict_merge(mapping, cls._get_field_mapping(name, value, root))
         return {
             prop: {
                 'properties': mapping
@@ -184,7 +167,7 @@ class ESExporter(object):
         return type(value)
 
     @classmethod
-    def _get_field_mapping(cls, name, value):
+    def _get_field_mapping(cls, name, value, root):
         extra_params = {}
         field_type = cls.PROPERTIES_FIELD_TYPE.get(name)
         if field_type is None:
@@ -195,6 +178,8 @@ class ESExporter(object):
                 extra_params = cls._get_dict_mapping(None, value)[None]
                 extra_params['dynamic'] = False
                 field_type = 'nested'
+            elif root == ('metas',) and isinstance(value, six.string_types):
+                field_type = 'text'
             else:
                 field_type = cls.PY_TYPE_TO_ES_FIELD_TYPE[obj_type]
         mapping = {
