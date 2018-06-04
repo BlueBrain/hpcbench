@@ -225,7 +225,7 @@ class IOR(Benchmark):
             if not osp.exists(self.path):
                 os.mkdir(self.path)
             else:
-                if not osp.isdir(self.path):
+                if not osp.isdir(osp.realpath(self.path)):
                     raise IOError
 
     @listify
@@ -239,7 +239,7 @@ class IOR(Benchmark):
     def _execution_matrix(self, api):
         if self.path:
             if '-F' not in self.options:
-                opath = ['-o', self.path+'/data']
+                opath = ['-o', osp.join(self.path, 'data')]
             else:
                 opath = ['-o', self.path]
         else:
