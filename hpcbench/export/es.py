@@ -10,7 +10,6 @@ import six
 
 from hpcbench.campaign import (
     from_file,
-    get_benchmark_types,
     get_metrics,
     ReportNode,
 )
@@ -30,6 +29,7 @@ class ESExporter(object):
         str: 'keyword',
     }
     PROPERTIES_FIELD_TYPE = dict(date='date')
+    ES_DOC_TYPE = '_doc'
 
     def __init__(self, path, hosts):
         """
@@ -108,18 +108,14 @@ class ESExporter(object):
     def index_mapping(self):
         """Get Elasticsearch index mapping
         """
-        fields = dict(
-            (doc_type, self._get_document_mapping(doc_type)) for
-            doc_type in self._document_types
-        )
-        return fields
+        return self._get_document_mapping
 
     @property
     def _documents(self):
-        for run in self._get_runs():
+        for run in self._runs:
             yield dict(
                 index=dict(
-                    _type=run['benchmark'],
+                    _type=self.ES_DOC_TYPE,
                     _id=self.document_id(run)
                 )
             )
@@ -129,17 +125,14 @@ class ESExporter(object):
     def document_id(self, doc):
         return doc['id'] + '/' + str(hash(frozenset(doc['context'].items())))
 
-    @cached_property
-    def _document_types(self):
-        return [
-            benchmark
-            for benchmark in get_benchmark_types(self.campaign)
-        ]
-
-    def _get_document_mapping(self, benchmark):
+    @property
+    def _get_document_mapping(self):
         fields = {}
-        for run in self._get_benchmark_runs(benchmark):
-            dict_merge(fields, ESExporter._get_dict_mapping(benchmark, run))
+        for run in self._runs:
+            dict_merge(
+                fields,
+                ESExporter._get_dict_mapping(self.ES_DOC_TYPE, run)
+            )
         return fields
 
     @classmethod
@@ -190,7 +183,8 @@ class ESExporter(object):
         mapping[name].update(extra_params)
         return mapping
 
-    def _get_runs(self):
+    @property
+    def _runs(self):
         for attrs, runs in get_metrics(self.campaign, self.report):
             for run in runs:
                 metrics = run.pop('metrics')
@@ -199,8 +193,3 @@ class ESExporter(object):
                     eax.update(run)
                     eax.update(attrs)
                     yield eax
-
-    def _get_benchmark_runs(self, benchmark):
-        for run in self._get_runs():
-            if run['benchmark'] == benchmark:
-                yield run
