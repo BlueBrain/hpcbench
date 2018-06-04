@@ -28,20 +28,19 @@ class TestCSV(unittest.TestCase):
     def test_csv(self):
         with pushd(self.temp_dir):
             bench = bensh.main(TestCSV.campaign_file())
-            with pushd(bench.campaign_path):
-                csv_exporter = CSVExporter(bench, TestCSV.OUTFILE)
-                csv_exporter.export()
-                with open(self.OUTFILE, 'r') as f:
-                    table = [row for row in csv.DictReader(f)]
-                    metric_perf = {float(p[self.PERFORMANCE_METRIC])
-                                   for p in table}
-                    self.assertEqual(metric_perf, set(FakeBenchmark.INPUTS))
+            csv_exporter = CSVExporter(bench.campaign_path, TestCSV.OUTFILE)
+            csv_exporter.export()
+            with open(self.OUTFILE, 'r') as f:
+                table = [row for row in csv.DictReader(f)]
+                metric_perf = {float(p[self.PERFORMANCE_METRIC])
+                               for p in table}
+                self.assertEqual(metric_perf, set(FakeBenchmark.INPUTS))
 
     def test_csv_cli(self):
         with pushd(self.temp_dir):
             bench = bensh.main(TestCSV.campaign_file())
             bencsv.main(['--output', self.OUTFILE, bench.campaign_path])
-            with open(osp.join(bench.campaign_path, self.OUTFILE), 'r') as f:
+            with open(self.OUTFILE, 'r') as f:
                 table = [row for row in csv.DictReader(f)]
                 metric_perf = {float(p[self.PERFORMANCE_METRIC])
                                for p in table}

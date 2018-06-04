@@ -27,7 +27,6 @@ from . toolbox.collections_ext import (
     freeze,
     nameddict,
 )
-from . toolbox.contextlib_ext import pushd
 from . toolbox.env import expandvars
 from . toolbox.functools_ext import listify
 
@@ -51,8 +50,10 @@ def pip_installer_url(version=None):
     return 'hpcbench=={}'.format(version)
 
 
-YAML_REPORT_FILE = 'hpcbench.yaml'
+JSON_METRICS_FILE = 'metrics.json'
 SBATCH_JINJA_TEMPLATE = 'sbatch.jinja'
+YAML_CAMPAIGN_FILE = 'campaign.yaml'
+YAML_REPORT_FILE = 'hpcbench.yaml'
 DEFAULT_CAMPAIGN = dict(
     output_dir="hpcbench-%Y%m%d-%H%M%S",
     network=dict(
@@ -79,7 +80,6 @@ DEFAULT_CAMPAIGN = dict(
     },
     export=dict(
         elasticsearch=dict(
-            host='localhost',
             connection_params=dict(),
             index_name='hpcbench-{date}'
         )
@@ -161,6 +161,9 @@ def from_file(campaign_file, expandcampvars=True):
     :return: memory representation of the YAML file
     :rtype: dictionary
     """
+    realpath = osp.realpath(campaign_file)
+    if osp.isdir(realpath):
+        campaign_file = osp.join(campaign_file, YAML_CAMPAIGN_FILE)
     campaign = Configuration.from_file(campaign_file)
     return default_campaign(campaign, expandcampvars)
 
@@ -337,39 +340,34 @@ def get_benchmark_types(campaign):
                 yield benchmark.type
 
 
-def get_metrics(campaign):
-    """Get all metrics of a campaign
+def get_metrics(campaign, report, top=True):
+    """Extract metrics from existing campaign
 
-    :return: metrics
-    :rtype: dictionary generator
+    :param campaign: campaign loaded with `hpcbench.campaign.from_file`
+    :param report: instance of `hpcbench.campaign.ReportNode`
+    :param top: this function is recursive. This parameter
+    help distinguishing top-call.
     """
-    from hpcbench.driver import SbatchDriver
-    from hpcbench.driver import CampaignDriver
-    for hostname, host_driver in campaign.traverse():
-        for tag, tag_driver in host_driver.traverse():
-            if isinstance(tag_driver, SbatchDriver):
-                sbatch_dir = osp.join(
-                    campaign.campaign_path, hostname, tag)
-                report = ReportNode(sbatch_dir)
-                for child in report.children:
-                    campaign_path = osp.join(sbatch_dir, child)
-                    with pushd(campaign_path):
-                        campaign = CampaignDriver(campaign_path, srun=tag)
-                        for eax in get_metrics(campaign):
-                            yield eax
-            else:
-                for suite, bench_obj in tag_driver.traverse():
-                    for category, cat_obj in bench_obj.traverse():
-                        yield (
-                            dict(
-                                hostname=hostname,
-                                tag=tag,
-                                category=category,
-                                suite=suite,
-                                campaign_id=campaign.campaign.campaign_id,
-                            ),
-                            cat_obj.metrics
-                        )
+    if top and campaign.process.type == 'slurm':
+        for path, _ in report.collect('jobid', with_path=True):
+            for child in ReportNode(path).children.values():
+                for metrics in get_metrics(campaign, child, top=False):
+                        yield metrics
+    else:
+        def metrics_node_extract(report):
+            metrics_file = osp.join(report.path, JSON_METRICS_FILE)
+            if osp.exists(metrics_file):
+                with open(metrics_file) as istr:
+                    return json.load(istr)
+
+        def metrics_iterator(report):
+            return filter(
+                lambda eax: eax[1] is not None,
+                report.map(metrics_node_extract, with_path=True)
+            )
+
+        for path, metrics in metrics_iterator(report):
+            yield report.path_context(path), metrics
 
 
 class CampaignMerge(object):
@@ -559,6 +557,25 @@ class ReportNode(collections.Mapping):
             if osp.exists(osp.join(self.path, child, YAML_REPORT_FILE)):
                 yield child, self.__class__(osp.join(self.path, child))
 
+    def map(self, func, **kwargs):
+        """Generator function returning result of
+        `func(self)`
+
+        :param func: callable object
+        :keyword recursive: if True, then apply map to every children nodes
+        :keyword with_path: whether the yield values is a tuple
+        of 2 elements containing report-path and `func(self)` result or
+        simply `func(self)` result.
+
+        :rtype: generator
+        """
+        if kwargs.get('with_path', False):
+            yield self.path, func(self)
+        if kwargs.get('recursive', True):
+            for child in self.children.values():
+                for value in child.map(func, **kwargs):
+                    yield value
+
     def collect(self, *keys, **kwargs):
         """Generator function traversing
         tree structure to collect values of a specified key.
@@ -567,7 +584,7 @@ class ReportNode(collections.Mapping):
         :type key: str
         :keyword recursive: look for key in children nodes
         :type recursive: bool
-        :keyword with_path: whether the yield values if a tuple
+        :keyword with_path: whether the yield values is a tuple
         of 2 elements containing report-path and the value
         or simply the value.
         :type with_path: bool
@@ -588,7 +605,7 @@ class ReportNode(collections.Mapping):
             if len(values) == 1:
                 values = values[0]
             if kwargs.get('with_path', False):
-                yield (self.path, values)
+                yield self.path, values
             else:
                 yield values
         if kwargs.get('recursive', True):
