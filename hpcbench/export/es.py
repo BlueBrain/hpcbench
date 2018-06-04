@@ -138,11 +138,14 @@ class ESExporter(object):
             yield dict(
                 index=dict(
                     _type=run['benchmark'],
-                    _id=run['id']
+                    _id=self.document_id(run)
                 )
             )
             run['campaign_id'] = self.campaign.campaign_id
             yield run
+
+    def document_id(self, doc):
+        return doc['id'] + '/' + str(hash(frozenset(doc['context'].items())))
 
     @cached_property
     def _document_types(self):
