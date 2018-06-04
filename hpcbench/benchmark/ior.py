@@ -2,6 +2,8 @@
 
     https://github.com/LLNL/ior
 """
+import os
+import os.path as osp
 import re
 import shlex
 
@@ -193,9 +195,9 @@ class IOR(Benchmark):
             attributes=dict(
                 apis=IOR.APIS,
                 block_size=IOR.DEFAULT_BLOCK_SIZE,
-                srun_nodes=IOR.DEFAULT_SRUN_NODES,
                 executable=IOR.DEFAULT_EXECUTABLE,
                 options=IOR.DEFAULT_OPTIONS,
+                srun_nodes=0,
                 path=None,
             )
         )
@@ -217,6 +219,15 @@ class IOR(Benchmark):
         """List of API to test"""
         return self.attributes['apis']
 
+    def pre_execute(self, execution):
+        """Make sure the named directory is created if possible"""
+        if self.path:
+            if not osp.exists(self.path):
+                os.mkdir(self.path)
+            else:
+                if not osp.isdir(osp.realpath(self.path)):
+                    raise IOError
+
     @listify
     def execution_matrix(self, context):
         del context  # unused
@@ -226,21 +237,26 @@ class IOR(Benchmark):
                 yield command
 
     def _execution_matrix(self, api):
+        if self.path:
+            if '-F' not in self.options:
+                opath = ['-o', osp.join(self.path, 'data')]
+            else:
+                opath = ['-o', self.path]
+        else:
+            opath = []
         cmd = dict(
             category=api,
             command=[
                 find_executable(self.executable, required=False),
                 '-a', api,
                 '-b', str(self.block_size),
-            ] + self.options,
+            ] + opath + self.options,
             metas=dict(
                 api=api,
                 block_size=self.block_size
             ),
             srun_nodes=self.srun_nodes,
         )
-        if self.path is not None:
-            cmd.update(cwd=self.path)
         yield cmd
 
     @property
