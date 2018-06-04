@@ -2,14 +2,17 @@
 """
 
 import collections
+import logging
 
 from cached_property import cached_property
 from elasticsearch import Elasticsearch
 import six
 
 from hpcbench.campaign import (
+    from_file,
     get_benchmark_types,
     get_metrics,
+    ReportNode,
 )
 from hpcbench.toolbox.collections_ext import dict_merge
 from hpcbench.toolbox.functools_ext import chunks
@@ -46,18 +49,23 @@ class ESExporter(object):
         ),
     )
 
-    def __init__(self, campaign):
+    def __init__(self, path, hosts):
         """
-        :param campaign: instance of ``hpcbench.driver.CampaignDriver``
+        :param path: path to existing campaign
+        :type path: str
+        :param hosts: Elasticsearch cluster
+        :rtype: str or list or str
         """
-        self.campaign = campaign
+        self.campaign = from_file(path)
+        self.report = ReportNode(path)
+        self.hosts = hosts
 
     @cached_property
     def es_client(self):
         """Get Elasticsearch client
         """
-        es_conf = self.campaign.campaign.export.elasticsearch
-        return Elasticsearch(es_conf.hosts, **es_conf.connection_params)
+        es_conf = self.campaign.export.elasticsearch
+        return Elasticsearch(self.hosts, **es_conf.connection_params)
 
     @cached_property
     def index_client(self):
@@ -69,9 +77,9 @@ class ESExporter(object):
     def index_name(self):
         """Get Elasticsearch index name associated to the campaign
         """
-        fmt = self.campaign.campaign.export.elasticsearch.index_name
+        fmt = self.campaign.export.elasticsearch.index_name
         fields = dict(
-            date=self.campaign.report.date,
+            date=self.report['date'],
         )
         return fmt.format(**fields).lower()
 
@@ -102,6 +110,7 @@ class ESExporter(object):
         )
 
     def _push_data(self):
+        doc_count = 0
         for runs in chunks(self._documents, 20):
             resp = self.es_client.bulk(
                 body=runs,
@@ -109,6 +118,9 @@ class ESExporter(object):
             )
             if resp['errors']:
                 raise Exception('Could not push documents')
+            doc_count += len(resp['items'])
+        logging.info('pushed %s documents in Elasticsearch index "%s"',
+                     doc_count, self.index_name)
 
     @cached_property
     def index_mapping(self):
@@ -122,25 +134,26 @@ class ESExporter(object):
 
     @property
     def _documents(self):
-        for run in ESExporter._get_runs(self.campaign):
+        for run in self._get_runs():
             yield dict(
                 index=dict(
                     _type=run['benchmark'],
                     _id=run['id']
                 )
             )
+            run['campaign_id'] = self.campaign.campaign_id
             yield run
 
     @cached_property
     def _document_types(self):
         return [
             benchmark
-            for benchmark in get_benchmark_types(self.campaign.campaign)
+            for benchmark in get_benchmark_types(self.campaign)
         ]
 
     def _get_document_mapping(self, benchmark):
         fields = {}
-        for run in ESExporter._get_benchmark_runs(self.campaign, benchmark):
+        for run in self._get_benchmark_runs(benchmark):
             dict_merge(fields, ESExporter._get_dict_mapping(benchmark, run))
         return fields
 
@@ -189,18 +202,16 @@ class ESExporter(object):
         mapping[name].update(extra_params)
         return mapping
 
-    @classmethod
-    def _get_runs(cls, campaign):
-        for attrs, metrics in get_metrics(campaign):
+    def _get_runs(self):
+        for attrs, metrics in get_metrics(self.campaign, self.report):
             for run in metrics:
                 eax = dict()
                 eax.update(attrs)
                 eax.update(run)
                 yield eax
 
-    @classmethod
-    def _get_benchmark_runs(cls, campaign, benchmark):
-        for attrs, metrics in get_metrics(campaign):
+    def _get_benchmark_runs(self, benchmark):
+        for attrs, metrics in get_metrics(self.campaign, self.report):
             for run in metrics:
                 if run['benchmark'] == benchmark:
                     eax = dict()

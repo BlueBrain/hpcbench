@@ -6,7 +6,9 @@ import csv
 from cached_property import cached_property
 
 from hpcbench.campaign import (
+    from_file,
     get_metrics,
+    ReportNode,
 )
 from hpcbench.toolbox.collections_ext import flatten_dict
 from hpcbench.toolbox.contextlib_ext import write_wherever
@@ -17,12 +19,13 @@ class CSVExporter(object):
     """Export a campaign to CSV
     """
 
-    def __init__(self, campaign, ofile=None):
+    def __init__(self, path, ofile=None):
         """
-        :param campaign: instance of ``hpcbench.driver.CampaignDriver``
+        :param path: path to existing campaign
         :param ofile: a filename or None if stdout should be used
         """
-        self.campaign = campaign
+        self.report = ReportNode(path)
+        self.campaign = from_file(path)
         self.ofile = ofile
 
     def export(self, fields=None):
@@ -68,7 +71,7 @@ class CSVExporter(object):
     @cached_property
     @listify
     def runs(self):
-        for attrs, metrics in get_metrics(self.campaign):
+        for attrs, metrics in get_metrics(self.campaign, self.report):
             for run in metrics:
                 run_flat = flatten_dict(run)
                 eax = dict()

@@ -50,8 +50,10 @@ from . api import (
 )
 from . campaign import (
     from_file,
+    JSON_METRICS_FILE,
     NodeSet,
     SBATCH_JINJA_TEMPLATE,
+    YAML_CAMPAIGN_FILE,
     YAML_REPORT_FILE,
 )
 from . toolbox.buildinfo import extract_build_info
@@ -75,8 +77,6 @@ from .toolbox.process import (
 )
 
 LOGGER = logging.getLogger('hpcbench')
-YAML_CAMPAIGN_FILE = 'campaign.yaml'
-JSON_METRICS_FILE = 'metrics.json'
 LOCALHOST = 'localhost'
 SEQUENCES = (list, FrozenList)
 MAPPINGS = (dict, FrozenDict)
