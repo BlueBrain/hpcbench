@@ -206,18 +206,16 @@ class ESExporter(object):
         return mapping
 
     def _get_runs(self):
-        for attrs, metrics in get_metrics(self.campaign, self.report):
-            for run in metrics:
-                eax = dict()
-                eax.update(attrs)
-                eax.update(run)
-                yield eax
+        for attrs, runs in get_metrics(self.campaign, self.report):
+            for run in runs:
+                metrics = run.pop('metrics')
+                for metric in metrics:
+                    eax = dict(metric)
+                    eax.update(run)
+                    eax.update(attrs)
+                    yield eax
 
     def _get_benchmark_runs(self, benchmark):
-        for attrs, metrics in get_metrics(self.campaign, self.report):
-            for run in metrics:
-                if run['benchmark'] == benchmark:
-                    eax = dict()
-                    eax.update(attrs)
-                    eax.update(run)
-                    yield eax
+        for run in self._get_runs():
+            if run['benchmark'] == benchmark:
+                yield run
