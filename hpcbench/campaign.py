@@ -328,6 +328,7 @@ class NetworkConfig(object):
         self.network.tags = expanded
 
 
+@listify(wrapper=set)
 def get_benchmark_types(campaign):
     """Get of benchmarks referenced in the configuration
 
