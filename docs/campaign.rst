@@ -487,6 +487,13 @@ Default value is:
 If value does not start with shebang, then it is considered
 like a file location.
 
+Global metas dictionary (optional)
+----------------------------------
+If present at top-level of YAML file, content  of ``metas`` dictionary
+will be merged with those from every execution (see
+``hpcbench.api.Benchmark.execution_context``)
+Those defined in ``execution_context`` take precedence.
+
 Environment variable expansion
 ------------------------------
 

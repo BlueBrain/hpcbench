@@ -91,6 +91,10 @@ benchmarks:
                     FOO: bar
 
 
+metas:
+    foo: bar
+    bar: pika
+
 expected_env:
     as_is:
         modules: []
