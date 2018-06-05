@@ -1,0 +1,7 @@
+network:
+  cluster: slurm
+  tags:
+    uc1:
+      nodes: [n1, n2]
+    uc2:
+      constraint: skylake
