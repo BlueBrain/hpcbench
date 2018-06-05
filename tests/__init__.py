@@ -140,7 +140,9 @@ class FakeBenchmark(Benchmark):
             )
         )
 
-    def pre_execute(self, execution):
+    def pre_execute(self, execution, context):
+        del execution  # unused
+        del context  # unused
         with open('test.py', 'w') as ostr:
             ostr.write(dedent("""\
             from __future__ import print_function
@@ -177,27 +179,3 @@ class FakeBenchmark(Benchmark):
     @property
     def metrics_extractors(self):
         return dict(main=FakeExtractor(self.attributes['run_path']))
-
-    @property
-    def plots(self):
-        return dict(
-            main=[
-                dict(
-                    name="{hostname} {category} Performance",
-                    series=dict(
-                        metas=['field'],
-                        metrics=[
-                            'performance',
-                            'standard_error'
-                        ],
-                    ),
-                    plotter=self.plot_performance
-                )
-            ]
-        )
-
-    def plot_performance(self, plt, description, metas, metrics):
-        plt.errorbar(metas['field'],
-                     metrics['performance'],
-                     yerr=metrics['standard_error'],
-                     fmt='o', ecolor='g', capthick=2)
