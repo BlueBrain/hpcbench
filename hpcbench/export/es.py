@@ -29,7 +29,7 @@ class ESExporter(object):
         str: 'keyword',
     }
     PROPERTIES_FIELD_TYPE = dict(date='date')
-    ES_DOC_TYPE = '_doc'
+    ES_DOC_TYPE = 'hpcbench_metric'
 
     def __init__(self, path, hosts):
         """
