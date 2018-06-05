@@ -678,9 +678,9 @@ class BenchmarkCategoryDriver(Enumerator):
                              executable)
         else:
             if magic.from_file(exepath).startswith('ELF'):
-                if 'metas' not in execution or execution['metas'] is None:
-                    execution['metas'] = dict()
-                execution['metas']['build_info'] = extract_build_info(exepath)
+                binfo = extract_build_info(exepath)
+                if binfo:
+                    execution.setdefault('metas', {})['build_info'] = binfo
             else:
                 self.logger.info('%s is not pointing to an ELF executable',
                                  exepath)
