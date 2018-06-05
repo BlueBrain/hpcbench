@@ -215,7 +215,8 @@ class TestHostDriver(unittest.TestCase):
                 ),
                 'main'
             )()
-            build_info = bench.execution_matrix(None)[0]['metas']['build_info']
+            metas = bench.execution_matrix(None)[0]['metas']
+            build_info = metas.get('build_info')
             self.assertEqual(build_info, bench.build_info)
 
     def slurm(self, **kwargs):
