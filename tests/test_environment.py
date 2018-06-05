@@ -77,7 +77,8 @@ class EnvBenchmark(Benchmark):
             category='ut',
             command=['true'],
             environment=self.environment,
-            modules=self.modules
+            modules=self.modules,
+            metas=dict(foo='foo')
         )
 
     def pre_execute(self, execution):
@@ -144,7 +145,7 @@ class TestEnvironment(DriverTestCase, unittest.TestCase):
 
     def test(self):
         report = ReportNode(self.CAMPAIGN_PATH)
-        keys = ('modules', 'environment')
+        keys = ('modules', 'environment', 'metas')
         expected_tests = 13
         tests = 0
         for path, env in report.collect(*keys, with_path=True):
@@ -153,8 +154,12 @@ class TestEnvironment(DriverTestCase, unittest.TestCase):
             self._check_campaign_report(context, env)
             self._check_shell_script(context)
             self._check_benchmark_hooks_environment(context)
+            self._check_metas(env)
             tests += 1
         self.assertEqual(tests, expected_tests)
+
+    def _check_metas(self, env):
+        self.assertEqual(env[2], dict(foo='foo', bar='pika'))
 
     def _check_campaign_report(self, context, env):
         """Verify environment and modules specified in report"""

@@ -628,6 +628,11 @@ class BenchmarkCategoryDriver(Enumerator):
             if 'modules' in self.config:
                 yaml_modules = self.config['modules'] or []
                 execution['modules'] = list(yaml_modules)
+            # Enrich `metas` if specified in YAML
+            if 'metas' in self.campaign:
+                metas = dict(self.campaign.metas)
+                metas.update(execution.setdefault('metas', {}))
+                execution['metas'] = metas
             name = execution.get('name') or ''
             yield execution, osp.join(name, str(uuid.uuid4()))
 
