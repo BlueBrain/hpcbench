@@ -27,13 +27,14 @@ class TestMDTestPostExecution(unittest.TestCase):
             post_cleanup=True,
             options=['foo', '-d', path]
         )
-        execution = next(mdt.execution_matrix(ExecutionContext(
+        exec_ctx = mdt.execution_matrix(ExecutionContext(
             node='node.local',
             tag='tag.name',
             nodes=[],
             logger=LOGGER,
             srun_options=None,
-        )))
+        ))
+        execution = next(exec_ctx)
         path = execution['command'][-1]
         self.assertTrue(path.endswith('node.local--tag.name'))
         os.mkdir(path)
@@ -41,7 +42,7 @@ class TestMDTestPostExecution(unittest.TestCase):
             pass
         if fill_dir:
             TestMDTestPostExecution.fill_directory(path)
-        mdt.post_execute(execution)
+        mdt.post_execute(execution, exec_ctx)
         self.assertEqual(os.listdir(path), ['stderr.txt'])
 
     def test_empty_dir(self):
