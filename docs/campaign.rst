@@ -114,6 +114,12 @@ All methods are being used:
   constraint tag is given to the sbatch options through the
   *--constraint* option.
 
+cluster
+~~~~~~~
+If value is "slurm", then the network ``nodes`` is filled based on the output
+of the ``info`` command. A tag will be also added for every 
+(partition, feature) tuple formatted like this: ``{partition}_{feature}``.
+
 ssh_config_file
 ~~~~~~~~~~~~~~~
 

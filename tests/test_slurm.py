@@ -11,7 +11,10 @@ import unittest
 import mock
 from mock import Mock
 
-from hpcbench.campaign import ReportNode
+from hpcbench.campaign import (
+    from_file,
+    ReportNode,
+)
 from hpcbench.driver import (
     CampaignDriver,
     SbatchDriver,
@@ -197,4 +200,22 @@ class TestSbatchTemplate(unittest.TestCase):
             'test_slurm_per_tag_sbatch_args.yaml',
             'uc1',
             sbatch_str
+        )
+
+
+class TestSlurmCluster(unittest.TestCase):
+    CAMPAIGN_FILE = osp.join(osp.dirname(__file__), 'test_slurm_cluster.yaml')
+    SINFO_OUTPUT_FILE = osp.join(osp.dirname(__file__),
+                                 'toolbox', 'sinfo-mock.txt')
+
+    @mock.patch('subprocess.check_output')
+    def test_campaign_network(self, co_mock):
+        with open(self.__class__.SINFO_OUTPUT_FILE) as istr:
+            co_mock.return_value = istr.read()
+        campaign = from_file(self.__class__.CAMPAIGN_FILE)
+        self.assertEqual(36, len(campaign.network.nodes))
+        self.assertEqual(
+            {'partition_2_rack1', 'uc1', 'uc2',
+             'partition_1_rack1', 'partition_3_rack1'},
+            set(campaign.network.tags)
         )

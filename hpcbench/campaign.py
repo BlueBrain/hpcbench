@@ -29,6 +29,7 @@ from . toolbox.collections_ext import (
 )
 from . toolbox.env import expandvars
 from . toolbox.functools_ext import listify
+from . toolbox.slurm import SlurmCluster
 
 
 def pip_installer_url(version=None):
@@ -223,11 +224,33 @@ class NetworkConfig(object):
         """
         return self.campaign.network
 
+    @property
+    def slurm(self):
+        return self.campaign.network.get('cluster') == 'slurm'
+
     def expand(self):
         """Perforn node expansion of network section.
         """
+        if self.slurm:
+            self._introspect_slurm_cluster()
         self.network.nodes = NetworkConfig._expand_nodes(self.network.nodes)
         self._expand_tags()
+
+    def _introspect_slurm_cluster(self):
+        cluster = SlurmCluster()
+        node_names = set()
+        tags = dict()
+        for node in cluster.nodes:
+            node_names.add(str(node))
+            for feature in node.active_features:
+                tag_name = node.partition + '_' + feature
+                tags.setdefault(tag_name, []).append(str(node))
+        for tag in tags:
+            tags[tag] = dict(nodes=tags[tag])
+        self.network.nodes = list(node_names)
+        prev_tags = self.network.tags
+        self.network.tags = tags
+        self.network.tags.update(prev_tags)
 
     @classmethod
     def _expand_nodes(cls, nodes):
