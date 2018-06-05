@@ -281,7 +281,7 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def pre_execute(self, execution):
+    def pre_execute(self, execution, context):
         """Method called before executing one of the commands.
         Current working directory is the execution directory.
 
@@ -289,8 +289,9 @@ class Benchmark(with_metaclass(ABCMeta, object)):
                           provided in ``execution_matrix`` member method.
         """
         del execution  # unused
+        del context  # unused
 
-    def post_execute(self, execution):
+    def post_execute(self, execution, context):
         """Method called after executing one of the commands.
         Current working directory is the execution directory.
 
@@ -298,6 +299,7 @@ class Benchmark(with_metaclass(ABCMeta, object)):
                           provided in ``execution_matrix`` member method.
         """
         del execution  # unused
+        del context  # unused
 
     @abstractproperty
     def metrics_extractors(self):

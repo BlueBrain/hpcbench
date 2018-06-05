@@ -82,10 +82,12 @@ class EnvBenchmark(Benchmark):
             metas=dict(foo='foo')
         )
 
-    def pre_execute(self, execution):
+    def pre_execute(self, execution, context):
+        del context  # unused
         self._dump_environment(execution, 'pre_execute.yaml')
 
-    def post_execute(self, execution):
+    def post_execute(self, execution, context):
+        del context  # unused
         self._dump_environment(execution, 'post_execute.yaml')
 
     def _dump_environment(self, execution, file):
