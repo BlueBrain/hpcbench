@@ -1013,7 +1013,8 @@ class ExecutionDriver(Leaf):
         os.close(fd)
         with open(path, 'w') as ostr:
             self._write_executor_script(ostr)
-        os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC)
+        mode = os.stat(path).st_mode
+        os.chmod(path, mode | stat.S_IEXEC | stat.S_IRGRP | stat.S_IRUSR)
         return path
 
     @property

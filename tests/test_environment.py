@@ -5,6 +5,7 @@ import glob
 import os
 import os.path as osp
 import re
+import stat
 import unittest
 
 from cached_property import cached_property
@@ -171,6 +172,9 @@ class TestEnvironment(DriverTestCase, unittest.TestCase):
     def _check_shell_script(self, context):
         """Verify generated shell-script prelude"""
         shell_script = glob.glob(osp.join(context.path, '*.sh'))[0]
+        mode = os.stat(shell_script).st_mode
+        expected_mode = stat.S_IEXEC | stat.S_IRGRP | stat.S_IRUSR
+        self.assertEqual(mode & expected_mode, expected_mode)
         environment = self.expected_env[context.benchmark]
         with open(shell_script) as istr:
             prelude = self._shell_prelude(**environment)
