@@ -256,7 +256,7 @@ class MiniGEMM(Benchmark):
             ),
         )
 
-    def _compile(self, execution):
+    def _compile(self, execution, context):
         with open('minigemm.cpp', 'w') as ostr:
             print(SOURCE, file=ostr)
         with open('Makefile', 'w') as ostr:
@@ -266,10 +266,17 @@ class MiniGEMM(Benchmark):
             print(COMPILE_SCRIPT.format(opts=opt_str), file=ostr)
         st = os.stat('compile.sh')
         os.chmod('compile.sh', st.st_mode | stat.S_IEXEC)
-        subprocess.check_call(['./compile.sh'])
+        try:
+            subprocess.check_call(['./compile.sh'])
+        except subprocess.CalledProcessError as cpe:
+            context.logger.warning(
+                'minigemm compilation failed, error code:',
+                cpe.returncode)
+        else:
+            context.logger.info('Successfully compiled minigemm benchmark')
 
-    def pre_execute(self, execution):
-        self._compile(execution)
+    def pre_execute(self, execution, context):
+        self._compile(execution, context)
 
     @cached_property
     def metrics_extractors(self):

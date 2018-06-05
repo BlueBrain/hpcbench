@@ -186,7 +186,7 @@ class MDTest(Benchmark):
             if opt == '-d' and len(command) > i + 1:
                 return command[i + 1]
 
-    def post_execute(self, execution):
+    def post_execute(self, execution, context):
         if self.post_cleanup:
             test_dir = MDTest._get_path_from_execution(execution)
             if test_dir and osp.isdir(test_dir):

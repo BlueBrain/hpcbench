@@ -210,6 +210,6 @@ class HPL(Benchmark):
     def metrics_extractors(self):
         return HPLExtractor()
 
-    def pre_execute(self, execution):
+    def pre_execute(self, execution, context):
         with open('HPL.dat', 'w') as ostr:
             ostr.write(self.data)

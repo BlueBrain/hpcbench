@@ -187,7 +187,7 @@ class Leaf(Enumerator):
         return []
 
 
-Top = namedtuple('top', ['campaign', 'node', 'logger', 'root'])
+Top = namedtuple('top', ['campaign', 'node', 'logger', 'root', 'name'])
 Top.__new__.__defaults__ = (None, ) * len(Top._fields)
 
 
@@ -590,6 +590,7 @@ class BenchmarkCategoryDriver(Enumerator):
         self.category = category
         self.benchmark = self.parent.benchmark
         self.config = parent.config
+        self.exec_context = parent.exec_context
 
     @cached_property
     def commands(self):
@@ -850,6 +851,7 @@ class FixedAttempts(Enumerator):
         self.execution = execution
         self.paths = []
         self.config = parent.config
+        self.exec_context = parent.exec_context
 
     __call__ = Enumerator._call_without_report
 
@@ -1003,6 +1005,7 @@ class ExecutionDriver(Leaf):
             process_count=1
         )
         self.config = parent.config
+        self.exec_context = parent.exec_context
 
     @cached_property
     def _executor_script(self):
@@ -1113,10 +1116,10 @@ class ExecutionDriver(Leaf):
 
     def __execute(self, stdout, stderr):
         with self.module_env():
-            self.benchmark.pre_execute(self.execution)
+            self.benchmark.pre_execute(self.execution, self.exec_context)
         exit_status = self.popen(stdout, stderr).wait()
         with self.module_env():
-            self.benchmark.post_execute(self.execution)
+            self.benchmark.post_execute(self.execution, self.exec_context)
         return exit_status
 
     @write_yaml_report

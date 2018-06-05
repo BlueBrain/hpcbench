@@ -16,12 +16,12 @@ from hpcbench.cli import bensh
 from hpcbench.driver import (
     BenchmarkCategoryDriver,
     BenchmarkDriver,
+    BenchmarkTagDriver,
     CampaignDriver,
     ConstraintTag,
     ExecutionDriver,
     FixedAttempts,
-    Top,
-)
+    HostDriver)
 from hpcbench.toolbox.contextlib_ext import modified_environ
 
 
@@ -191,7 +191,12 @@ class TestBenchmark(unittest.TestCase):
             FixedAttempts(
                 BenchmarkCategoryDriver(
                     BenchmarkDriver(
-                        Top(logger=LOGGER),
+                        BenchmarkTagDriver(
+                            HostDriver(
+                                CampaignDriver(default_campaign()),
+                                'n1'
+                            )
+                        ),
                         namedtuple('benchmark', ['name'])(name='benchmark'),
                         dict(exec_prefix=exec_prefix),
                     ),
