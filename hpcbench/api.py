@@ -287,6 +287,8 @@ class Benchmark(with_metaclass(ABCMeta, object)):
 
         :param execution: one of the dictionary
                           provided in ``execution_matrix`` member method.
+        :param context: `ExecutionContext` instance. See ``execution_matrix``
+                        member method for more details.
         """
         del execution  # unused
         del context  # unused
@@ -297,6 +299,8 @@ class Benchmark(with_metaclass(ABCMeta, object)):
 
         :param execution: one of the dictionary
                           provided in ``execution_matrix`` member method.
+        :param context: `ExecutionContext` instance. See ``execution_matrix``
+                        member method for more details.
         """
         del execution  # unused
         del context  # unused

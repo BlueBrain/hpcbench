@@ -78,6 +78,7 @@ class Basic(Benchmark):
 
     def pre_execute(self, execution, context):
         del execution  # unused
+        del context  # unused
         with open(Basic.PING_IPS_FILE, 'w') as ostr:
             for ip in self.ping_ips:
                 print(ip, file=ostr)
