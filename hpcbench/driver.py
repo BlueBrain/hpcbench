@@ -169,6 +169,21 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
                         raise
                 yield child
 
+    @classmethod
+    def call_decorator(cls, func):
+        """class function that MUST specified as decorator
+        to the `__call__` method overriden by sub-classes.
+        """
+        @wraps(func)
+        def _wrap(self, *args, **kwargs):
+            try:
+                return func(self, *args, **kwargs)
+            except Exception:
+                self.logger.exception('While executing benchmark')
+                if not self.catch_child_exception:
+                    raise
+        return _wrap
+
     @write_yaml_report
     def __call__(self, **kwargs):
         return self._call_without_report(**kwargs)
@@ -412,6 +427,7 @@ class SbatchDriver(Enumerator):
         return template
 
     @write_yaml_report
+    @Enumerator.call_decorator
     def __call__(self, **kwargs):
         with open(self.sbatch_filename, 'w') as sbatch:
             self._create_sbatch(sbatch)
@@ -664,6 +680,7 @@ class BenchmarkCategoryDriver(Enumerator):
         return FixedAttempts
 
     @write_yaml_report
+    @Enumerator.call_decorator
     def __call__(self, **kwargs):
         if "no_exec" not in kwargs:
             for run_dir in self._execute(**kwargs):
@@ -759,6 +776,7 @@ class MetricsDriver(object):
             self.report = yaml.safe_load(istr)
 
     @write_yaml_report
+    @Enumerator.call_decorator
     def __call__(self, **kwargs):
         cat = self.report.get('category')
         metas = self.report.get('metas')
@@ -1142,6 +1160,7 @@ class ExecutionDriver(Leaf):
         return exit_status
 
     @write_yaml_report
+    @Enumerator.call_decorator
     def __call__(self, **kwargs):
         with open('stdout', 'w') as stdout, \
                 open('stderr', 'w') as stderr:
