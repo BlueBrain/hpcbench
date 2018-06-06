@@ -171,7 +171,7 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
 
     @classmethod
     def call_decorator(cls, func):
-        """class function that MUST specified as decorator
+        """class function that MUST be specified as decorator
         to the `__call__` method overriden by sub-classes.
         """
         @wraps(func)
