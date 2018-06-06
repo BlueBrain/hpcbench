@@ -68,6 +68,16 @@ DEFAULT_CAMPAIGN = dict(
         installer_prelude_file=None,
         max_concurrent_runs=4,
         pip_installer_url=pip_installer_url(),
+        slurm_blacklist_states=[
+            'down',
+            'drained',
+            'draining',
+            'error',
+            'fail',
+            'failing',
+            'future',
+            'maint',
+        ],
     ),
     process=dict(
         type='local',
@@ -240,7 +250,10 @@ class NetworkConfig(object):
         cluster = SlurmCluster()
         node_names = set()
         tags = dict()
+        blacklist_states = set(self.network.slurm_blacklist_states)
         for node in cluster.nodes:
+            if node.state in blacklist_states:
+                continue
             node_names.add(str(node))
             for feature in node.active_features:
                 tag_name = node.partition + '_' + feature
