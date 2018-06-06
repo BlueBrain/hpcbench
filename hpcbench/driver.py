@@ -678,13 +678,19 @@ class BenchmarkCategoryDriver(Enumerator):
             self.logger.info("Could not find exe %s to examine for build info",
                              executable)
         else:
-            if magic.from_file(exepath).startswith('ELF'):
-                binfo = extract_build_info(exepath)
-                if binfo:
-                    execution.setdefault('metas', {})['build_info'] = binfo
+            try:
+                file_type = magic.from_file(osp.realpath(exepath))
+            except IOError as exc:
+                self.logger.warn('Could not find file type of %s: %s',
+                                 exepath, exc)
             else:
-                self.logger.info('%s is not pointing to an ELF executable',
-                                 exepath)
+                if file_type.startswith('ELF'):
+                    binfo = extract_build_info(exepath)
+                    if binfo:
+                        execution.setdefault('metas', {})['build_info'] = binfo
+                else:
+                    self.logger.info('%s is not pointing to an ELF executable',
+                                     exepath)
 
     def _execute(self, **kwargs):
         runs = dict()
