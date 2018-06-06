@@ -29,6 +29,7 @@ from hpcbench.toolbox.contextlib_ext import (
     mkdtemp,
     pushd,
 )
+from .. import FakeCluster
 
 LOGGER = logging.getLogger(__name__)
 
@@ -174,10 +175,12 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
 
     @property
     def exec_context(self):
+        tag = '*'
+        node = 'localhost'
         return ExecutionContext(
-            node='localhost',
-            tag='*',
-            nodes=['localhost'],
+            cluster=FakeCluster(tag, [node], node),
+            node=node,
+            tag=tag,
             logger=self.logger,
             srun_options=[],
         )

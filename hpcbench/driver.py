@@ -16,6 +16,7 @@ import copy
 import datetime
 from functools import wraps
 import glob
+import itertools
 import json
 import logging
 import os
@@ -44,6 +45,7 @@ import yaml
 from . import jinja_environment
 from . api import (
     Benchmark,
+    Cluster,
     ExecutionContext,
     Metric,
     NoMetricException,
@@ -218,15 +220,52 @@ Top = namedtuple('top', ['campaign', 'node', 'logger', 'root', 'name'])
 Top.__new__.__defaults__ = (None, ) * len(Top._fields)
 
 
+class ClusterWrapper(Cluster):
+    def __init__(self, network, tag, node):
+        self._network = network
+        self._tag = tag
+        self._node = node
+
+    @property
+    def nodes(self):
+        return self._network.nodes(self._tag)
+
+    @property
+    def node_pairs(self):
+        return self._network.node_pairs(self._tag, self._node)
+
+    @property
+    @listify
+    def tag_node_pairs(self):
+        return itertools.chain([
+            self._network.node_pairs(self._tag, node)
+            for node in self._network.nodes(self._tag)
+        ])
+
+
 class Network(object):
-    def __init__(self, campaign):
+    def __init__(self, campaign, logger=None):
         self.campaign = campaign
+        self.logger = logger or LOGGER
 
     def has_tag(self, tag):
         return tag in self.campaign.network.tags
 
+    def node_pairs(self, tag, node):
+        nodes = self.nodes(tag)
+        try:
+            pos = nodes.index(node)
+        except ValueError:
+            self.logger.error('Could not find node %s in nodes %s',
+                              node, ', '.join(nodes))
+        return [
+            (node, nodes[i])
+            for i in range(pos + 1, len(nodes))
+        ]
+
     def nodes(self, tag):
-        """get list of nodes that belong to a tag
+        """get nodes that belong to a tag
+        :param tag: tag name
         :rtype: list of string
         """
         if tag == '*':
@@ -598,12 +637,14 @@ class BenchmarkDriver(Enumerator):
 
     @cached_property
     def exec_context(self):
+        tag = self.parent.name
+        cluster = ClusterWrapper(self.root.network, tag, self.node)
         return ExecutionContext(
-            node=self.node,
-            tag=self.parent.name,
-            nodes=self.root.network.nodes(self.parent.name),
+            cluster=cluster,
             logger=self.logger,
-            srun_options=self.config['srun_options']
+            node=self.node,
+            srun_options=self.config['srun_options'],
+            tag=tag,
         )
 
     @property
