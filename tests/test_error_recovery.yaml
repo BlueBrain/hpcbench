@@ -1,0 +1,10 @@
+benchmarks:
+    '*':
+        working:
+            type: fake
+        error:
+            # This benchmark will fail because executable
+            # will not be found
+            type: fake
+            attributes:
+                executable: /unknown

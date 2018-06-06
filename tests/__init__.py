@@ -1,4 +1,5 @@
 import inspect
+import os
 import os.path as osp
 import shutil
 import sys
@@ -7,6 +8,7 @@ from textwrap import dedent
 
 from cached_property import cached_property
 import six
+import yaml
 
 from hpcbench.api import (
     Benchmark,
@@ -19,6 +21,8 @@ from . toolbox.test_buildinfo import TestExtractBuildinfo
 
 
 class DriverTestCase(object):
+    check_campaign_consistency = False
+
     @classmethod
     def get_campaign_file(cls):
         return osp.splitext(inspect.getfile(cls))[0] + '.yaml'
@@ -30,6 +34,31 @@ class DriverTestCase(object):
             cls.driver = bensh.main(cls.get_campaign_file())
         cls.CAMPAIGN_PATH = osp.join(cls.TEST_DIR,
                                      cls.driver.campaign_path)
+        if cls.check_campaign_consistency:
+            cls._check_campaign_consistency()
+
+    @classmethod
+    def _check_campaign_consistency(cls):
+        dirs = [cls.CAMPAIGN_PATH]
+        while dirs:
+            path = dirs.pop()
+            files = os.listdir(path)
+            if not files:
+                # empty directory is considered valid
+                continue
+            hpcbench_yaml = osp.join(path, 'hpcbench.yaml')
+            if not osp.isfile(hpcbench_yaml):
+                raise Exception('Missing hpchench.yaml in %s' %
+                                hpcbench_yaml)
+            with open(hpcbench_yaml) as istr:
+                data = yaml.safe_load(istr)
+            children = data.get('children', [])
+            assert isinstance(children, list)
+            children = set(children)
+            for file in files:
+                fpath = osp.join(path, file)
+                if osp.isdir(fpath):
+                    dirs.append(fpath)
 
     @classmethod
     def tearDownClass(cls):
@@ -137,8 +166,14 @@ class FakeBenchmark(Benchmark):
             attributes=dict(
                 input=FakeBenchmark.INPUTS,
                 run_path=None,
+                executable=sys.executable
             )
         )
+
+    @cached_property
+    def executable(self):
+        """Get path to python executable"""
+        return self.attributes['executable']
 
     def pre_execute(self, execution, context):
         del execution  # unused
@@ -161,7 +196,7 @@ class FakeBenchmark(Benchmark):
             dict(
                 category='main',
                 command=[
-                    sys.executable, 'test.py', str(value)
+                    self.executable, 'test.py', str(value)
                 ],
                 metas=dict(field=value / 10)
                 if not isinstance(value, six.string_types) else None

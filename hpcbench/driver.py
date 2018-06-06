@@ -110,12 +110,19 @@ def write_yaml_report(func):
 
 class Enumerator(six.with_metaclass(ABCMeta, object)):
     """Common class for every campaign node"""
-    def __init__(self, parent, name=None, logger=None):
+    def __init__(self, parent, name=None, logger=None,
+                 catch_child_exception=False):
+        """
+        :keyword catch_child_exception: if True, then
+        report exception raised by children but do not
+        propagate it upstream.
+        """
         self.parent = parent
         self.campaign = parent.campaign
         self.root = parent.root
         self.node = parent.node
         self.name = name
+        self.catch_child_exception = catch_child_exception
         if logger:
             self.logger = logger
         elif name:
@@ -154,7 +161,12 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
             child_obj = self.child_builder(child)
             with pushd(str(child), cleanup=isinstance(child_obj, Enumerator)
                        and not child_obj.has_children):
-                child_obj(**kwargs)
+                try:
+                    child_obj(**kwargs)
+                except Exception:
+                    self.logger.exception('While executing benchmark')
+                    if not self.catch_child_exception:
+                        raise
                 yield child
 
     @write_yaml_report
@@ -541,7 +553,8 @@ class BenchmarkDriver(Enumerator):
     """Abstract representation of a benchmark, part of a campaign tag
     """
     def __init__(self, parent, benchmark, config):
-        super(BenchmarkDriver, self).__init__(parent, benchmark.name)
+        super(BenchmarkDriver, self).__init__(parent, benchmark.name,
+                                              catch_child_exception=True)
         self.benchmark = benchmark
         self.config = BenchmarkDriver._prepare_config(config)
 
