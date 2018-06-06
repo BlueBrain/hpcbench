@@ -207,6 +207,8 @@ class IMB(Benchmark):
         ALL_GATHER: ["-npmin", "{process_count}"],
         ALL_TO_ALL: ["-npmin", "{process_count}"],
     }
+    NODE_PAIRING = {'node', 'tag'}
+    DEFAULT_NODE_PAIRING = 'node'
 
     def __init__(self):
         super(IMB, self).__init__(
@@ -215,6 +217,7 @@ class IMB(Benchmark):
                 categories=IMB.DEFAULT_CATEGORIES,
                 arguments=IMB.DEFAULT_ARGUMENTS,
                 srun_nodes=0,
+                node_pairing=IMB.DEFAULT_NODE_PAIRING,
             )
         )
     name = 'imb'
@@ -244,11 +247,27 @@ class IMB(Benchmark):
         must be executed on"""
         return self.attributes['srun_nodes']
 
+    @property
+    def node_pairing(self):
+        value = self.attributes['node_pairing']
+        if value not in IMB.NODE_PAIRING:
+            msg = 'Unexpected {0} value: got "{1}" but valid values are {2}'
+            msg = msg.format('node_pairing', value, IMB.NODE_PAIRING)
+            raise ValueError(msg)
+        return value
+
+    def _node_pairs(self, context):
+        if self.node_pairing == 'node':
+            return context.cluster.node_pairs
+        elif self.node_pairing == 'tag':
+            return context.cluster.tag_node_pairs
+        assert False
+
     def execution_matrix(self, context):
         for category in self.categories:
             arguments = self.arguments.get(category) or []
             if category == IMB.PING_PONG:
-                for pair in context.cluster.node_pairs:
+                for pair in self._node_pairs(context):
                     yield dict(
                         category=category,
                         command=[find_executable(self.executable,

@@ -237,6 +237,8 @@ class OSU(Benchmark):
     OSU_ALLTOALLV = 'osu_alltoallv'
     OSU_REDUCE = 'osu_reduce'
     OSU_ALLREDUCE = 'osu_allreduce'
+    NODE_PAIRING = {'node', 'tag'}
+    DEFAULT_NODE_PAIRING = 'node'
     DEFAULT_CATEGORIES = [
         OSU_BW,
         OSU_LAT,
@@ -261,6 +263,7 @@ class OSU(Benchmark):
                 categories=OSU.DEFAULT_CATEGORIES,
                 arguments=OSU.DEFAULT_ARGUMENTS,
                 srun_nodes=0,
+                node_pairing=OSU.DEFAULT_NODE_PAIRING,
             )
         )
     name = 'osu'
@@ -290,6 +293,22 @@ class OSU(Benchmark):
         return self.attributes['arguments']
 
     @property
+    def node_pairing(self):
+        value = self.attributes['node_pairing']
+        if value not in OSU.NODE_PAIRING:
+            msg = 'Unexpected {0} value: got "{1}" but valid values are {2}'
+            msg = msg.format('node_pairing', value, OSU.NODE_PAIRING)
+            raise ValueError(msg)
+        return value
+
+    def node_pairs(self, context):
+        if self.node_pairing == 'node':
+            return context.cluster.node_pairs
+        elif self.node_pairing == 'tag':
+            return context.cluster.tag_node_pairs
+        assert False
+
+    @property
     def srun_nodes(self):
         """Number of nodes the benchmark (other than PingPong)
         must be executed on"""
@@ -305,7 +324,7 @@ class OSU(Benchmark):
                 else:
                     executable = find_executable(self.executable(category),
                                                  required=False)
-                    for pair in context.cluster.node_pairs:
+                    for pair in self.node_pairs(context):
                         yield dict(
                             category=category,
                             command=[executable] + arguments,
