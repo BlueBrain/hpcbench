@@ -117,8 +117,14 @@ All methods are being used:
 cluster
 ~~~~~~~
 If value is "slurm", then the network ``nodes`` is filled based on the output
-of the ``info`` command. A tag will be also added for every 
+of the ``info`` command. A tag will be also added for every
 (partition, feature) tuple formatted like this: ``{partition}_{feature}``.
+
+slurm_blacklist_states
+~~~~~~~~~~~~~~~~~~~~~~
+List of SLURM node states used to filter-out nodes when ``cluster`` option
+is set to ``nodes``. Default states are down, drained, draining, error,
+fail, failing, future, and maint.
 
 ssh_config_file
 ~~~~~~~~~~~~~~~
@@ -249,7 +255,7 @@ override default behavior, which is defined in the benchmark class.
 
 exec_prefix (optional)
 ~~~~~~~~~~~~~~~~~~~~~~
-Command prepended to every commands spawned by the tagged benchmark. Can 
+Command prepended to every commands spawned by the tagged benchmark. Can
 be either a string or a list of string, for instance:
 
 .. code-block:: yaml
@@ -504,7 +510,7 @@ Environment variable expansion
 ------------------------------
 
 Your configuration options can contain environment variables. HPCBench uses the
-variable values from the shell environment in which `ben-sh` is run. 
+variable values from the shell environment in which `ben-sh` is run.
 For example, suppose the shell contains EMAIL=root@cscs.ch and you supply this configuration:
 
 .. code-block:: yaml
