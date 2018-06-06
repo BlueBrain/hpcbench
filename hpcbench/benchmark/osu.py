@@ -305,11 +305,15 @@ class OSU(Benchmark):
                 else:
                     executable = find_executable(self.executable(category),
                                                  required=False)
-                    for pair in OSU.host_pairs(context):
+                    for pair in context.cluster.node_pairs:
                         yield dict(
                             category=category,
                             command=[executable] + arguments,
                             srun_nodes=pair,
+                            metas=dict(
+                                from_node=pair[0],
+                                to_node=pair[1],
+                            )
                         )
             else:
                 yield dict(
@@ -319,23 +323,6 @@ class OSU(Benchmark):
                     + arguments,
                     srun_nodes=self.srun_nodes
                 )
-
-    @staticmethod
-    def host_pairs(context):
-        try:
-            pos = context.nodes.index(context.node)
-        except ValueError:
-            context.logger.error(
-                'Could not find current node %s in nodes %s',
-                context.node,
-                ', '.join(context.nodes)
-            )
-            return []
-        else:
-            return [
-                [context.node, context.nodes[i]]
-                for i in range(pos + 1, len(context.nodes))
-            ]
 
     @cached_property
     def metrics_extractors(self):

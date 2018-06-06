@@ -16,6 +16,7 @@ from hpcbench.api import (
     MetricsExtractor,
 )
 from hpcbench.cli import bensh
+from hpcbench.driver import ClusterWrapper
 from hpcbench.toolbox.contextlib_ext import pushd
 from . toolbox.test_buildinfo import TestExtractBuildinfo
 
@@ -214,3 +215,27 @@ class FakeBenchmark(Benchmark):
     @property
     def metrics_extractors(self):
         return dict(main=FakeExtractor(self.attributes['run_path']))
+
+
+class FakeNetwork:
+    def __init__(self, tag, nodes):
+        self._tag = tag
+        self._nodes = nodes
+
+    def nodes(self, tag):
+        if self._tag is not None:
+            assert tag == self._tag
+        return self._nodes
+
+    def node_pairs(self, tag, node):
+        nodes = self.nodes(tag)
+        pos = nodes.index(node)
+        return [
+            (node, nodes[i])
+            for i in range(pos + 1, len(nodes))
+        ]
+
+
+class FakeCluster(ClusterWrapper):
+    def __init__(self, tag, nodes, node):
+        super(FakeCluster, self).__init__(FakeNetwork(tag, nodes), tag, node)

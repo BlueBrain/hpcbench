@@ -3,6 +3,7 @@ import unittest
 from hpcbench.api import ExecutionContext
 from hpcbench.benchmark.imb import IMB
 from . benchmark import AbstractBenchmarkTest
+from .. import FakeCluster
 
 
 class TestImb(AbstractBenchmarkTest, unittest.TestCase):
@@ -173,18 +174,21 @@ class TestImb(AbstractBenchmarkTest, unittest.TestCase):
 
     @property
     def exec_context(self):
+        node = 'node03'
+        tag = '*'
+        nodes = [
+            'node01',
+            'node02',
+            'node03',
+            'node04',
+            'node05',
+        ]
         return ExecutionContext(
-            node='node03',
-            tag='*',
-            nodes=[
-                'node01',
-                'node02',
-                'node03',
-                'node04',
-                'node05',
-            ],
+            cluster=FakeCluster(tag, nodes, node),
             logger=self.logger,
+            node=node,
             srun_options=[],
+            tag=tag,
         )
 
     @property
@@ -192,13 +196,15 @@ class TestImb(AbstractBenchmarkTest, unittest.TestCase):
         return [
             dict(
                 command=['/path/to/fake', 'PingPong'],
-                srun_nodes=['node03', 'node04'],
-                category='PingPong'
+                srun_nodes=('node03', 'node04'),
+                category='PingPong',
+                metas=dict(from_node='node03', to_node='node04'),
             ),
             dict(
                 command=['/path/to/fake', 'PingPong'],
-                srun_nodes=['node03', 'node05'],
-                category='PingPong'
+                srun_nodes=('node03', 'node05'),
+                category='PingPong',
+                metas=dict(from_node='node03', to_node='node05'),
             ),
             dict(
                 command=[

@@ -3,6 +3,7 @@ import unittest
 from hpcbench.api import ExecutionContext
 from hpcbench.benchmark.osu import OSU
 from . benchmark import AbstractBenchmarkTest
+from .. import FakeCluster
 
 
 class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
@@ -94,16 +95,19 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
 
     @property
     def exec_context(self):
+        node = 'node03'
+        tag = '*'
+        nodes = [
+            'node01',
+            'node03',
+            'node05',
+        ]
         return ExecutionContext(
-            node='node03',
-            tag='*',
-            nodes=[
-                'node01',
-                'node03',
-                'node05',
-            ],
+            cluster=FakeCluster(tag, nodes, node),
             logger=self.logger,
+            node=node,
             srun_options=[],
+            tag=tag,
         )
 
     @property
@@ -111,27 +115,29 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
         return [
             dict(
                 command=['/path/to/fake', '-x', '200', '-i', '100'],
-                srun_nodes=['node03', 'node05'],
-                category='osu_bw'
+                srun_nodes=('node03', 'node05'),
+                category='osu_bw',
+                metas=dict(from_node='node03', to_node='node05')
             ),
             dict(
                 command=['/path/to/fake'],
                 srun_nodes=['node01', 'node03', 'node05'],
-                category='osu_mbw_mr'
+                category='osu_mbw_mr',
             ),
             dict(
                 command=['/path/to/fake', '-x', '200', '-i', '100'],
-                srun_nodes=['node03', 'node05'],
-                category='osu_latency'
-            ),
-            dict(
-                command=['/path/to/fake', '-x', '200', '-i', '100'],
-                srun_nodes=['node01', 'node03', 'node05'],
-                category='osu_alltoallv'
+                srun_nodes=('node03', 'node05'),
+                category='osu_latency',
+                metas=dict(from_node='node03', to_node='node05')
             ),
             dict(
                 command=['/path/to/fake', '-x', '200', '-i', '100'],
                 srun_nodes=['node01', 'node03', 'node05'],
-                category='osu_allgatherv'
+                category='osu_alltoallv',
+            ),
+            dict(
+                command=['/path/to/fake', '-x', '200', '-i', '100'],
+                srun_nodes=['node01', 'node03', 'node05'],
+                category='osu_allgatherv',
             ),
         ]

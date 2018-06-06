@@ -28,11 +28,11 @@ class TestMDTestPostExecution(unittest.TestCase):
             options=['foo', '-d', path]
         )
         exec_ctx = mdt.execution_matrix(ExecutionContext(
-            node='node.local',
-            tag='tag.name',
-            nodes=[],
+            cluster=None,
             logger=LOGGER,
+            node='node.local',
             srun_options=None,
+            tag='tag.name',
         ))
         execution = next(exec_ctx)
         path = execution['command'][-1]

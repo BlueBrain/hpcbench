@@ -15,24 +15,64 @@ __all__ = [
     'MetricsExtractor',
 ]
 
-# Metrics have simply a unit and a type
-# namedtuples are compact and have a nice str representation
-Metric = namedtuple("Metric", "unit type")
+
+class Cluster(with_metaclass(ABCMeta, object)):
+    @abstractproperty
+    def nodes(self):
+        """get nodes of the current tag
+        :rtype: string list
+        """
+
+    @abstractproperty
+    def node_pairs(self):
+        """List of node pairs where:
+        - first element is the current node
+        - the second being node N for every N after the current node
+          is the nodes list of the current tag.
+        """
+        pass
+
+    @abstractproperty
+    def tag_node_pairs(self):
+        """Iterator of node pairs for every entries
+        in the strictly upper triangular matrix of nodes.
+        """
 
 
 class ExecutionContext(namedtuple(
     "ExecutionContext",
     [
-        "node",
-        "tag",
-        "nodes",
-        "logger",
-        "srun_options",
+        "cluster",  # instance of ``Cluster``
+        "logger",  # instance of logging.Logger
+        "node",  # current node (string)
+        "srun_options",  # given srun_options (string list)
+        "tag",  # current tag processed (string)
     ]
 )):
     @property
     def implicit_nodes(self):
-        return not isinstance(self.nodes, list)
+        return not isinstance(self.cluster.nodes, list)
+
+
+# Metrics have simply a unit and a type
+# namedtuples are compact and have a nice str representation
+Metric = namedtuple("Metric", "unit type")
+
+
+class Metrics(object):  # pragma pylint: disable=too-few-public-methods
+    """List of common metrics
+    """
+    Microsecond = Metric('us', float)
+    Millisecond = Metric('ms', float)
+    Second = Metric('s', float)
+    MegaBytesPerSecond = Metric('MB/s', float)
+    GigaBytesPerSecond = Metric('GB/s', float)
+    Cardinal = Metric('#', int)
+    Byte = Metric('B', int)
+    Flops = Metric('Flop/s', float)
+    GFlops = Metric('GFlop/s', float)
+    Bool = Metric('bool', bool)
+    Ops = Metric('op/s', float)
 
 
 class NoMetricException(Exception):
@@ -51,22 +91,6 @@ class UnexpectedMetricsException(Exception):
             'metrics set: %s'
         return error % (', '.join(self.unset_metrics),
                         ', '.join(set(self.metrics)))
-
-
-class Metrics(object):  # pragma pylint: disable=too-few-public-methods
-    """List of common metrics
-    """
-    Microsecond = Metric('us', float)
-    Millisecond = Metric('ms', float)
-    Second = Metric('s', float)
-    MegaBytesPerSecond = Metric('MB/s', float)
-    GigaBytesPerSecond = Metric('GB/s', float)
-    Cardinal = Metric('#', int)
-    Byte = Metric('B', int)
-    Flops = Metric('Flop/s', float)
-    GFlops = Metric('GFlop/s', float)
-    Bool = Metric('bool', bool)
-    Ops = Metric('op/s', float)
 
 
 class MetricsExtractor(with_metaclass(ABCMeta, object)):
