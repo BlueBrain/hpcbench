@@ -211,7 +211,7 @@ class TestSlurmCluster(unittest.TestCase):
     @mock.patch('subprocess.check_output')
     def test_campaign_network(self, co_mock):
         with open(self.__class__.SINFO_OUTPUT_FILE) as istr:
-            co_mock.return_value = istr.read()
+            co_mock.return_value = istr.read().encode()
         campaign = from_file(self.__class__.CAMPAIGN_FILE)
         self.assertEqual(35, len(campaign.network.nodes))
         self.assertEqual(

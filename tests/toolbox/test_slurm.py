@@ -12,7 +12,7 @@ class TestSlurm(unittest.TestCase):
     @mock.patch('subprocess.check_output')
     def test_introspect_cluster(self, co_mock):
         with open(TestSlurm.SINFO_OUTPUT_FILE) as istr:
-            co_mock.return_value = istr.read()
+            co_mock.return_value = istr.read().encode()
         c = SlurmCluster()
         self.assertEqual(108, len(c.nodes))
         self.assertEqual(
