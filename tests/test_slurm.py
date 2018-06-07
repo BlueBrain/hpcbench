@@ -215,7 +215,7 @@ class TestSlurmCluster(unittest.TestCase):
         campaign = from_file(self.__class__.CAMPAIGN_FILE)
         self.assertEqual(35, len(campaign.network.nodes))
         self.assertEqual(
-            {'partition_2_rack1', 'uc1', 'uc2',
+            {'partition_2_rack1', 'uc1', 'uc2', 'rack1',
              'partition_1_rack1', 'partition_3_rack1'},
             set(campaign.network.tags)
         )

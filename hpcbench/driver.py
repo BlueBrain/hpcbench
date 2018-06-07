@@ -16,7 +16,6 @@ import copy
 import datetime
 from functools import wraps
 import glob
-import itertools
 import json
 import logging
 import os
@@ -240,6 +239,7 @@ class ClusterWrapper(Cluster):
         for node in self._network.nodes(self._tag)[:-1]:
             for pair in self._network.node_pairs(self._tag, node):
                 yield pair
+
 
 class Network(object):
     def __init__(self, campaign, logger=None):

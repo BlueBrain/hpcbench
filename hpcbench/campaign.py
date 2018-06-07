@@ -29,7 +29,7 @@ from . toolbox.collections_ext import (
     nameddict,
 )
 from . toolbox.env import expandvars
-from . toolbox.functools_ext import chunks, listify
+from . toolbox.functools_ext import listify
 from . toolbox.slurm import SlurmCluster
 
 
