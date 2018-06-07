@@ -5,6 +5,7 @@ from contextlib import contextmanager
 import filecmp
 import functools
 import json
+import logging
 import operator
 import os
 import os.path as osp
@@ -28,7 +29,7 @@ from . toolbox.collections_ext import (
     nameddict,
 )
 from . toolbox.env import expandvars
-from . toolbox.functools_ext import listify
+from . toolbox.functools_ext import chunks, listify
 from . toolbox.slurm import SlurmCluster
 
 
@@ -51,6 +52,7 @@ def pip_installer_url(version=None):
     return 'hpcbench=={}'.format(version)
 
 
+LOGGER = logging.getLogger('hpcbench')
 JSON_METRICS_FILE = 'metrics.json'
 SBATCH_JINJA_TEMPLATE = 'sbatch.jinja'
 YAML_CAMPAIGN_FILE = 'campaign.yaml'
@@ -262,6 +264,12 @@ class NetworkConfig(object):
         for tag in tags:
             tags[tag] = dict(nodes=tags[tag])
         self.network.nodes = list(node_names)
+        LOGGER.info('Found nodes: %s', NodeSet.fromlist(self.network.nodes))
+        LOGGER.info('Found tags:')
+        for tag in iter(sorted(tags)):
+            LOGGER.info("{: >25} {}".format(
+                tag, NodeSet.fromlist(tags[tag]['nodes']))
+            )
         prev_tags = self.network.tags
         self.network.tags = tags
         self.network.tags.update(prev_tags)
@@ -330,7 +338,7 @@ class NetworkConfig(object):
                         cls._resolve(rectag, recconfig,
                                      expanded, recursive, visited)
                     else:  # rectag is nowhere to be found
-                        message = '%s refers to %s, which is not defined.'
+                        message = '"%s" refers to "%s", which is not defined.'
                         message = message % (tag, rectag)
                         raise Exception(message)
                 pattern.pop('tags')  # we've expanded this, it can be deleted
