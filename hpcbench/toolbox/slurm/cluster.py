@@ -27,7 +27,7 @@ class SlurmCluster:
     def discover_partitions(cls):
         command = [SINFO, '--Node', '--format', '%all']
         output = subprocess.check_output(command)
-        reader = csv.DictReader(output.splitlines(), delimiter='|')
+        reader = csv.DictReader(output.decode().splitlines(), delimiter='|')
         sanitizer_re = re.compile('[^0-9a-zA-Z]+')
 
         def sanitize(field):
@@ -54,7 +54,7 @@ class SlurmCluster:
                 row[key] = row[key].strip()
                 conv_type = None
                 if key in commasplit_fields:
-                    row[key] = row[key].split()
+                    row[key] = row[key].split(',')
                 elif key in int_fields:
                     conv_type = int
                 elif key in float_fields:

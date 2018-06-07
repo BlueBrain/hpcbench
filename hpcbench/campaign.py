@@ -261,6 +261,7 @@ class NetworkConfig(object):
             for feature in node.active_features:
                 tag_name = node.partition + '_' + feature
                 tags.setdefault(tag_name, []).append(str(node))
+                tags.setdefault(feature, []).append(str(node))
         for tag in tags:
             tags[tag] = dict(nodes=tags[tag])
         self.network.nodes = list(node_names)
