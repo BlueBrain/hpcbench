@@ -123,7 +123,7 @@ of the ``info`` command. A tag will be also added for every
 slurm_blacklist_states
 ~~~~~~~~~~~~~~~~~~~~~~
 List of SLURM node states used to filter-out nodes when ``cluster`` option
-is set to ``nodes``. Default states are down, drained, draining, error,
+is set to ``slurm``. Default states are down, drained, draining, error,
 fail, failing, future, maint, and reserved.
 
 ssh_config_file
