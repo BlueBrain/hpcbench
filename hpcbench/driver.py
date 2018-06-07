@@ -237,11 +237,9 @@ class ClusterWrapper(Cluster):
     @property
     @listify
     def tag_node_pairs(self):
-        return itertools.chain([
-            self._network.node_pairs(self._tag, node)
-            for node in self._network.nodes(self._tag)
-        ])
-
+        for node in self._network.nodes(self._tag)[:-1]:
+            for pair in self._network.node_pairs(self._tag, node):
+                yield pair
 
 class Network(object):
     def __init__(self, campaign, logger=None):
