@@ -259,7 +259,7 @@ class Network(object):
             self.logger.error('Could not find node %s in nodes %s',
                               node, ', '.join(nodes))
         return [
-            (node, nodes[i])
+            [node, nodes[i]]
             for i in range(pos + 1, len(nodes))
         ]
 
