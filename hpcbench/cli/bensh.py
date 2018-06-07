@@ -19,7 +19,7 @@ Options:
   --version               Show version
   -v -vv                  Increase program verbosity
 """
-
+from __future__ import print_function
 import os.path as osp
 
 from hpcbench.campaign import Generator
@@ -47,3 +47,4 @@ def main(argv=None):
         driver()
         if argv is not None:
             return driver
+        print(osp.abspath(driver.campaign_path))
