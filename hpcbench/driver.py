@@ -801,7 +801,7 @@ class BenchmarkCategoryDriver(Enumerator):
         """Get content of the JSON metrics file
         """
         with open(JSON_METRICS_FILE) as istr:
-            return yaml.safe_load(istr)
+            return json.load(istr)
 
 
 class MetricsDriver(object):
