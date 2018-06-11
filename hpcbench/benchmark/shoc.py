@@ -19,14 +19,14 @@ class SHOCExtractor(MetricsExtractor):
     METRICS = dict(
         h2d_bw=Metrics.MegaBytesPerSecond,
         d2h_bw=Metrics.MegaBytesPerSecond,
-        flops_dp=Metrics.Flops,
-        flops_sp=Metrics.Flops,
+        flops_dp=Metrics.GFlops,
+        flops_sp=Metrics.GFlops,
         gmem_readbw=Metrics.MegaBytesPerSecond,
         gmem_writebw=Metrics.MegaBytesPerSecond,
         lmem_readbw=Metrics.MegaBytesPerSecond,
         lmem_writebw=Metrics.MegaBytesPerSecond,
-        sgemm_n=Metrics.Flops,
-        dgemm_n=Metrics.Flops,
+        sgemm_n=Metrics.GFlops,
+        dgemm_n=Metrics.GFlops,
     )
     METRICS_NAMES = set(METRICS)
     EXPR = re.compile(r'[\w]+\:\s+(\d*\.?\d+)')
