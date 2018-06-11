@@ -48,7 +48,7 @@ class HPLExtractor(MetricsExtractor):
         size_p=Metrics.Cardinal,
         size_q=Metrics.Cardinal,
         time=Metrics.Second,
-        flops=Metrics.Flops,
+        flops=Metrics.GFlops,
         validity=Metrics.Bool,
         precision=Metric(unit='', type=float)
     )
@@ -62,7 +62,7 @@ class HPLExtractor(MetricsExtractor):
             size_p=(int, 3),
             size_q=(int, 4),
             time=(float, 5),
-            flops=(float, 6, 1e+9),
+            flops=(float, 6),
         ),
         precision=dict(
             precision=(float, 1),
@@ -103,8 +103,6 @@ class HPLExtractor(MetricsExtractor):
             mtype = data[0]
             mfield = data[1]
             mvalue = mtype(search.group(mfield))
-            if len(data) == 3:
-                mvalue *= data[2]
             metrics[metric] = mvalue
         if section == 'precision':
             metrics['validity'] = str(search.group(2)) == "PASSED"
