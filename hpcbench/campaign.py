@@ -221,7 +221,8 @@ def default_campaign(campaign=None, expandcampvars=True, frozen=True):
         campaign = nameddict(dict_map_kv(campaign, _expandvars))
     else:
         campaign = nameddict(campaign)
-    NetworkConfig(campaign).expand()
+    if expandcampvars:
+        NetworkConfig(campaign).expand()
     return freeze(campaign) if frozen else campaign
 
 
