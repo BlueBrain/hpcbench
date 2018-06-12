@@ -25,7 +25,7 @@ class CSVExporter(object):
         :param ofile: a filename or None if stdout should be used
         """
         self.report = ReportNode(path)
-        self.campaign = from_file(path)
+        self.campaign = from_file(path, expandcampvars=False)
         self.ofile = ofile
 
     def export(self, fields=None):

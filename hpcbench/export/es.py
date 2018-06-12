@@ -38,7 +38,7 @@ class ESExporter(object):
         :param hosts: Elasticsearch cluster
         :rtype: str or list or str
         """
-        self.campaign = from_file(path)
+        self.campaign = from_file(path, expandcampvars=False)
         self.report = ReportNode(path)
         self.hosts = hosts
 
