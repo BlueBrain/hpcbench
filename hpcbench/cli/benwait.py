@@ -24,10 +24,9 @@ from . import cli_common
 
 
 def is_slurm_job_terminated(jobid):
-    output = subprocess.check_output([
-        find_executable('sacct'),
-        '-n', '-X', '-o', "end", '-j', str(jobid)
-    ])
+    output = subprocess.check_output(
+        [find_executable('sacct'), '-n', '-X', '-o', "end", '-j', str(jobid)]
+    )
     end = output.strip()
     end = end.decode()
     return end != 'Unknown'

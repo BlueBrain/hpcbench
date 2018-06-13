@@ -2,7 +2,7 @@ import unittest
 
 from hpcbench.api import ExecutionContext
 from hpcbench.benchmark.osu import OSU
-from . benchmark import AbstractBenchmarkTest
+from .benchmark import AbstractBenchmarkTest
 from .. import FakeCluster
 
 
@@ -16,7 +16,7 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
             raw=[
                 {'bandwidth': 11923.92, 'bytes': 2097152},
                 {'bandwidth': 11952.24, 'bytes': 4194304},
-            ]
+            ],
         ),
         OSU.OSU_LAT: dict(
             min_lat=3.68,
@@ -26,8 +26,8 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
             raw=[
                 {'bytes': 16, 'latency': 3.68},
                 {'bytes': 32, 'latency': 3.85},
-                {'bytes': 64, 'latency': 3.84}
-            ]
+                {'bytes': 64, 'latency': 3.84},
+            ],
         ),
         OSU.OSU_ALLTOALLV: dict(
             min_lat=1.31,
@@ -39,8 +39,8 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
                 {'bytes': 128, 'latency': 1.31},
                 {'bytes': 256, 'latency': 1.58},
                 {'bytes': 512, 'latency': 1.71},
-                {'bytes': 1024, 'latency': 1.98}
-            ]
+                {'bytes': 1024, 'latency': 1.98},
+            ],
         ),
         OSU.OSU_ALLGATHERV: dict(
             min_lat=1.64,
@@ -52,8 +52,8 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
                 {'bytes': 128, 'latency': 6.18},
                 {'bytes': 256, 'latency': 1.84},
                 {'bytes': 512, 'latency': 2.37},
-                {'bytes': 1024, 'latency': 3.06}
-            ]
+                {'bytes': 1024, 'latency': 3.06},
+            ],
         ),
         OSU.OSU_MBW_MR: dict(
             max_bw=4306.41,
@@ -67,8 +67,8 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
                 {'bytes': 128, 'bandwidth': 998.25, 'msg_rate': 7798822.08},
                 {'bytes': 256, 'bandwidth': 1912.59, 'msg_rate': 7471067.52},
                 {'bytes': 512, 'bandwidth': 3080.21, 'msg_rate': 6016034.42},
-                {'bytes': 1024, 'bandwidth': 4306.41, 'msg_rate': 4205474.79}
-            ]
+                {'bytes': 1024, 'bandwidth': 4306.41, 'msg_rate': 4205474.79},
+            ],
         ),
     }
 
@@ -85,23 +85,15 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
     def attributes(self):
         return dict(
             executable='/path/to/fake',
-            srun_nodes=[
-                'node01',
-                'node03',
-                'node05',
-            ],
-            categories=self.get_benchmark_categories()
+            srun_nodes=['node01', 'node03', 'node05'],
+            categories=self.get_benchmark_categories(),
         )
 
     @property
     def exec_context(self):
         node = 'node03'
         tag = '*'
-        nodes = [
-            'node01',
-            'node03',
-            'node05',
-        ]
+        nodes = ['node01', 'node03', 'node05']
         return ExecutionContext(
             cluster=FakeCluster(tag, nodes, node),
             logger=self.logger,
@@ -117,7 +109,7 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
                 command=['/path/to/fake', '-x', '200', '-i', '100'],
                 srun_nodes=('node03', 'node05'),
                 category='osu_bw',
-                metas=dict(from_node='node03', to_node='node05')
+                metas=dict(from_node='node03', to_node='node05'),
             ),
             dict(
                 command=['/path/to/fake'],
@@ -128,7 +120,7 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
                 command=['/path/to/fake', '-x', '200', '-i', '100'],
                 srun_nodes=('node03', 'node05'),
                 category='osu_latency',
-                metas=dict(from_node='node03', to_node='node05')
+                metas=dict(from_node='node03', to_node='node05'),
             ),
             dict(
                 command=['/path/to/fake', '-x', '200', '-i', '100'],

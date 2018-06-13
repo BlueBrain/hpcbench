@@ -1,7 +1,7 @@
 import unittest
 
 from hpcbench.benchmark.stream import Stream
-from . benchmark import AbstractBenchmarkTest
+from .benchmark import AbstractBenchmarkTest
 
 
 class TestStream(AbstractBenchmarkTest, unittest.TestCase):
@@ -10,17 +10,14 @@ class TestStream(AbstractBenchmarkTest, unittest.TestCase):
         copy_avg_time=0.0340,
         copy_min_time=0.0326,
         copy_max_time=0.0411,
-
         scale_bandwidth=66962.5477,
         scale_avg_time=0.0340,
         scale_min_time=0.0321,
         scale_max_time=0.0440,
-
         add_bandwidth=64950.7676,
         add_avg_time=0.0515,
         add_min_time=0.0496,
         add_max_time=0.0546,
-
         triad_bandwidth=64010.9863,
         triad_avg_time=0.0508,
         triad_min_time=0.0503,
@@ -38,6 +35,4 @@ class TestStream(AbstractBenchmarkTest, unittest.TestCase):
 
     @property
     def attributes(self):
-        return dict(
-            executable='/path/to/fake'
-        )
+        return dict(executable='/path/to/fake')

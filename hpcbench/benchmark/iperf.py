@@ -7,20 +7,14 @@ import json
 
 from cached_property import cached_property
 
-from hpcbench.api import (
-    Benchmark,
-    Metrics,
-    MetricsExtractor,
-)
-from hpcbench.toolbox.process import (
-    find_executable,
-    physical_cpus,
-)
+from hpcbench.api import Benchmark, Metrics, MetricsExtractor
+from hpcbench.toolbox.process import find_executable, physical_cpus
 
 
 class IPERFExtractor(MetricsExtractor):
     """Parse JSON file written by stream to extract interested metrics
     """
+
     @property
     def metrics(self):
         return dict(
@@ -37,10 +31,7 @@ class IPERFExtractor(MetricsExtractor):
         if not data['intervals']:
             raise Exception('Missing "intervals" in JSON: ')
         max_bits_per_second = max(
-            [
-                interval['sum']['bits_per_second']
-                for interval in data['intervals']
-            ]
+            [interval['sum']['bits_per_second'] for interval in data['intervals']]
         )
         sent = data['end']['sum_sent']
         received = data['end']['sum_received']
@@ -48,13 +39,14 @@ class IPERFExtractor(MetricsExtractor):
             max_bandwidth=max_bits_per_second / bits_in_mb,
             bandwidth_receiver=received['bits_per_second'] / bits_in_mb,
             bandwidth_sender=sent['bits_per_second'] / bits_in_mb,
-            retransmits=sent['retransmits']
+            retransmits=sent['retransmits'],
         )
 
 
 class Iperf(Benchmark):
     """Benchmark wrapper for the HPLbench utility
     """
+
     name = 'iperf'
 
     description = "Provides TCP benchmark."
@@ -91,30 +83,26 @@ class Iperf(Benchmark):
         "mpirun" is added if attribute is not empty and
         do not start by mpirun
         """
-        return [
-            str(e)
-            for e in self.attributes['mpirun']
-        ]
+        return [str(e) for e in self.attributes['mpirun']]
 
     @property
     def options(self):
         """List of additional arguments appended
         to the command line"""
-        return [
-            str(e)
-            for e in self.attributes['options']
-        ]
+        return [str(e) for e in self.attributes['options']]
 
     def execution_matrix(self, context):
         del context  # unused
         yield dict(
             category=Iperf.DEFAULT_DEVICE,
-            command=self.mpirun + [
+            command=self.mpirun
+            + [
                 find_executable(self.executable, required=False),
                 '-c',
                 self.server,
                 '-J',
-            ] + self.options,
+            ]
+            + self.options,
         )
 
     @cached_property

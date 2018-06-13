@@ -1,7 +1,7 @@
 import unittest
 
 from hpcbench.benchmark.shoc import SHOC
-from . benchmark import AbstractBenchmarkTest
+from .benchmark import AbstractBenchmarkTest
 
 
 class TestShoc(AbstractBenchmarkTest, unittest.TestCase):
@@ -29,88 +29,32 @@ class TestShoc(AbstractBenchmarkTest, unittest.TestCase):
 
     @property
     def attributes(self):
-        return dict(
-            executable='/path/to/fake',
-        )
+        return dict(executable='/path/to/fake')
 
     def test_extra_attributes(self):
         self.assertExecutionMatrix(
-            dict(
-                size=42,
-                executable='/fake',
-            ),
-            [
-                dict(
-                    category='gpu',
-                    command=[
-                        '/fake',
-                        '-cuda',
-                        '-d',
-                        '0',
-                        '-s',
-                        '42'
-                    ]
-                )
-            ]
+            dict(size=42, executable='/fake'),
+            [dict(category='gpu', command=['/fake', '-cuda', '-d', '0', '-s', '42'])],
         )
         self.assertExecutionMatrix(
-            dict(
-                device=42,
-                executable='/fake',
-            ),
-            [
-                dict(
-                    category='gpu',
-                    command=[
-                        '/fake',
-                        '-cuda',
-                        '-d',
-                        '42',
-                        '-s',
-                        '1'
-                    ]
-                )
-            ]
+            dict(device=42, executable='/fake'),
+            [dict(category='gpu', command=['/fake', '-cuda', '-d', '42', '-s', '1'])],
         )
         self.assertExecutionMatrix(
-            dict(
-                executable='/fake',
-                options='uber option'
-            ),
+            dict(executable='/fake', options='uber option'),
             [
                 dict(
                     category='gpu',
-                    command=[
-                        '/fake',
-                        '-cuda',
-                        '-d',
-                        '0',
-                        '-s',
-                        '1',
-                        'uber',
-                        'option',
-                    ]
+                    command=['/fake', '-cuda', '-d', '0', '-s', '1', 'uber', 'option'],
                 )
-            ]
+            ],
         )
         self.assertExecutionMatrix(
-            dict(
-                executable='/fake',
-                options=['uber', 'option']
-            ),
+            dict(executable='/fake', options=['uber', 'option']),
             [
                 dict(
                     category='gpu',
-                    command=[
-                        '/fake',
-                        '-cuda',
-                        '-d',
-                        '0',
-                        '-s',
-                        '1',
-                        'uber',
-                        'option',
-                    ]
+                    command=['/fake', '-cuda', '-d', '0', '-s', '1', 'uber', 'option'],
                 )
-            ]
+            ],
         )

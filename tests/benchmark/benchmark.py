@@ -8,27 +8,13 @@ import os.path as osp
 import shutil
 
 from cached_property import cached_property
-from six import (
-    assertCountEqual,
-    string_types,
-    with_metaclass,
-)
+from six import assertCountEqual, string_types, with_metaclass
 import yaml
 
-from hpcbench.api import (
-    Benchmark,
-    ExecutionContext,
-    MetricsExtractor,
-)
-from hpcbench.driver import (
-    MetricsDriver,
-    YAML_REPORT_FILE,
-)
+from hpcbench.api import Benchmark, ExecutionContext, MetricsExtractor
+from hpcbench.driver import MetricsDriver, YAML_REPORT_FILE
 from hpcbench.toolbox.collections_ext import dict_merge
-from hpcbench.toolbox.contextlib_ext import (
-    mkdtemp,
-    pushd,
-)
+from hpcbench.toolbox.contextlib_ext import mkdtemp, pushd
 from .. import FakeCluster
 
 LOGGER = logging.getLogger(__name__)
@@ -88,7 +74,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
         for file_ in os.listdir(test_dir):
             if file_.startswith(prefix):
                 src_file = osp.join(test_dir, file_)
-                dest = file_[len(prefix):]
+                dest = file_[len(prefix) :]
                 if osp.isfile(src_file):
                     self.logger.info('using file: %s', src_file)
                     shutil.copy(src_file, dest)
@@ -100,8 +86,9 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
             command = execution['command']
             executable = command[0]
             self.assertTrue(osp.isfile(executable), executable + ' is a file')
-            self.assertTrue(os.access(executable, os.X_OK),
-                            executable + ' is executable')
+            self.assertTrue(
+                os.access(executable, os.X_OK), executable + ' is executable'
+            )
 
     def test_class_has_name(self):
         clazz_name = self.get_benchmark_clazz().name
@@ -123,21 +110,12 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
         self.maxDiff = None
         with mkdtemp() as top_dir, pushd(top_dir):
             with open(YAML_REPORT_FILE, 'w') as ostr:
-                yaml.dump(
-                    dict(
-                        children=['sample-run'],
-                        category=category
-                    ),
-                    ostr
-                )
+                yaml.dump(dict(children=['sample-run'], category=category), ostr)
             with pushd('sample-run'):
                 self.create_sample_run(category)
                 clazz = self.get_benchmark_clazz()
                 benchmark = clazz()
-                dict_merge(
-                    benchmark.attributes,
-                    self.attributes
-                )
+                dict_merge(benchmark.attributes, self.attributes)
                 expected_metrics = self.get_expected_metrics(category)
                 if not isinstance(expected_metrics, list):
                     expected_metrics = itertools.repeat(expected_metrics)
@@ -145,11 +123,9 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
                     expected_metrics = iter(expected_metrics)
                 for metas in self.execution_metrics_set(category):
                     with open(YAML_REPORT_FILE, 'w') as ostr:
-                        yaml.dump(dict(
-                            category=category,
-                            metas=metas,
-                            executor='local',
-                        ), ostr)
+                        yaml.dump(
+                            dict(category=category, metas=metas, executor='local'), ostr
+                        )
                     md = MetricsDriver('test-category', benchmark)
                     report = md()
                     parsed_metrics = report['metrics'][0]['measurement']
@@ -167,10 +143,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
     def execution_matrix(self):
         clazz = self.get_benchmark_clazz()
         benchmark = clazz()
-        dict_merge(
-            benchmark.attributes,
-            self.attributes
-        )
+        dict_merge(benchmark.attributes, self.attributes)
         return list(benchmark.execution_matrix(self.exec_context))
 
     @property
@@ -228,10 +201,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
     def test_metrics_extractors(self):
         clazz = self.get_benchmark_clazz()
         benchmark = clazz()
-        dict_merge(
-            benchmark.attributes,
-            self.attributes
-        )
+        dict_merge(benchmark.attributes, self.attributes)
         all_extractors = benchmark.metrics_extractors
         assert isinstance(all_extractors, (Mapping, list, MetricsExtractor))
 
@@ -255,21 +225,16 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
         """
         clazz = self.get_benchmark_clazz()
         benchmark = clazz()
-        dict_merge(
-            benchmark.attributes,
-            attributes
-        )
+        dict_merge(benchmark.attributes, attributes)
         assertCountEqual(
-            self,
-            list(benchmark.execution_matrix(self.exec_context)),
-            exec_matrix
+            self, list(benchmark.execution_matrix(self.exec_context)), exec_matrix
         )
 
     def test_has_entrypoint(self):
         """Benchmark must be specified in setup.py"""
         if self.exposed_benchmark:
             expected_module = inspect.getfile(self.get_benchmark_clazz())
-            expected_module = expected_module[len(os.getcwd()) + 1:]
+            expected_module = expected_module[len(os.getcwd()) + 1 :]
             expected_module = osp.splitext(expected_module)[0]
             expected_module = expected_module.replace('/', '.')
             with open('setup.py') as istr:

@@ -5,10 +5,7 @@ import tempfile
 import unittest
 
 from hpcbench.campaign import merge_campaigns
-from hpcbench.cli import (
-    benmerge,
-    bensh,
-)
+from hpcbench.cli import benmerge, bensh
 from hpcbench.toolbox.contextlib_ext import pushd
 
 
@@ -34,11 +31,13 @@ class TestMerge(unittest.TestCase):
 
     def test_executable(self):
         with pushd(self.temp_dir):
-            benmerge.main([
-                bensh.main(TestMerge.campaign_file()).campaign_path,
-                bensh.main(TestMerge.campaign_file()).campaign_path,
-                bensh.main(TestMerge.campaign_file()).campaign_path,
-            ])
+            benmerge.main(
+                [
+                    bensh.main(TestMerge.campaign_file()).campaign_path,
+                    bensh.main(TestMerge.campaign_file()).campaign_path,
+                    bensh.main(TestMerge.campaign_file()).campaign_path,
+                ]
+            )
 
     @classmethod
     def campaign_file(cls, suffix=""):

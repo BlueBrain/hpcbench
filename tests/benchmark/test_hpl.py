@@ -1,7 +1,7 @@
 import unittest
 
 from hpcbench.benchmark.hpl import HPL
-from . benchmark import AbstractBenchmarkTest
+from .benchmark import AbstractBenchmarkTest
 
 
 class TestHpl(AbstractBenchmarkTest, unittest.TestCase):
@@ -27,85 +27,76 @@ class TestHpl(AbstractBenchmarkTest, unittest.TestCase):
 
     @property
     def attributes(self):
-        return dict(
-            executable='/path/to/fake',
-            mpirun=['-n', 21],
-            srun_nodes=42,
-        )
+        return dict(executable='/path/to/fake', mpirun=['-n', 21], srun_nodes=42)
 
     def test_attributes(self):
         self.assertExecutionMatrix(
-            dict(
-                executable='/path/to/fake',
-                srun_nodes='tag-name',
-            ),
+            dict(executable='/path/to/fake', srun_nodes='tag-name'),
             [
                 dict(
                     category='cpu',
                     environment=dict(
-                        KMP_AFFINITY='scatter',
-                        OMP_NUM_THREADS='1',
-                        MKL_NUM_THREADS='1',
+                        KMP_AFFINITY='scatter', OMP_NUM_THREADS='1', MKL_NUM_THREADS='1'
                     ),
                     command=['/path/to/fake'],
                     srun_nodes='tag-name',
                 )
-            ]
+            ],
         )
         self.assertExecutionMatrix(
-            dict(
-                executable='/path/to/fake',
-                srun_nodes=None,
-            ),
+            dict(executable='/path/to/fake', srun_nodes=None),
             [
                 dict(
                     category='cpu',
                     environment=dict(
-                        KMP_AFFINITY='scatter',
-                        OMP_NUM_THREADS='1',
-                        MKL_NUM_THREADS='1',
+                        KMP_AFFINITY='scatter', OMP_NUM_THREADS='1', MKL_NUM_THREADS='1'
                     ),
                     command=['/path/to/fake'],
                 )
-            ]
+            ],
         )
         self.assertExecutionMatrix(
             dict(
                 executable='/path/to/fake',
                 srun_nodes=None,
-                options=['--problem_size', '100000',
-                         '--block_size', '336',
-                         '--hpl_numthreads', '64'],
+                options=[
+                    '--problem_size',
+                    '100000',
+                    '--block_size',
+                    '336',
+                    '--hpl_numthreads',
+                    '64',
+                ],
             ),
             [
                 dict(
                     category='cpu',
                     environment=dict(
-                        KMP_AFFINITY='scatter',
-                        OMP_NUM_THREADS='1',
-                        MKL_NUM_THREADS='1',
+                        KMP_AFFINITY='scatter', OMP_NUM_THREADS='1', MKL_NUM_THREADS='1'
                     ),
-                    command=['/path/to/fake', '--problem_size', '100000',
-                             '--block_size', '336',
-                             '--hpl_numthreads', '64'],
+                    command=[
+                        '/path/to/fake',
+                        '--problem_size',
+                        '100000',
+                        '--block_size',
+                        '336',
+                        '--hpl_numthreads',
+                        '64',
+                    ],
                 )
-            ]
+            ],
         )
         self.assertExecutionMatrix(
             dict(
-                executable='/path/to/fake',
-                srun_nodes=None,
-                mpirun=['mpirun', '-n', 21],
+                executable='/path/to/fake', srun_nodes=None, mpirun=['mpirun', '-n', 21]
             ),
             [
                 dict(
                     category='cpu',
                     environment=dict(
-                        KMP_AFFINITY='scatter',
-                        OMP_NUM_THREADS='1',
-                        MKL_NUM_THREADS='1',
+                        KMP_AFFINITY='scatter', OMP_NUM_THREADS='1', MKL_NUM_THREADS='1'
                     ),
                     command=['mpirun', '-n', '21', '/path/to/fake'],
                 )
-            ]
+            ],
         )

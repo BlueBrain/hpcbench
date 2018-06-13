@@ -6,15 +6,12 @@ import re
 
 from cached_property import cached_property
 
-from hpcbench.api import (
-    Benchmark,
-    Metrics,
-    MetricsExtractor,
-)
+from hpcbench.api import Benchmark, Metrics, MetricsExtractor
 
 
 class CpuExtractor(MetricsExtractor):
     """Ignore stdout until this line"""
+
     STDOUT_IGNORE_PRIOR = 'Test execution summary:'
     KEEP_NUMBERS = re.compile('[^0-9.]')
     TEXT_TO_METRIC = {
@@ -31,7 +28,7 @@ class CpuExtractor(MetricsExtractor):
             average=Metrics.Millisecond,
             maximum=Metrics.Millisecond,
             percentile95=Metrics.Millisecond,
-            total_time=Metrics.Second
+            total_time=Metrics.Second,
         )
 
     @property
@@ -57,7 +54,7 @@ class CpuExtractor(MetricsExtractor):
         line = line.strip()
         for attr, metric in cls.TEXT_TO_METRIC.items():
             if line.startswith(attr + ':'):
-                value = line[len(attr + ':'):].lstrip()
+                value = line[len(attr + ':') :].lstrip()
                 value = cls.KEEP_NUMBERS.sub('', value)
                 metrics[metric] = float(value)
                 return
@@ -66,6 +63,7 @@ class CpuExtractor(MetricsExtractor):
 class Sysbench(Benchmark):
     """Benchmark wrapper for the sysbench utility
     """
+
     FEATURE_CPU = 'cpu'
     MAX_PRIMES = [30]
     THREADS = [1, 4, 16]
@@ -116,12 +114,9 @@ class Sysbench(Benchmark):
                             '--test=cpu',
                             '--num-threads=%s' % thread,
                             '--cpu-max-prime=%s' % max_prime,
-                            'run'
+                            'run',
                         ],
-                        metas=dict(
-                            threads=thread,
-                            max_prime=max_prime
-                        )
+                        metas=dict(threads=thread, max_prime=max_prime),
                     )
 
     @cached_property

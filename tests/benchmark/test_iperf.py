@@ -1,7 +1,7 @@
 import unittest
 
 from hpcbench.benchmark.iperf import Iperf
-from . benchmark import AbstractBenchmarkTest
+from .benchmark import AbstractBenchmarkTest
 
 
 class TestIperf(AbstractBenchmarkTest, unittest.TestCase):
@@ -23,6 +23,4 @@ class TestIperf(AbstractBenchmarkTest, unittest.TestCase):
 
     @property
     def attributes(self):
-        return dict(
-            executable='/path/to/fake'
-        )
+        return dict(executable='/path/to/fake')

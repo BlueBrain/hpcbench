@@ -2,6 +2,7 @@
 """
 
 import json
+
 try:
     from json import JSONDecodeError as JSONDcdError
 except ImportError:
@@ -10,10 +11,7 @@ import logging
 import subprocess
 
 from hpcbench.toolbox.collections_ext import byteify
-from hpcbench.toolbox.contextlib_ext import (
-    mkdtemp,
-    pushd,
-)
+from hpcbench.toolbox.contextlib_ext import mkdtemp, pushd
 
 
 LOGGER = logging.getLogger('hpcbench')
@@ -41,19 +39,22 @@ def extract_build_info(exe_path, elf_section=ELF_SECTION):
     """
     build_info = {}
     with mkdtemp() as tempd, pushd(tempd):
-        proc = subprocess.Popen([OBJCOPY,
-                                 DUMP_SECTION,
-                                 "{secn}={ofile}".format(secn=elf_section,
-                                                         ofile=BUILDINFO_FILE),
-                                 exe_path], stderr=subprocess.PIPE)
+        proc = subprocess.Popen(
+            [
+                OBJCOPY,
+                DUMP_SECTION,
+                "{secn}={ofile}".format(secn=elf_section, ofile=BUILDINFO_FILE),
+                exe_path,
+            ],
+            stderr=subprocess.PIPE,
+        )
         proc.wait()
         errno = proc.returncode
         stderr = proc.stderr.read()
         if errno or len(stderr):  # just return the empty dict
             LOGGER.warning('objcopy failed with errno %s.', errno)
             if len(stderr):
-                LOGGER.warning('objcopy failed with following msg:\n%s',
-                               stderr)
+                LOGGER.warning('objcopy failed with following msg:\n%s', stderr)
             return build_info
 
         with open(BUILDINFO_FILE) as build_info_f:

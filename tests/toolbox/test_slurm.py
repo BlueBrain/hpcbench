@@ -16,6 +16,5 @@ class TestSlurm(unittest.TestCase):
         c = SlurmCluster()
         self.assertEqual(108, len(c.nodes))
         self.assertEqual(
-            {'partition_1', 'partition_2', 'partition_3'},
-            set(c.partitions.keys())
+            {'partition_1', 'partition_2', 'partition_3'}, set(c.partitions.keys())
         )

@@ -8,11 +8,7 @@ from cached_property import cached_property
 from elasticsearch import Elasticsearch
 import six
 
-from hpcbench.campaign import (
-    from_file,
-    get_metrics,
-    ReportNode,
-)
+from hpcbench.campaign import from_file, get_metrics, ReportNode
 from hpcbench.toolbox.collections_ext import dict_merge
 from hpcbench.toolbox.functools_ext import chunks
 
@@ -60,9 +56,7 @@ class ESExporter(object):
         """Get Elasticsearch index name associated to the campaign
         """
         fmt = self.campaign.export.elasticsearch.index_name
-        fields = dict(
-            date=self.report['date'],
-        )
+        fields = dict(date=self.report['date'])
         return fmt.format(**fields).lower()
 
     def export(self):
@@ -84,25 +78,20 @@ class ESExporter(object):
             self._create_index()
 
     def _create_index(self):
-        self.index_client.create(
-            self.index_name,
-            dict(
-                mappings=self.index_mapping
-            )
-        )
+        self.index_client.create(self.index_name, dict(mappings=self.index_mapping))
 
     def _push_data(self):
         doc_count = 0
         for runs in chunks(self._documents, 20):
-            resp = self.es_client.bulk(
-                body=runs,
-                index=self.index_name
-            )
+            resp = self.es_client.bulk(body=runs, index=self.index_name)
             if resp['errors']:
                 raise Exception('Could not push documents')
             doc_count += len(resp['items'])
-        logging.info('pushed %s documents in Elasticsearch index "%s"',
-                     doc_count, self.index_name)
+        logging.info(
+            'pushed %s documents in Elasticsearch index "%s"',
+            doc_count,
+            self.index_name,
+        )
 
     @cached_property
     def index_mapping(self):
@@ -113,12 +102,7 @@ class ESExporter(object):
     @property
     def _documents(self):
         for run in self._runs:
-            yield dict(
-                index=dict(
-                    _type=self.ES_DOC_TYPE,
-                    _id=self.document_id(run)
-                )
-            )
+            yield dict(index=dict(_type=self.ES_DOC_TYPE, _id=self.document_id(run)))
             run['campaign_id'] = self.campaign.campaign_id
             yield run
 
@@ -129,10 +113,7 @@ class ESExporter(object):
     def _get_document_mapping(self):
         fields = {}
         for run in self._runs:
-            dict_merge(
-                fields,
-                ESExporter._get_dict_mapping(self.ES_DOC_TYPE, run)
-            )
+            dict_merge(fields, ESExporter._get_dict_mapping(self.ES_DOC_TYPE, run))
         return fields
 
     @classmethod
@@ -144,11 +125,7 @@ class ESExporter(object):
                 dict_merge(mapping, cls._get_dict_mapping(name, value, ctx))
             else:
                 dict_merge(mapping, cls._get_field_mapping(name, value, root))
-        return {
-            prop: {
-                'properties': mapping
-            }
-        }
+        return {prop: {'properties': mapping}}
 
     @classmethod
     def _get_field_type(cls, value):
@@ -175,11 +152,7 @@ class ESExporter(object):
                 field_type = 'text'
             else:
                 field_type = cls.PY_TYPE_TO_ES_FIELD_TYPE[obj_type]
-        mapping = {
-            name: {
-                'type': field_type
-            }
-        }
+        mapping = {name: {'type': field_type}}
         mapping[name].update(extra_params)
         return mapping
 

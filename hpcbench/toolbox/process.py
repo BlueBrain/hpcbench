@@ -60,8 +60,7 @@ def physical_cpus():
     """
     if platform.system() == 'Darwin':
         ncores = subprocess.check_output(
-            ['/usr/sbin/sysctl', '-n', 'hw.ncpu'],
-            shell=False
+            ['/usr/sbin/sysctl', '-n', 'hw.ncpu'], shell=False
         )
         return int(ncores.strip())
 

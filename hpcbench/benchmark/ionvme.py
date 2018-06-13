@@ -13,23 +13,17 @@ import textwrap
 
 from cached_property import cached_property
 
-from hpcbench.api import (
-    Benchmark,
-    Metrics,
-    MetricsExtractor,
-)
+from hpcbench.api import Benchmark, Metrics, MetricsExtractor
 
 
 class IONVMEExtractor(MetricsExtractor):
     """Ignore stdout until this line"""
+
     STDOUT_IGNORE_PRIOR = "1024+0 records out"
-    METRICS = dict(
-        bandwidth=Metrics.MegaBytesPerSecond,
-    )
+    METRICS = dict(bandwidth=Metrics.MegaBytesPerSecond)
     METRICS_NAMES = set(METRICS)
 
-    BANDWIDTH_OSX_RE = \
-        re.compile(r'^\s*\d+\s\w+\s\w+\s\w+\s\d*\.?\d+\s\w+\s[(](\d+)')
+    BANDWIDTH_OSX_RE = re.compile(r'^\s*\d+\s\w+\s\w+\s\w+\s\d*\.?\d+\s\w+\s[(](\d+)')
 
     def __init__(self):
         self.s_bandwidth = set()
@@ -65,9 +59,7 @@ class IONVMEExtractor(MetricsExtractor):
             if len(tokens) == 2:
                 value, unit = tokens[1].split(' ', 2)
                 value = float(value)
-                bandwidth = IONVMEExtractor.parse_bandwidth_linux(
-                    value, unit
-                )
+                bandwidth = IONVMEExtractor.parse_bandwidth_linux(value, unit)
                 self.s_bandwidth.add(bandwidth)
 
     @classmethod
@@ -106,13 +98,11 @@ class IONVME(Benchmark):
 
     NVME_READ = 'Read'
     NVME_WRITE = 'Write'
-    DEFAULT_CATEGORIES = [
-        NVME_WRITE,
-        NVME_READ,
-    ]
+    DEFAULT_CATEGORIES = [NVME_WRITE, NVME_READ]
 
     SCRIPT_NAME = 'ionvme.sh'
-    SCRIPT = textwrap.dedent("""\
+    SCRIPT = textwrap.dedent(
+        """\
     #!/bin/bash -e
 
     TESTDIR="${FILE_PATH:-$PWD}"
@@ -157,17 +147,12 @@ class IONVME(Benchmark):
         benchmark_read
     fi
     rm -f "$TEMPFILE"
-    """)
+    """
+    )
 
     def __init__(self):
         super(IONVME, self).__init__(
-            attributes=dict(
-                categories=[
-                    IONVME.NVME_WRITE,
-                    IONVME.NVME_READ,
-                ],
-                path=None,
-            )
+            attributes=dict(categories=[IONVME.NVME_WRITE, IONVME.NVME_READ], path=None)
         )
 
     @property
@@ -178,10 +163,7 @@ class IONVME(Benchmark):
     def execution_matrix(self, context):
         del context  # unused
         for category in self.categories:
-            cmd = dict(
-                category=category,
-                command=['./' + IONVME.SCRIPT_NAME, category],
-            )
+            cmd = dict(category=category, command=['./' + IONVME.SCRIPT_NAME, category])
             if self.path:
                 cmd.setdefault('environment', {})['FILE_PATH'] = self.path
                 cmd.setdefault('metas', {})['path'] = self.path

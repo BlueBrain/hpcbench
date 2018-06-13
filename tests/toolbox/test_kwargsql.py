@@ -14,35 +14,23 @@ class TestKwargSQL(unittest.TestCase):
     d = {
         's': 's_value',
         'i': 3,
-        'nested': {
-            'val': 'nested-value',
-            'another_key': 42,
-        },
+        'nested': {'val': 'nested-value', 'another_key': 42},
         'array': [4, 5, 6],
         'exc': Exception("Error: a comprehensive message"),
-        'nestedl': [
-            dict(foo=1),
-            dict(foo=2, bar=3),
-        ],
+        'nestedl': [dict(foo=1), dict(foo=2, bar=3)],
     }
 
     def test_sequence_get(self):
-        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__any__foo')),
-                         [1, 2])
+        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__any__foo')), [1, 2])
         # nested elements that produce an error are discarded from the result.
-        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__any__bar')),
-                         [3])
-        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__any__unknown')),
-                         [])
+        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__any__bar')), [3])
+        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__any__unknown')), [])
         # It makes not difference to call `any` or `each` is `kwargsql.get`
         # because it matters when there is an operation to perform on the
         # result data.
-        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__each__foo')),
-                         [1, 2])
-        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__each__bar')),
-                         [3])
-        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__any__unknown')),
-                         [])
+        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__each__foo')), [1, 2])
+        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__each__bar')), [3])
+        self.assertEqual(list(kwargsql.get(self.d, 'nestedl__any__unknown')), [])
 
     def test_sequence_logical(self):
         # at least one element of `nestedl` has the `foo` attribute
@@ -134,6 +122,7 @@ class TestKwargSQL(unittest.TestCase):
 
             def __getitem__(self, key):
                 return key + 1
+
         self.assertEqual(kwargsql.get(DumbSequence(), '1'), 2)
 
 

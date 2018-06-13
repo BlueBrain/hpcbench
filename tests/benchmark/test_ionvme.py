@@ -2,25 +2,15 @@ import os
 import os.path as osp
 import unittest
 
-from hpcbench.benchmark.ionvme import (
-    IONVME,
-    IONVMEExtractor,
-)
-from hpcbench.toolbox.contextlib_ext import (
-    mkdtemp,
-    pushd,
-)
-from . benchmark import AbstractBenchmarkTest
+from hpcbench.benchmark.ionvme import IONVME, IONVMEExtractor
+from hpcbench.toolbox.contextlib_ext import mkdtemp, pushd
+from .benchmark import AbstractBenchmarkTest
 
 
 class TestIonvme(AbstractBenchmarkTest, unittest.TestCase):
     EXPECTED_METRICS = {
-        IONVME.NVME_READ: dict(
-            bandwidth=494.29915046691895,
-        ),
-        IONVME.NVME_WRITE: dict(
-            bandwidth=398.93171882629395,
-        ),
+        IONVME.NVME_READ: dict(bandwidth=494.29915046691895),
+        IONVME.NVME_WRITE: dict(bandwidth=398.93171882629395),
     }
 
     def get_benchmark_clazz(self):
@@ -34,23 +24,19 @@ class TestIonvme(AbstractBenchmarkTest, unittest.TestCase):
 
     @property
     def attributes(self):
-        return dict(
-            executable='/path/to/fake'
-        )
+        return dict(executable='/path/to/fake')
 
     def test_parse_bandwidth_linux(self):
         expected = 150
         self.assertEqual(
-            IONVMEExtractor.parse_bandwidth_linux(expected * 1024, "KB/s"),
-            expected
+            IONVMEExtractor.parse_bandwidth_linux(expected * 1024, "KB/s"), expected
         )
         self.assertEqual(
-            IONVMEExtractor.parse_bandwidth_linux(expected / 1024.0, "GB/s"),
-            expected
+            IONVMEExtractor.parse_bandwidth_linux(expected / 1024.0, "GB/s"), expected
         )
         self.assertEqual(
-            IONVMEExtractor.parse_bandwidth_linux(expected * 1024 * 1024,
-                                                  "bytes/s"), expected
+            IONVMEExtractor.parse_bandwidth_linux(expected * 1024 * 1024, "bytes/s"),
+            expected,
         )
         with self.assertRaises(Exception):
             IONVMEExtractor.parse_bandwidth_linux(0, '?')

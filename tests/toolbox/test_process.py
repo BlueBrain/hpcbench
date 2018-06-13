@@ -11,8 +11,9 @@ class TestFindExecutable(unittest.TestCase):
         os.environ['ELLESSE'] = '/usr/bin/elesse'
         try:
             self.assertEqual(find_executable('ellesse'), '/usr/bin/elesse')
-            self.assertEqual(find_executable('elaisse', ['elesse'],
-                                             required=False), 'elaisse')
+            self.assertEqual(
+                find_executable('elaisse', ['elesse'], required=False), 'elaisse'
+            )
         finally:
             os.environ.pop('ELLESSE')
 

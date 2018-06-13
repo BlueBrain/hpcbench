@@ -41,10 +41,9 @@ def main(argv=None):
         node = arguments.get('-n')
         output_dir = arguments.get('--output-dir')
         srun_tag = arguments.get('--srun')
-        driver = CampaignDriver(campaign_file,
-                                node=node,
-                                output_dir=output_dir,
-                                srun=srun_tag)
+        driver = CampaignDriver(
+            campaign_file, node=node, output_dir=output_dir, srun=srun_tag
+        )
         driver()
         if argv is not None:
             return driver

@@ -8,19 +8,13 @@ import subprocess
 
 from cached_property import cached_property
 
-from hpcbench.api import (
-    Benchmark,
-    Metric,
-    Metrics,
-    MetricsExtractor)
+from hpcbench.api import Benchmark, Metric, Metrics, MetricsExtractor
 
 
 class GemmExtractor(MetricsExtractor):
 
     METRICS = dict(
-        time=Metrics.Second,
-        gflops=Metrics.GFlops,
-        checksum=Metric('#', float)
+        time=Metrics.Second, gflops=Metrics.GFlops, checksum=Metric('#', float)
     )
 
     @property
@@ -39,11 +33,7 @@ class GemmExtractor(MetricsExtractor):
             gflops = float(flopl.split()[0])
             checkl = istr.readline()
             chk = float(checkl.split()[-1])
-        metrics = dict(
-            time=time,
-            gflops=gflops,
-            checksum=chk
-        )
+        metrics = dict(time=time, gflops=gflops, checksum=chk)
         return metrics
 
 
@@ -208,6 +198,7 @@ class MiniGEMM(Benchmark):
     """A mini benchmark performing MKL based generalized matrix multiplies
     to determine the node's peak floating point performance.
     """
+
     name = 'minigemm'
     description = "DGEMM mini benchmark"
     COMPILE_PARAMS = []
@@ -216,10 +207,12 @@ class MiniGEMM(Benchmark):
 
     def __init__(self):
         super(MiniGEMM, self).__init__(
-            attributes=dict(compile=self.COMPILE_PARAMS,
-                            omp_threads=self.DEFAULT_OPENMP_THREADS,
-                            mkl_threads=self.DEFAULT_NESTED_MKL_THREADS
-                            ))
+            attributes=dict(
+                compile=self.COMPILE_PARAMS,
+                omp_threads=self.DEFAULT_OPENMP_THREADS,
+                mkl_threads=self.DEFAULT_NESTED_MKL_THREADS,
+            )
+        )
 
     @cached_property
     def compile(self):
@@ -251,8 +244,7 @@ class MiniGEMM(Benchmark):
                 OMP_NESTED='true',
                 OMP_PROC_BIND='spread,close',
                 OMP_PLACES='cores',
-                OMP_NUM_THREADS=','.join([self.omp_threads,
-                                          self.mkl_threads]),
+                OMP_NUM_THREADS=','.join([self.omp_threads, self.mkl_threads]),
             ),
         )
 
@@ -270,8 +262,8 @@ class MiniGEMM(Benchmark):
             subprocess.check_call(['./compile.sh'])
         except subprocess.CalledProcessError as cpe:
             context.logger.warning(
-                'minigemm compilation failed, error code:',
-                cpe.returncode)
+                'minigemm compilation failed, error code:', cpe.returncode
+            )
         else:
             context.logger.info('Successfully compiled minigemm benchmark')
 

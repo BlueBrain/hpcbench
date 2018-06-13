@@ -1,1 +1,1 @@
-from . cluster import SlurmCluster  # noqa
+from .cluster import SlurmCluster  # noqa

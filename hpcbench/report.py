@@ -32,10 +32,7 @@ def tex_escape(text):
     regex = re.compile(
         '|'.join(
             re.escape(six.text_type(key))
-            for key in sorted(
-                conv.keys(),
-                key=lambda item: - len(item)
-            )
+            for key in sorted(conv.keys(), key=lambda item: -len(item))
         )
     )
     return regex.sub(lambda match: conv[match.group()], text)

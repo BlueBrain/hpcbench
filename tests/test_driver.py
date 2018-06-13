@@ -14,11 +14,7 @@ import yaml
 
 from hpcbench.api import Benchmark
 from hpcbench.campaign import ReportNode
-from hpcbench.cli import (
-    bendoc,
-    benelastic,
-    benumb,
-)
+from hpcbench.cli import bendoc, benelastic, benumb
 from hpcbench.driver import (
     BenchmarkCategoryDriver,
     BenchmarkDriver,
@@ -28,13 +24,9 @@ from hpcbench.driver import (
     HostDriver,
     SrunExecutionDriver,
 )
-from hpcbench.toolbox.contextlib_ext import (
-    capture_stdout,
-    mkdtemp,
-    pushd,
-)
+from hpcbench.toolbox.contextlib_ext import capture_stdout, mkdtemp, pushd
 from . import BuildInfoBench, DriverTestCase, FakeBenchmark
-from . benchmark.benchmark import AbstractBenchmarkTest
+from .benchmark.benchmark import AbstractBenchmarkTest
 
 
 LOGGER = logging.getLogger('hpcbench')
@@ -45,8 +37,7 @@ class TestDriver(DriverTestCase, unittest.TestCase):
         with self.assertRaises(NameError) as exc:
             Benchmark.get_subclass('unkn0wnb3nchm4rk')
         self.assertEqual(
-            str(exc.exception),
-            "Not a valid Benchmark class: unkn0wnb3nchm4rk"
+            str(exc.exception), "Not a valid Benchmark class: unkn0wnb3nchm4rk"
         )
 
     def test_run_01(self):
@@ -58,15 +49,13 @@ class TestDriver(DriverTestCase, unittest.TestCase):
             '*',
             'test01',
             'main',
-            'metrics.json'
+            'metrics.json',
         )
         # use report API to ensure all commands succeeded
         report = ReportNode(TestDriver.CAMPAIGN_PATH)
-        self.assertEqual(list(report.collect('command_succeeded')),
-                         [True] * 3)
+        self.assertEqual(list(report.collect('command_succeeded')), [True] * 3)
         self.assertTrue(
-            osp.isfile(aggregated_metrics_f),
-            "Not file: " + aggregated_metrics_f
+            osp.isfile(aggregated_metrics_f), "Not file: " + aggregated_metrics_f
         )
         with open(aggregated_metrics_f) as istr:
             aggregated_metrics = json.load(istr)
@@ -84,8 +73,9 @@ class TestDriver(DriverTestCase, unittest.TestCase):
         content = stdout.getvalue()
         self.assertTrue(content)
 
-    @unittest.skipIf('UT_SKIP_ELASTICSEARCH' in os.environ,
-                     'manually disabled from environment')
+    @unittest.skipIf(
+        'UT_SKIP_ELASTICSEARCH' in os.environ, 'manually disabled from environment'
+    )
     def test_05_es_dump(self):
         # Push documents to Elasticsearch
         argv = [TestDriver.CAMPAIGN_PATH]
@@ -112,10 +102,7 @@ class TestFakeBenchmark(AbstractBenchmarkTest, unittest.TestCase):
         return dict(
             performance=10.0,
             standard_error=1.0,
-            pairs=[
-                dict(first=1.5, second=True),
-                dict(first=3.0, second=False),
-            ],
+            pairs=[dict(first=1.5, second=True), dict(first=3.0, second=False)],
         )
 
     def get_benchmark_categories(self):
@@ -125,47 +112,25 @@ class TestFakeBenchmark(AbstractBenchmarkTest, unittest.TestCase):
 class TestHostDriver(unittest.TestCase):
     CAMPAIGN = dict(
         network=dict(
-            nodes=[
-                'node{0:02}'.format(id_)
-                for id_ in range(1, 11)
-            ],
+            nodes=['node{0:02}'.format(id_) for id_ in range(1, 11)],
             tags=reduce(
                 lambda x, y: dict(x, **y),
                 (
                     dict(
-                        (
-                            'n{0:02}'.format(id_),
-                            dict(nodes=['node{0:02}'.format(id_)])
-                        )
+                        ('n{0:02}'.format(id_), dict(nodes=['node{0:02}'.format(id_)]))
                         for id_ in range(1, 11)
-
                     ),
                     dict(
                         group_nodes=[
-                            dict(
-                                nodes=[
-                                    "node01",
-                                    "node02",
-                                ],
-                            ),
-                            dict(
-                                nodes=[
-                                    "node03",
-                                ],
-                            ),
+                            dict(nodes=["node01", "node02"]),
+                            dict(nodes=["node03"]),
                         ],
-                        group_match=dict(
-                            match="node1.*"
-                        ),
-                        group_rectags=dict(
-                            tags=["group_match", "group_nodes"]
-                        ),
-                        group_localhost=[
-                            dict(nodes=["localhost"])
-                        ],
-                    )
-                )
-            )
+                        group_match=dict(match="node1.*"),
+                        group_rectags=dict(tags=["group_match", "group_nodes"]),
+                        group_localhost=[dict(nodes=["localhost"])],
+                    ),
+                ),
+            ),
         )
     )
 
@@ -178,23 +143,22 @@ class TestHostDriver(unittest.TestCase):
         cls.DRIVER = CampaignDriver(cls.CAMPAIGN_FILE)
 
     def host_driver(self, node):
-        return HostDriver(
-            CampaignDriver(TestHostDriver.CAMPAIGN_FILE, node=node),
-            node
-        )
+        return HostDriver(CampaignDriver(TestHostDriver.CAMPAIGN_FILE, node=node), node)
 
     def test_host_driver_children(self):
         self.assertEqual(
             self.host_driver('node01').children,
-            {'*', 'n01', 'group_nodes', 'group_rectags', 'group_localhost'}
+            {'*', 'n01', 'group_nodes', 'group_rectags', 'group_localhost'},
         )
         self.assertEqual(
             self.host_driver('node10').children,
-            {'*', 'n10', 'group_match', 'group_rectags', 'group_localhost'}
+            {'*', 'n10', 'group_match', 'group_rectags', 'group_localhost'},
         )
 
-    @unittest.skipIf('TRAVIS_TAG' in os.environ,
-                     'objcopy version does not support --dump-section yet')
+    @unittest.skipIf(
+        'TRAVIS_TAG' in os.environ,
+        'objcopy version does not support --dump-section yet',
+    )
     def test_buildinfo(self):
         node = 'node01'
         tag = '*'
@@ -204,16 +168,12 @@ class TestHostDriver(unittest.TestCase):
             BenchmarkCategoryDriver(
                 BenchmarkDriver(
                     BenchmarkTagDriver(
-                        HostDriver(
-                            CampaignDriver(campaign_file, node=node),
-                            node
-                        ),
-                        tag
+                        HostDriver(CampaignDriver(campaign_file, node=node), node), tag
                     ),
                     bench,
                     dict(),
                 ),
-                'main'
+                'main',
             )()
             metas = bench.execution_matrix(None)[0]['metas']
             build_info = metas.get('build_info')
@@ -224,46 +184,42 @@ class TestHostDriver(unittest.TestCase):
         tag = kwargs.get('tag', 'group_nodes')
         srun_nodes = kwargs.get('srun_nodes', 1)
         benchmark_config = kwargs.get('benchmark_config')
-        execution = dict(
-            command=['ls', '-la']
-        )
+        execution = dict(command=['ls', '-la'])
         campaign_file = TestHostDriver.CAMPAIGN_FILE
         if srun_nodes is not None:
             execution.update(srun_nodes=srun_nodes)
         return SrunExecutionDriver(
-           FixedAttempts(
+            FixedAttempts(
                 BenchmarkCategoryDriver(
                     BenchmarkDriver(
                         BenchmarkTagDriver(
-                            HostDriver(
-                                CampaignDriver(campaign_file, node=node),
-                                node
-                            ),
-                            tag
+                            HostDriver(CampaignDriver(campaign_file, node=node), node),
+                            tag,
                         ),
                         namedtuple('benchmark', ['name'])(name='benchmark'),
                         benchmark_config or dict(),
                     ),
-                    'category'
+                    'category',
                 ),
-                execution
+                execution,
             )
         )
 
     def test_slurm_constraint(self):
         """SLURM --constraint option disables node name resolution"""
-        slurm = self.slurm(benchmark_config=dict(
-            srun=dict(constraint="uc1*6|uc2*6")
-        ))
+        slurm = self.slurm(benchmark_config=dict(srun=dict(constraint="uc1*6|uc2*6")))
         os.environ['SRUN'] = 'true'  # otherwise `find_executable` crashes
         six.assertCountEqual(
             self,
             slurm.command,
-            ['true',
-             '--output=slurm-%N-%t.stdout',
-             '--error=slurm-%N-%t.error',
-             "--constraint='uc1*6|uc2*6'",
-             'ls', '-la']
+            [
+                'true',
+                '--output=slurm-%N-%t.stdout',
+                '--error=slurm-%N-%t.error',
+                "--constraint='uc1*6|uc2*6'",
+                'ls',
+                '-la',
+            ],
         )
         os.environ.pop('SRUN')
 
@@ -278,38 +234,25 @@ class TestHostDriver(unittest.TestCase):
     def test_srun_nodes_method(self):
         self.assertEqual(
             self.slurm(node='node03', srun_nodes=0).srun_nodes,
-            ['node01', 'node02', 'node03']
+            ['node01', 'node02', 'node03'],
+        )
+        self.assertEqual(self.slurm(node='node01', srun_nodes=1).srun_nodes, ['node01'])
+        self.assertEqual(self.slurm(node='node02', srun_nodes=1).srun_nodes, ['node02'])
+        self.assertEqual(
+            self.slurm(node='node01', srun_nodes=2).srun_nodes, ['node01', 'node02']
         )
         self.assertEqual(
-            self.slurm(node='node01', srun_nodes=1).srun_nodes,
-            ['node01']
+            self.slurm(node='node02', srun_nodes=2).srun_nodes, ['node02', 'node03']
         )
         self.assertEqual(
-            self.slurm(node='node02', srun_nodes=1).srun_nodes,
-            ['node02']
+            self.slurm(node='node03', srun_nodes=2).srun_nodes, ['node03', 'node01']
         )
         self.assertEqual(
-            self.slurm(node='node01', srun_nodes=2).srun_nodes,
-            ['node01', 'node02']
-        )
-        self.assertEqual(
-            self.slurm(node='node02', srun_nodes=2).srun_nodes,
-            ['node02', 'node03']
-        )
-        self.assertEqual(
-            self.slurm(node='node03', srun_nodes=2).srun_nodes,
-            ['node03', 'node01']
-        )
-        self.assertEqual(
-            self.slurm(node='node03', srun_nodes='group_match').srun_nodes,
-            ['node10']
+            self.slurm(node='node03', srun_nodes='group_match').srun_nodes, ['node10']
         )
         self.assertEqual(
             self.slurm(srun_nodes='*').srun_nodes,
-            [
-                'node{0:02}'.format(id_)
-                for id_ in range(1, 11)
-            ]
+            ['node{0:02}'.format(id_) for id_ in range(1, 11)],
         )
 
     def test_srun_nodes_method_errors(self):
@@ -331,30 +274,11 @@ class TestHostDriver(unittest.TestCase):
 
     def test_nodes_method(self):
         self.assertEqual(
-            self.network.nodes('group_nodes'),
-            [
-                'node01',
-                'node02',
-                'node03'
-            ]
+            self.network.nodes('group_nodes'), ['node01', 'node02', 'node03']
         )
+        self.assertEqual(self.network.nodes('group_match'), ['node10'])
+        self.assertEqual(self.network.nodes('n01'), ['node01'])
         self.assertEqual(
-            self.network.nodes('group_match'),
-            [
-                'node10',
-            ]
-        )
-        self.assertEqual(
-            self.network.nodes('n01'),
-            [
-                'node01',
-            ]
-        )
-        self.assertEqual(
-            self.network.nodes('*'),
-            [
-                'node{0:02}'.format(id_)
-                for id_ in range(1, 11)
-            ]
+            self.network.nodes('*'), ['node{0:02}'.format(id_) for id_ in range(1, 11)]
         )
         self.assertEqual(self.network.nodes('unknown_group'), [])

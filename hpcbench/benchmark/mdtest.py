@@ -8,11 +8,7 @@ import shutil
 
 from cached_property import cached_property
 
-from hpcbench.api import (
-    Benchmark,
-    Metrics,
-    MetricsExtractor,
-)
+from hpcbench.api import Benchmark, Metrics, MetricsExtractor
 from hpcbench.driver import LOGGER
 from hpcbench.toolbox.functools_ext import listify
 from hpcbench.toolbox.process import find_executable
@@ -21,6 +17,7 @@ from hpcbench.toolbox.process import find_executable
 class MDTestExtractor(MetricsExtractor):
     """Extract metrics from mdtest output
     """
+
     STDOUT_IGNORE_PRIOR = 'SUMMARY:'
 
     FLOAT_RE = r'(\d*\.?\d+)'
@@ -34,7 +31,7 @@ class MDTestExtractor(MetricsExtractor):
         names = dict(
             directory={'creation', 'stat', 'removal'},
             file={'creation', 'stat', 'read', 'removal'},
-            tree={'creation', 'removal'}
+            tree={'creation', 'removal'},
         )
 
         def _pairs():
@@ -42,6 +39,7 @@ class MDTestExtractor(MetricsExtractor):
                 for prefix, suffixes in names.items():
                     for suffix in suffixes:
                         yield kind + '_' + prefix + '_' + suffix, Metrics.Ops
+
         return dict(_pairs())
 
     def extract_metrics(self, metas):
@@ -73,9 +71,7 @@ class MDTestExtractor(MetricsExtractor):
             fields = cls._match_to_dict(match)
             for kind, value in fields['data'].items():
                 name = '{kind}_{prefix}_{suffix}'.format(
-                    kind=kind,
-                    prefix=fields['prefix'],
-                    suffix=fields['suffix'],
+                    kind=kind, prefix=fields['prefix'], suffix=fields['suffix']
                 )
                 yield name, value
 
@@ -89,13 +85,14 @@ class MDTestExtractor(MetricsExtractor):
                 min=float(match.group(4)),
                 mean=float(match.group(5)),
                 stddev=float(match.group(6)),
-            )
+            ),
         )
 
 
 class MDTest(Benchmark):
     """Wrapper for mdtest utility
     """
+
     name = 'mdtest'
     description = 'Used for testing the metadata performance of a file system'
 
@@ -112,10 +109,7 @@ class MDTest(Benchmark):
     @property
     def options(self):
         """List of arguments given to the mdtest command"""
-        return [
-            str(e)
-            for e in self.attributes['options']
-        ]
+        return [str(e) for e in self.attributes['options']]
 
     @cached_property
     def executable(self):
@@ -130,8 +124,7 @@ class MDTest(Benchmark):
         for i, opt in enumerate(options):
             if opt == '-d':
                 options[i + 1] = options[i + 1].format(
-                    node=context.node,
-                    tag=context.tag,
+                    node=context.node, tag=context.tag
                 )
 
         return [find_executable(self.executable)] + options
@@ -150,9 +143,7 @@ class MDTest(Benchmark):
 
     def execution_matrix(self, context):
         yield dict(
-            category='disk',
-            command=self.command(context),
-            srun_nodes=self.srun_nodes,
+            category='disk', command=self.command(context), srun_nodes=self.srun_nodes
         )
 
     @property
@@ -161,12 +152,7 @@ class MDTest(Benchmark):
 
     @classmethod
     def cleanup_dir_content(cls, path):
-        white_list = {
-            'stderr.txt',
-            'stdout.txt',
-            'hpcbench.yaml',
-            'metrics.json',
-        }
+        white_list = {'stderr.txt', 'stdout.txt', 'hpcbench.yaml', 'metrics.json'}
         for file in os.listdir(path):
             if file in white_list:
                 continue

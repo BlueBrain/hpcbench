@@ -5,33 +5,34 @@ import re
 
 from cached_property import cached_property
 
-from hpcbench.api import (
-    Benchmark,
-    Metrics,
-    MetricsExtractor,
-)
-from hpcbench.toolbox.process import (
-    find_executable,
-)
+from hpcbench.api import Benchmark, Metrics, MetricsExtractor
+from hpcbench.toolbox.process import find_executable
 
 
 class StreamExtractor(MetricsExtractor):
     """Ignore stdout until this line"""
-    STDOUT_IGNORE_PRIOR = set([
-        'Function      Rate (MB/s)   Avg time     Min time     Max time',
-        'Function    Best Rate MB/s  Avg time     Min time     Max time',
-    ])
+
+    STDOUT_IGNORE_PRIOR = set(
+        [
+            'Function      Rate (MB/s)   Avg time     Min time     Max time',
+            'Function    Best Rate MB/s  Avg time     Min time     Max time',
+        ]
+    )
     KEEP_NUMBERS = re.compile('[^0-9.]')
     SECTIONS = ['copy', 'scale', 'add', 'triad']
     REGEX = dict(
-        copy=re.compile('^Copy:[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
-                        '[ \t]*([\\d.]+)[ \t]*([\\d.]+)'),
-        scale=re.compile('^Scale:[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
-                         '[ \t]*([\\d.]+)[ \t]*([\\d.]+)'),
-        add=re.compile('^Add:[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
-                       '[ \t]*([\\d.]+)[ \t]*([\\d.]+)'),
-        triad=re.compile('^Triad:[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
-                         '[ \t]*([\\d.]+)[ \t]*([\\d.]+)')
+        copy=re.compile(
+            '^Copy:[ \t]*([\\d.]+)[ \t]*([\\d.]+)' '[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
+        ),
+        scale=re.compile(
+            '^Scale:[ \t]*([\\d.]+)[ \t]*([\\d.]+)' '[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
+        ),
+        add=re.compile(
+            '^Add:[ \t]*([\\d.]+)[ \t]*([\\d.]+)' '[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
+        ),
+        triad=re.compile(
+            '^Triad:[ \t]*([\\d.]+)[ \t]*([\\d.]+)' '[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
+        ),
     )
 
     METRICS = dict(
@@ -89,6 +90,7 @@ class StreamExtractor(MetricsExtractor):
 class Stream(Benchmark):
     """Benchmark wrapper for the streambench utility
     """
+
     name = 'stream'
 
     description = "Provides memory bandwidth benchmarking capabilities."
@@ -99,8 +101,7 @@ class Stream(Benchmark):
     def __init__(self):
         super(Stream, self).__init__(
             attributes=dict(
-                threads=Stream.DEFAULT_THREADS,
-                executable=Stream.DEFAULT_EXECUTABLE,
+                threads=Stream.DEFAULT_THREADS, executable=Stream.DEFAULT_EXECUTABLE
             )
         )
 
@@ -113,10 +114,7 @@ class Stream(Benchmark):
     @property
     def threads(self):
         """List of possible threads the command is executed with"""
-        return [
-            str(e)
-            for e in self.attributes['threads']
-        ]
+        return [str(e) for e in self.attributes['threads']]
 
     def execution_matrix(self, context):
         del context  # unused
@@ -125,10 +123,7 @@ class Stream(Benchmark):
                 category=Stream.name,
                 command=[find_executable(self.executable, required=False)],
                 metas=dict(threads=thread),
-                environment=dict(
-                    OMP_NUM_THREADS=thread,
-                    KMP_AFFINITY='scatter'
-                ),
+                environment=dict(OMP_NUM_THREADS=thread, KMP_AFFINITY='scatter'),
             )
 
     @cached_property

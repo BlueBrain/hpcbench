@@ -6,7 +6,7 @@ import unittest
 
 from hpcbench.api import ExecutionContext
 from hpcbench.benchmark.mdtest import MDTest
-from . benchmark import AbstractBenchmarkTest
+from .benchmark import AbstractBenchmarkTest
 
 
 LOGGER = logging.getLogger('test_mdtest')
@@ -23,17 +23,16 @@ class TestMDTestPostExecution(unittest.TestCase):
         path = tempfile.mkdtemp(suffix='{node}--{tag}')
         os.rmdir(path)
         mdt = MDTest()
-        mdt.attributes.update(
-            post_cleanup=True,
-            options=['foo', '-d', path]
+        mdt.attributes.update(post_cleanup=True, options=['foo', '-d', path])
+        exec_ctx = mdt.execution_matrix(
+            ExecutionContext(
+                cluster=None,
+                logger=LOGGER,
+                node='node.local',
+                srun_options=None,
+                tag='tag.name',
+            )
         )
-        exec_ctx = mdt.execution_matrix(ExecutionContext(
-            cluster=None,
-            logger=LOGGER,
-            node='node.local',
-            srun_options=None,
-            tag='tag.name',
-        ))
         execution = next(exec_ctx)
         path = execution['command'][-1]
         self.assertTrue(path.endswith('node.local--tag.name'))
@@ -100,24 +99,14 @@ class TestMDTestBenchmark(AbstractBenchmarkTest, unittest.TestCase):
     def expected_execution_matrix(self):
         return [
             dict(
-                command=[
-                    '/path/to/fake',
-                    'foo',
-                    '-d',
-                    '/bar/localhost/kikoo/*'
-                ],
+                command=['/path/to/fake', 'foo', '-d', '/bar/localhost/kikoo/*'],
                 srun_nodes=1,
-                category='disk'
-            ),
+                category='disk',
+            )
         ]
 
     @property
     def attributes(self):
         return dict(
-            executable='/path/to/fake',
-            options=[
-                'foo',
-                '-d',
-                '/bar/{node}/kikoo/{tag}'
-            ],
+            executable='/path/to/fake', options=['foo', '-d', '/bar/{node}/kikoo/{tag}']
         )

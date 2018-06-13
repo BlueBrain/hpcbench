@@ -9,11 +9,7 @@ import os.path as osp
 
 from six import with_metaclass
 
-__all__ = [
-    'Benchmark',
-    'ExecutionContext',
-    'MetricsExtractor',
-]
+__all__ = ['Benchmark', 'ExecutionContext', 'MetricsExtractor']
 
 
 class Cluster(with_metaclass(ABCMeta, object)):
@@ -39,16 +35,18 @@ class Cluster(with_metaclass(ABCMeta, object)):
         """
 
 
-class ExecutionContext(namedtuple(
-    "ExecutionContext",
-    [
-        "cluster",  # instance of ``Cluster``
-        "logger",  # instance of logging.Logger
-        "node",  # current node (string)
-        "srun_options",  # given srun_options (string list)
-        "tag",  # current tag processed (string)
-    ]
-)):
+class ExecutionContext(
+    namedtuple(
+        "ExecutionContext",
+        [
+            "cluster",  # instance of ``Cluster``
+            "logger",  # instance of logging.Logger
+            "node",  # current node (string)
+            "srun_options",  # given srun_options (string list)
+            "tag",  # current tag processed (string)
+        ],
+    )
+):
     @property
     def implicit_nodes(self):
         return not isinstance(self.cluster.nodes, list)
@@ -62,6 +60,7 @@ Metric = namedtuple("Metric", "unit type")
 class Metrics(object):  # pragma pylint: disable=too-few-public-methods
     """List of common metrics
     """
+
     Microsecond = Metric('us', float)
     Millisecond = Metric('ms', float)
     Second = Metric('s', float)
@@ -76,6 +75,7 @@ class Metrics(object):  # pragma pylint: disable=too-few-public-methods
 
 class NoMetricException(Exception):
     """Raised when a log does not contain any metric"""
+
     pass
 
 
@@ -85,11 +85,8 @@ class UnexpectedMetricsException(Exception):
         self.metrics = metrics
 
     def __str__(self):
-        error = \
-            'Could not extract some metrics: %s\n' \
-            'metrics set: %s'
-        return error % (', '.join(self.unset_metrics),
-                        ', '.join(set(self.metrics)))
+        error = 'Could not extract some metrics: %s\n' 'metrics set: %s'
+        return error % (', '.join(self.unset_metrics), ', '.join(set(self.metrics)))
 
 
 class MetricsExtractor(with_metaclass(ABCMeta, object)):
@@ -210,6 +207,7 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         :rtype: bool
         """
         return True
+
     # ---
 
     def __init__(self, attributes=None):

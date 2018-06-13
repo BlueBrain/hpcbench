@@ -9,18 +9,13 @@ import mock
 import six
 import yaml
 
-from hpcbench.campaign import (
-    ReportNode,
-    YAML_REPORT_FILE,
-)
-from hpcbench.cli.benwait import (
-    main as benwait,
-    wait_for_completion,
-)
+from hpcbench.campaign import ReportNode, YAML_REPORT_FILE
+from hpcbench.cli.benwait import main as benwait, wait_for_completion
 
 
 class sacct:
     """Helper class to create mock objets in unit-tests below"""
+
     SACCT_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
     def __init__(self):
@@ -46,10 +41,7 @@ class sacct:
 
     def mock(self):
         """Build the mock object"""
-        return mock.patch(
-            "subprocess.check_output",
-            side_effect=self._returned_values
-        )
+        return mock.patch("subprocess.check_output", side_effect=self._returned_values)
 
 
 class TestBenWait(unittest.TestCase):
@@ -80,11 +72,7 @@ class TestBenWait(unittest.TestCase):
     def test_all_completed(self):
         """both sbatch jobs terminated"""
         with sacct().cd().cd().mock() as mock:
-            six.assertCountEqual(
-                self,
-                wait_for_completion(self.REPORT),
-                [1, 2]
-            )
+            six.assertCountEqual(self, wait_for_completion(self.REPORT), [1, 2])
             self.assertEqual(mock.call_count, 2)
 
     def test_wait_one(self):
@@ -96,9 +84,7 @@ class TestBenWait(unittest.TestCase):
         for scenario in scenarii:
             with scenario as mock:
                 six.assertCountEqual(
-                    self,
-                    wait_for_completion(self.REPORT, interval=0.5),
-                    [1, 2]
+                    self, wait_for_completion(self.REPORT, interval=0.5), [1, 2]
                 )
                 self.assertEqual(mock.call_count, 3)
 

@@ -5,11 +5,7 @@ import csv
 
 from cached_property import cached_property
 
-from hpcbench.campaign import (
-    from_file,
-    get_metrics,
-    ReportNode,
-)
+from hpcbench.campaign import from_file, get_metrics, ReportNode
 from hpcbench.toolbox.collections_ext import flatten_dict
 from hpcbench.toolbox.contextlib_ext import write_wherever
 from hpcbench.toolbox.functools_ext import listify
@@ -40,7 +36,7 @@ class CSVExporter(object):
     def peek(self):
         """Print the Campaign data columns"""
         for col in self._headers:
-            print('- '+col)
+            print('- ' + col)
 
     def _push_data(self):
         with write_wherever(self.ofile) as ofo:
@@ -51,9 +47,11 @@ class CSVExporter(object):
 
     def _push_data_filtered(self, fields):
         if len(set(fields) - self._headers):
-            raise ValueError('The provided list of fields contains an element '
-                             + 'that could not be found in this campaign\n'
-                             + str(set(fields) - self._headers))
+            raise ValueError(
+                'The provided list of fields contains an element '
+                + 'that could not be found in this campaign\n'
+                + str(set(fields) - self._headers)
+            )
         with write_wherever(self.ofile) as ofo:
             csvf = csv.DictWriter(ofo, fieldnames=fields)
             csvf.writeheader()

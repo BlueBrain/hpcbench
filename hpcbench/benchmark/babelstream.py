@@ -20,26 +20,14 @@ import subprocess
 
 from cached_property import cached_property
 
-from hpcbench.api import (
-    Benchmark,
-    Metrics,
-    MetricsExtractor,
-)
+from hpcbench.api import Benchmark, Metrics, MetricsExtractor
 from hpcbench.toolbox.functools_ext import listify
 from hpcbench.toolbox.process import find_executable
 
 
 class BabelStreamExtractor(MetricsExtractor):
-    OPERATIONS = {
-        'Copy',
-        'Mul',
-        'Add',
-        'Triad',
-        'Dot',
-    }
-    METRICS = dict(
-        max_mbytes_per_sec=('bandwidth', Metrics.MegaBytesPerSecond),
-    )
+    OPERATIONS = {'Copy', 'Mul', 'Add', 'Triad', 'Dot'}
+    METRICS = dict(max_mbytes_per_sec=('bandwidth', Metrics.MegaBytesPerSecond))
 
     @property
     def metrics(self):
@@ -74,9 +62,7 @@ class BabelStream(Benchmark):
 
     def __init__(self):
         super(BabelStream, self).__init__(
-            attributes=dict(
-                executable=BabelStream.DEFAULT_EXECUTABLE,
-            )
+            attributes=dict(executable=BabelStream.DEFAULT_EXECUTABLE)
         )
 
     @property
@@ -119,16 +105,14 @@ class BabelStream(Benchmark):
             yield dict(
                 category=BabelStream.CATEGORY,
                 command=self._command(device),
-                metas=dict(
-                    device=int(device),
-                )
+                metas=dict(device=int(device)),
             )
 
     def _command(self, device):
         cmd = [
             find_executable(self.executable, required=False),
             '--device',
-            device
+            device,
         ] + self.options
         if '--csv' not in cmd:
             cmd.append('--csv')

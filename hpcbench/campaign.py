@@ -22,15 +22,10 @@ import yaml
 import hpcbench
 from hpcbench.api import Benchmark
 from hpcbench.report import render
-from . toolbox.collections_ext import (
-    Configuration,
-    dict_map_kv,
-    freeze,
-    nameddict,
-)
-from . toolbox.env import expandvars
-from . toolbox.functools_ext import listify
-from . toolbox.slurm import SlurmCluster
+from .toolbox.collections_ext import Configuration, dict_map_kv, freeze, nameddict
+from .toolbox.env import expandvars
+from .toolbox.functools_ext import listify
+from .toolbox.slurm import SlurmCluster
 
 
 def pip_installer_url(version=None):
@@ -47,7 +42,7 @@ def pip_installer_url(version=None):
             git_rev = git_rev[1:]  # get rid of scm letter
         return 'git+{project_url}@{git_rev}#egg=hpcbench'.format(
             project_url='http://github.com/tristan0x/hpcbench',
-            git_rev=git_rev or 'master'
+            git_rev=git_rev or 'master',
         )
     return 'hpcbench=={}'.format(version)
 
@@ -60,9 +55,7 @@ YAML_REPORT_FILE = 'hpcbench.yaml'
 DEFAULT_CAMPAIGN = dict(
     output_dir="hpcbench-%Y%m%d-%H%M%S",
     network=dict(
-        nodes=[
-            socket.gethostname(),
-        ],
+        nodes=[socket.gethostname()],
         tags=dict(),
         ssh_config_file=None,
         remote_work_dir='.hpcbench',
@@ -89,14 +82,9 @@ DEFAULT_CAMPAIGN = dict(
         sbatch_template=SBATCH_JINJA_TEMPLATE,
     ),
     tag=dict(),
-    benchmarks={
-        '*': {}
-    },
+    benchmarks={'*': {}},
     export=dict(
-        elasticsearch=dict(
-            connection_params=dict(),
-            index_name='hpcbench-{date}'
-        )
+        elasticsearch=dict(connection_params=dict(), index_name='hpcbench-{date}')
     ),
     precondition=dict(),
 )
@@ -104,6 +92,7 @@ DEFAULT_CAMPAIGN = dict(
 
 class Generator(object):
     """Generate default campaign file"""
+
     DEFAULT_TEMPLATE = 'hpcbench.yaml.jinja'
 
     def __init__(self, template=None):
@@ -115,9 +104,10 @@ class Generator(object):
         """Write YAML campaign template to the given open file
         """
         render(
-            self.template, file,
+            self.template,
+            file,
             benchmarks=self.benchmarks,
-            hostname=socket.gethostname()
+            hostname=socket.gethostname(),
         )
 
     @property
@@ -137,17 +127,17 @@ class Generator(object):
                 attributes={
                     attr: dict(
                         doc=Generator._format_attrdoc(b.__class__, attr),
-                        value=Generator._format_attrvalue(b.attributes[attr])
+                        value=Generator._format_attrvalue(b.attributes[attr]),
                     )
                     for attr in b.attributes
-                }
+                },
             )
             for b in benches
         ]
 
     @classmethod
     def _format_attrdoc(cls, clazz, attr):
-        doc = (getattr(clazz, attr).__doc__ or '')
+        doc = getattr(clazz, attr).__doc__ or ''
         doc = doc.strip()
         doc = '# ' + doc
         return doc.replace('\n        ', '\n          # ').strip()
@@ -199,8 +189,11 @@ def default_campaign(campaign=None, expandcampvars=True, frozen=True):
 
     def _merger(_camp, _deft):
         for key in _deft.keys():
-            if (key in _camp and isinstance(_camp[key], dict)
-                    and isinstance(_deft[key], collections.Mapping)):
+            if (
+                key in _camp
+                and isinstance(_camp[key], dict)
+                and isinstance(_deft[key], collections.Mapping)
+            ):
                 _merger(_camp[key], _deft[key])
             elif key not in _camp:
                 _camp[key] = _deft[key]
@@ -217,6 +210,7 @@ def default_campaign(campaign=None, expandcampvars=True, frozen=True):
         if isinstance(value, six.string_types):
             return expandvars(value)
         return value
+
     if expandcampvars:
         campaign = nameddict(dict_map_kv(campaign, _expandvars))
     else:
@@ -229,6 +223,7 @@ def default_campaign(campaign=None, expandcampvars=True, frozen=True):
 class NetworkConfig(object):
     """Wrapper around network configuration
     """
+
     def __init__(self, campaign):
         self.campaign = campaign
 
@@ -269,9 +264,7 @@ class NetworkConfig(object):
         LOGGER.info('Found nodes: %s', NodeSet.fromlist(self.network.nodes))
         LOGGER.info('Found tags:')
         for tag in iter(sorted(tags)):
-            LOGGER.info("{: >25} {}".format(
-                tag, NodeSet.fromlist(tags[tag]['nodes']))
-            )
+            LOGGER.info("{: >25} {}".format(tag, NodeSet.fromlist(tags[tag]['nodes'])))
         prev_tags = self.network.tags
         self.network.tags = tags
         self.network.tags.update(prev_tags)
@@ -281,8 +274,7 @@ class NetworkConfig(object):
         if isinstance(nodes, six.string_types):
             nodes = [nodes]
         if not isinstance(nodes, list):
-            raise Exception('Invalid "nodes" value type.'
-                            ' list expected')
+            raise Exception('Invalid "nodes" value type.' ' list expected')
         eax = NodeSet()
         for node in nodes:
             eax.update(node)
@@ -308,8 +300,7 @@ class NetworkConfig(object):
             elif mode == 'tags':
                 pass  # don't fail but ignore tags
             else:
-                raise Exception('Unknown tag association pattern: %s',
-                                mode)
+                raise Exception('Unknown tag association pattern: %s', mode)
 
     @classmethod
     def _is_leaf(cls, config):
@@ -331,14 +322,15 @@ class NetworkConfig(object):
                     if rectag in expanded:
                         config += expanded[rectag]
                     elif rectag in visited:
-                        raise Exception('found circular dependency '
-                                        + 'between %s and %s',
-                                        tag, rectag)
+                        raise Exception(
+                            'found circular dependency ' + 'between %s and %s',
+                            tag,
+                            rectag,
+                        )
                     elif rectag in recursive:
                         recconfig = recursive.pop(rectag)
                         visited.add(rectag)
-                        cls._resolve(rectag, recconfig,
-                                     expanded, recursive, visited)
+                        cls._resolve(rectag, recconfig, expanded, recursive, visited)
                     else:  # rectag is nowhere to be found
                         message = '"%s" refers to "%s", which is not defined.'
                         message = message % (tag, rectag)
@@ -400,8 +392,9 @@ def get_metrics(campaign, report, top=True):
         for path, _ in report.collect('jobid', with_path=True):
             for child in ReportNode(path).children.values():
                 for metrics in get_metrics(campaign, child, top=False):
-                        yield metrics
+                    yield metrics
     else:
+
         def metrics_node_extract(report):
             metrics_file = osp.join(report.path, JSON_METRICS_FILE)
             if osp.exists(metrics_file):
@@ -411,7 +404,7 @@ def get_metrics(campaign, report, top=True):
         def metrics_iterator(report):
             return filter(
                 lambda eax: eax[1] is not None,
-                report.map(metrics_node_extract, with_path=True)
+                report.map(metrics_node_extract, with_path=True),
             )
 
         for path, metrics in metrics_iterator(report):
@@ -433,13 +426,11 @@ class CampaignMerge(object):
         self.rhs = rhs
         self.serializers = dict(
             json=CampaignMerge.SERIALIZER_CLASS(
-                reader=CampaignMerge._reader_json,
-                writer=CampaignMerge._writer_json
+                reader=CampaignMerge._reader_json, writer=CampaignMerge._writer_json
             ),
             yaml=CampaignMerge.SERIALIZER_CLASS(
-                reader=CampaignMerge._reader_yaml,
-                writer=CampaignMerge._writer_yaml
-            )
+                reader=CampaignMerge._reader_yaml, writer=CampaignMerge._writer_yaml
+            ),
         )
 
     def merge(self):
@@ -470,8 +461,7 @@ class CampaignMerge(object):
 
     DATA_FILE_EXTENSIONS = {'yaml', 'json'}
     IGNORED_FILES = 'campaign.yaml'
-    SERIALIZER_CLASS = collections.namedtuple('serializer',
-                                              ['reader', 'writer'])
+    SERIALIZER_CLASS = collections.namedtuple('serializer', ['reader', 'writer'])
 
     def _merge_data_file(self, path, extension):
         def _merge(lhs, rhs):
@@ -480,16 +470,17 @@ class CampaignMerge(object):
                 return
             for key in rhs.keys():
                 if key in lhs:
-                    if (isinstance(lhs[key], dict)
-                            and isinstance(rhs[key], collections.Mapping)):
+                    if isinstance(lhs[key], dict) and isinstance(
+                        rhs[key], collections.Mapping
+                    ):
                         _merge(lhs[key], rhs[key])
-                    elif (isinstance(lhs[key], list)
-                          and isinstance(rhs[key], list)):
+                    elif isinstance(lhs[key], list) and isinstance(rhs[key], list):
                         lhs[key] += rhs[key]
                     elif key == 'elapsed':
                         lhs[key] += rhs[key]
                 elif key not in lhs:
                     lhs[key] = rhs[key]
+
         lhs_file = osp.join(self.lhs, path)
         rhs_file = osp.join(self.rhs, path)
         assert osp.isfile(rhs_file)
@@ -532,7 +523,7 @@ class CampaignMerge(object):
         rhs = self.rhs
         try:
             self.lhs = osp.join(self.lhs, subdir)
-            self.rhs = osp.join(self. rhs, subdir)
+            self.rhs = osp.join(self.rhs, subdir)
             yield
         finally:
             self.lhs = lhs
@@ -553,6 +544,7 @@ def merge_campaigns(output_campaign, *campaigns):
 class ReportNode(collections.Mapping):
     """Navigate across hpcbench.yaml files of a campaign
     """
+
     def __init__(self, path):
         """
         :param path: path to an existing campaign directory
@@ -572,7 +564,7 @@ class ReportNode(collections.Mapping):
         """Build of dictionary of fields extracted from
         the given path"""
         prefix = os.path.commonprefix([path, self._path])
-        relative_path = path[len(prefix):]
+        relative_path = path[len(prefix) :]
         relative_path = relative_path.strip(os.sep)
         attrs = ['node', 'tag', 'benchmark', 'category', 'attempt']
         for i, elt in enumerate(relative_path.split(os.sep)):
@@ -644,9 +636,7 @@ class ReportNode(collections.Mapping):
         if not keys:
             raise Exception('Missing key')
         has_values = functools.reduce(
-            operator.__and__,
-            [key in self.data for key in keys],
-            True
+            operator.__and__, [key in self.data for key in keys], True
         )
         if has_values:
             values = tuple([self.data[key] for key in keys])

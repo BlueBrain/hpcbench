@@ -10,15 +10,11 @@ from cached_property import cached_property
 import six
 import yaml
 
-from hpcbench.api import (
-    Benchmark,
-    Metric,
-    MetricsExtractor,
-)
+from hpcbench.api import Benchmark, Metric, MetricsExtractor
 from hpcbench.cli import bensh
 from hpcbench.driver import ClusterWrapper
 from hpcbench.toolbox.contextlib_ext import pushd
-from . toolbox.test_buildinfo import TestExtractBuildinfo
+from .toolbox.test_buildinfo import TestExtractBuildinfo
 
 
 class DriverTestCase(object):
@@ -33,8 +29,7 @@ class DriverTestCase(object):
         cls.TEST_DIR = tempfile.mkdtemp(prefix='hpcbench-ut')
         with pushd(cls.TEST_DIR):
             cls.driver = bensh.main(cls.get_campaign_file())
-        cls.CAMPAIGN_PATH = osp.join(cls.TEST_DIR,
-                                     cls.driver.campaign_path)
+        cls.CAMPAIGN_PATH = osp.join(cls.TEST_DIR, cls.driver.campaign_path)
         if cls.check_campaign_consistency:
             cls._check_campaign_consistency()
 
@@ -49,8 +44,7 @@ class DriverTestCase(object):
                 continue
             hpcbench_yaml = osp.join(path, 'hpcbench.yaml')
             if not osp.isfile(hpcbench_yaml):
-                raise Exception('Missing hpchench.yaml in %s' %
-                                hpcbench_yaml)
+                raise Exception('Missing hpchench.yaml in %s' % hpcbench_yaml)
             with open(hpcbench_yaml) as istr:
                 data = yaml.safe_load(istr)
             children = data.get('children', [])
@@ -67,7 +61,6 @@ class DriverTestCase(object):
 
 
 class NullExtractor(MetricsExtractor):
-
     @property
     def metrics(self):
         return dict()
@@ -85,8 +78,7 @@ class FakeExtractor(MetricsExtractor):
         metrics = dict(
             performance=Metric('m', float),
             standard_error=Metric('m', float),
-            pairs=[dict(first=Metric('m', float),
-                        second=Metric('m', bool))]
+            pairs=[dict(first=Metric('m', float), second=Metric('m', bool))],
         )
         if self.show_cwd:
             metrics.update(path=Metric('', str))
@@ -98,10 +90,7 @@ class FakeExtractor(MetricsExtractor):
             metrics = dict(
                 performance=float(content[0].strip()),
                 standard_error=float(content[1].strip()),
-                pairs=[
-                    dict(first=1.5, second=True),
-                    dict(first=3.0, second=False),
-                ],
+                pairs=[dict(first=1.5, second=True), dict(first=3.0, second=False)],
             )
             if self.show_cwd:
                 metrics.update(path=content[2].strip())
@@ -118,19 +107,11 @@ class BuildInfoBench(Benchmark):
     metric_required = False
 
     def __init__(self):
-        super(BuildInfoBench, self).__init__(
-            attributes=dict(
-                run_path=None,
-            )
-        )
+        super(BuildInfoBench, self).__init__(attributes=dict(run_path=None))
         temp_dir = tempfile.mkdtemp(prefix='hpcbench-ut')
         bibench = osp.join(temp_dir, 'bibench')
         TestExtractBuildinfo.make_dummy(bibench)
-        self.exe_matrix = [dict(
-            category='main',
-            command=[bibench],
-            metas=dict()
-        )]
+        self.exe_matrix = [dict(category='main', command=[bibench], metas=dict())]
 
     @property
     def in_campaign_template(self):
@@ -165,9 +146,7 @@ class FakeBenchmark(Benchmark):
     def __init__(self):
         super(FakeBenchmark, self).__init__(
             attributes=dict(
-                input=FakeBenchmark.INPUTS,
-                run_path=None,
-                executable=sys.executable
+                input=FakeBenchmark.INPUTS, run_path=None, executable=sys.executable
             )
         )
 
@@ -180,7 +159,9 @@ class FakeBenchmark(Benchmark):
         del execution  # unused
         del context  # unused
         with open('test.py', 'w') as ostr:
-            ostr.write(dedent("""\
+            ostr.write(
+                dedent(
+                    """\
             from __future__ import print_function
             import os
             import sys
@@ -189,26 +170,26 @@ class FakeBenchmark(Benchmark):
             print(float(sys.argv[1]) / 10)
             if os.environ.get('SHOW_CWD'):
                 print(os.getcwd())
-            """))
+            """
+                )
+            )
 
     def execution_matrix(self, context):
         del context  # unused
         cmds = [
             dict(
                 category='main',
-                command=[
-                    self.executable, 'test.py', str(value)
-                ],
+                command=[self.executable, 'test.py', str(value)],
                 metas=dict(field=value / 10)
-                if not isinstance(value, six.string_types) else None
+                if not isinstance(value, six.string_types)
+                else None,
             )
             for value in self.attributes['input']
         ]
         if self.attributes['run_path']:
             for cmd in cmds:
                 cmd.update(
-                    environment=dict(SHOW_CWD='1'),
-                    cwd=self.attributes['run_path']
+                    environment=dict(SHOW_CWD='1'), cwd=self.attributes['run_path']
                 )
         return cmds
 
@@ -230,10 +211,7 @@ class FakeNetwork:
     def node_pairs(self, tag, node):
         nodes = self.nodes(tag)
         pos = nodes.index(node)
-        return [
-            (node, nodes[i])
-            for i in range(pos + 1, len(nodes))
-        ]
+        return [(node, nodes[i]) for i in range(pos + 1, len(nodes))]
 
 
 class FakeCluster(ClusterWrapper):

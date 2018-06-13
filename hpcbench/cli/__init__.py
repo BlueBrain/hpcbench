@@ -20,8 +20,7 @@ def setup_logger(verbose, logfile):
     elif verbose > 1:
         level = logging.DEBUG
     if logfile:
-        logging.basicConfig(filename=logfile, level=level,
-                            format=LOGGING_FORMAT)
+        logging.basicConfig(filename=logfile, level=level, format=LOGGING_FORMAT)
     else:
         logging.basicConfig(level=level, format=LOGGING_FORMAT)
 

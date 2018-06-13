@@ -10,11 +10,7 @@ import shlex
 from cached_property import cached_property
 import six
 
-from hpcbench.api import (
-    Benchmark,
-    Metric,
-    MetricsExtractor,
-)
+from hpcbench.api import Benchmark, Metric, MetricsExtractor
 from hpcbench.toolbox.functools_ext import listify
 from hpcbench.toolbox.process import find_executable
 
@@ -22,81 +18,39 @@ from hpcbench.toolbox.process import find_executable
 class Extractor(MetricsExtractor):
     """Parser for IOR outputs
     """
+
     RE_MULTIPLE_SPACES = re.compile('\\s+')
     OPERATIONS = set(['write', 'read'])
     METAS = {
-        '#Tasks': {
-            'name': 'tasks',
-            'metric': Metric(unit='', type=int)
-        },
-        'Max(MiB)': {
-            'name': 'max',
-            'metric': Metric(unit='Mib', type=float)
-        },
-        'Mean(MiB)': {
-            'name': 'mean',
-            'metric': Metric(unit='MiB', type=float)
-        },
-        'Mean(s)': {
-            'name': 'mean_time',
-            'metric': Metric(unit='s', type=float)
-        },
-        'Min(MiB)': {
-            'name': 'min',
-            'metric': Metric(unit='MiB', type=float)
-        },
-        'StdDev': {
-            'name': 'std_dev',
-            'metric': Metric(unit='', type=float)
-        },
-        'aggsize': {
-            'name': 'agg_size',
-            'metric': Metric(unit='?', type=int)
-        },
-        'blksiz': {
-            'name': 'block_size',
-            'metric': Metric(unit='B', type=int)
-        },
-        'fPP': {
-            'name': 'file_per_proc',
-            'metric': Metric(unit='', type=int)
-        },
-        'reord': {
-            'name': 'reorder_tasks',
-            'metric': Metric(unit='', type=bool)
-        },
+        '#Tasks': {'name': 'tasks', 'metric': Metric(unit='', type=int)},
+        'Max(MiB)': {'name': 'max', 'metric': Metric(unit='Mib', type=float)},
+        'Mean(MiB)': {'name': 'mean', 'metric': Metric(unit='MiB', type=float)},
+        'Mean(s)': {'name': 'mean_time', 'metric': Metric(unit='s', type=float)},
+        'Min(MiB)': {'name': 'min', 'metric': Metric(unit='MiB', type=float)},
+        'StdDev': {'name': 'std_dev', 'metric': Metric(unit='', type=float)},
+        'aggsize': {'name': 'agg_size', 'metric': Metric(unit='?', type=int)},
+        'blksiz': {'name': 'block_size', 'metric': Metric(unit='B', type=int)},
+        'fPP': {'name': 'file_per_proc', 'metric': Metric(unit='', type=int)},
+        'reord': {'name': 'reorder_tasks', 'metric': Metric(unit='', type=bool)},
         'reordoff': {
             'name': 'task_per_node_offset',
-            'metric': Metric(unit='', type=int)
+            'metric': Metric(unit='', type=int),
         },
         'reordrand': {
             'name': 'reorder_tasks_random',
-            'metric': Metric(unit='', type=bool)
+            'metric': Metric(unit='', type=bool),
         },
-        'reps': {
-            'name': 'repetitions',
-            'metric': Metric(unit='', type=int)
-        },
+        'reps': {'name': 'repetitions', 'metric': Metric(unit='', type=int)},
         'seed': {
             'name': 'reorder_tasks_random_seed',
-            'metric': Metric(unit='', type=int)
+            'metric': Metric(unit='', type=int),
         },
-        'segcnt': {
-            'name': 'segments',
-            'metric': Metric(unit='', type=int)
-        },
-        'tPN': {
-            'name': 'tasks_per_node',
-            'metric': Metric(unit='', type=int)
-        },
-        'xsize': {
-            'name': 'transfer_size',
-            'metric': Metric(unit='B', type=int)}
+        'segcnt': {'name': 'segments', 'metric': Metric(unit='', type=int)},
+        'tPN': {'name': 'tasks_per_node', 'metric': Metric(unit='', type=int)},
+        'xsize': {'name': 'transfer_size', 'metric': Metric(unit='B', type=int)},
     }
 
-    METAS_IGNORED = set([
-        'API', 'Operation', 'RefNum', 'Test#',
-    ])
+    METAS_IGNORED = set(['API', 'Operation', 'RefNum', 'Test#'])
 
     SUMMARY_HEADER = 'Summary of all tests:'
     RESULTS_HEADER_START = 'Operation'
@@ -106,8 +60,7 @@ class Extractor(MetricsExtractor):
         metrics = {}
         for operation in Extractor.OPERATIONS:
             for meta, desc in Extractor.METAS.items():
-                name = Extractor.get_meta_name(operation,
-                                               desc.get('name') or meta)
+                name = Extractor.get_meta_name(operation, desc.get('name') or meta)
                 metrics[name] = desc['metric']
         return metrics
 
@@ -180,6 +133,7 @@ class Extractor(MetricsExtractor):
 
 class IOR(Benchmark):
     """Driver for IOR benchmark"""
+
     name = "ior"
 
     description = "Parallel filesystem I/O benchmark"
@@ -248,13 +202,14 @@ class IOR(Benchmark):
             category=api,
             command=[
                 find_executable(self.executable, required=False),
-                '-a', api,
-                '-b', str(self.block_size),
-            ] + opath + self.options,
-            metas=dict(
-                api=api,
-                block_size=self.block_size
-            ),
+                '-a',
+                api,
+                '-b',
+                str(self.block_size),
+            ]
+            + opath
+            + self.options,
+            metas=dict(api=api, block_size=self.block_size),
             srun_nodes=self.srun_nodes,
         )
         yield cmd

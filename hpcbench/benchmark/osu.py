@@ -7,11 +7,7 @@ import re
 
 from cached_property import cached_property
 
-from hpcbench.api import (
-    Benchmark,
-    Metric,
-    Metrics,
-    MetricsExtractor)
+from hpcbench.api import Benchmark, Metric, Metrics, MetricsExtractor
 from hpcbench.toolbox.process import find_executable
 
 
@@ -67,19 +63,16 @@ class OSUExtractor(MetricsExtractor):
 class OSUBWExtractor(OSUExtractor):
     """Metrics extractor for osu_bw benchmark"""
 
-    BW_BANDWIDTH_RE = re.compile(
-        r'^(\d+)[\s]+(\d*\.?\d+)'
-    )
+    BW_BANDWIDTH_RE = re.compile(r'^(\d+)[\s]+(\d*\.?\d+)')
 
     def __init__(self):
-        self._metrics = dict(max_bw_bytes=Metrics.Byte,
-                             max_bw=Metrics.MegaBytesPerSecond,
-                             maxb_bw_bytes=Metrics.Byte,
-                             maxb_bw=Metrics.MegaBytesPerSecond,
-                             raw=[dict(
-                                 bytes=Metrics.Byte,
-                                 bandwidth=Metrics.MegaBytesPerSecond,
-                             )])
+        self._metrics = dict(
+            max_bw_bytes=Metrics.Byte,
+            max_bw=Metrics.MegaBytesPerSecond,
+            maxb_bw_bytes=Metrics.Byte,
+            maxb_bw=Metrics.MegaBytesPerSecond,
+            raw=[dict(bytes=Metrics.Byte, bandwidth=Metrics.MegaBytesPerSecond)],
+        )
         super(OSUBWExtractor, self).__init__()
 
     @cached_property
@@ -93,30 +86,29 @@ class OSUBWExtractor(OSUExtractor):
     def process_line(self, line):
         search = self.BW_BANDWIDTH_RE.search(line)
         if search:
-            self.s_raw_data.append((int(search.group(1)),
-                                    float(search.group(2))))
+            self.s_raw_data.append((int(search.group(1)), float(search.group(2))))
 
     def epilog(self):
         maxb_bw_b, maxb_bw = self.s_raw_data[-1]
         max_bw_b, max_bw = max(self.s_raw_data, key=itemgetter(1))
-        return dict(maxb_bw=maxb_bw, maxb_bw_bytes=maxb_bw_b,
-                    max_bw=max_bw, max_bw_bytes=max_bw_b,
-                    raw=[{'bytes': b, 'bandwidth': bw}
-                         for b, bw in self.s_raw_data])
+        return dict(
+            maxb_bw=maxb_bw,
+            maxb_bw_bytes=maxb_bw_b,
+            max_bw=max_bw,
+            max_bw_bytes=max_bw_b,
+            raw=[{'bytes': b, 'bandwidth': bw} for b, bw in self.s_raw_data],
+        )
 
 
 class OSUMBWExtractor(OSUBWExtractor):
     """Metrics extractor for osu_mbw_mr benchmark"""
 
-    BW_BANDWIDTH_MSGRATE_RE = re.compile(
-        r'^(\d+)[\s]+(\d*\.?\d+)[\s]+(\d*\.?\d+)'
-    )
+    BW_BANDWIDTH_MSGRATE_RE = re.compile(r'^(\d+)[\s]+(\d*\.?\d+)[\s]+(\d*\.?\d+)')
 
     def __init__(self):
         super(OSUMBWExtractor, self).__init__()
         msg_rate_metric = Metric('Msg/s', float)
-        msg_metrics = dict(max_mr=msg_rate_metric,
-                           maxb_mr=msg_rate_metric)
+        msg_metrics = dict(max_mr=msg_rate_metric, maxb_mr=msg_rate_metric)
         self._metrics.update(msg_metrics)
         self._metrics['raw'][0]['msg_rate'] = msg_rate_metric
 
@@ -127,40 +119,44 @@ class OSUMBWExtractor(OSUBWExtractor):
     def process_line(self, line):
         search = self.BW_BANDWIDTH_MSGRATE_RE.search(line)
         if search:
-            self.s_raw_data.append((int(search.group(1)),
-                                    float(search.group(2)),
-                                    float(search.group(3))))
+            self.s_raw_data.append(
+                (int(search.group(1)), float(search.group(2)), float(search.group(3)))
+            )
 
     def epilog(self):
         maxb_bw_b, maxb_bw, maxb_mr = self.s_raw_data[-1]
         max_bw_b, max_bw, max_mr = max(self.s_raw_data, key=itemgetter(1))
-        return dict(maxb_bw=maxb_bw, maxb_mr=maxb_mr,
-                    maxb_bw_bytes=maxb_bw_b,
-                    max_bw=max_bw, max_mr=max_mr, max_bw_bytes=max_bw_b,
-                    raw=[{'bytes': b, 'bandwidth': bw, 'msg_rate': mr}
-                         for b, bw, mr in self.s_raw_data])
+        return dict(
+            maxb_bw=maxb_bw,
+            maxb_mr=maxb_mr,
+            maxb_bw_bytes=maxb_bw_b,
+            max_bw=max_bw,
+            max_mr=max_mr,
+            max_bw_bytes=max_bw_b,
+            raw=[
+                {'bytes': b, 'bandwidth': bw, 'msg_rate': mr}
+                for b, bw, mr in self.s_raw_data
+            ],
+        )
 
 
 class OSULatExtractor(OSUExtractor):
     """Metrics extractor for osu_bw benchmark"""
 
-    BW_LATENCY_RE = re.compile(
-        r'^(\d+)[\s]+(\d*\.?\d+)'
-    )
+    BW_LATENCY_RE = re.compile(r'^(\d+)[\s]+(\d*\.?\d+)')
 
     def __init__(self):
         super(OSULatExtractor, self).__init__()
 
     @cached_property
     def metrics(self):
-        return dict(min_lat_bytes=Metrics.Byte,
-                    min_lat=Metrics.Microsecond,
-                    minb_lat_bytes=Metrics.Byte,
-                    minb_lat=Metrics.Microsecond,
-                    raw=[dict(
-                        bytes=Metrics.Byte,
-                        latency=Metrics.Microsecond
-                    )])
+        return dict(
+            min_lat_bytes=Metrics.Byte,
+            min_lat=Metrics.Microsecond,
+            minb_lat_bytes=Metrics.Byte,
+            minb_lat=Metrics.Microsecond,
+            raw=[dict(bytes=Metrics.Byte, latency=Metrics.Microsecond)],
+        )
 
     @cached_property
     def stdout_ignore_prior(self):
@@ -176,32 +172,32 @@ class OSULatExtractor(OSUExtractor):
     def epilog(self):
         minb_lat_b, minb_lat = self.s_raw_data[0]
         min_lat_b, min_lat = min(self.s_raw_data, key=itemgetter(1))
-        return dict(minb_lat=minb_lat, minb_lat_bytes=minb_lat_b,
-                    min_lat=min_lat, min_lat_bytes=min_lat_b,
-                    raw=[{'bytes': b, 'latency': l}
-                         for b, l in self.s_raw_data])
+        return dict(
+            minb_lat=minb_lat,
+            minb_lat_bytes=minb_lat_b,
+            min_lat=min_lat,
+            min_lat_bytes=min_lat_b,
+            raw=[{'bytes': b, 'latency': l} for b, l in self.s_raw_data],
+        )
 
 
 class OSUCollectiveLatExtractor(OSUExtractor):
     """Metrics extractor for osu_bw benchmark"""
 
-    BW_LATENCY_RE = re.compile(
-        r'^(\d+)[\s]+(\d*\.?\d+)'
-    )
+    BW_LATENCY_RE = re.compile(r'^(\d+)[\s]+(\d*\.?\d+)')
 
     def __init__(self):
         super(OSUCollectiveLatExtractor, self).__init__()
 
     @cached_property
     def metrics(self):
-        return dict(min_lat_bytes=Metrics.Byte,
-                    min_lat=Metrics.Microsecond,
-                    minb_lat_bytes=Metrics.Byte,
-                    minb_lat=Metrics.Microsecond,
-                    raw=[dict(
-                        bytes=Metrics.Byte,
-                        latency=Metrics.Microsecond,
-                    )])
+        return dict(
+            min_lat_bytes=Metrics.Byte,
+            min_lat=Metrics.Microsecond,
+            minb_lat_bytes=Metrics.Byte,
+            minb_lat=Metrics.Microsecond,
+            raw=[dict(bytes=Metrics.Byte, latency=Metrics.Microsecond)],
+        )
 
     @cached_property
     def stdout_ignore_prior(self):
@@ -217,10 +213,13 @@ class OSUCollectiveLatExtractor(OSUExtractor):
     def epilog(self):
         minb_lat_b, minb_lat = self.s_raw_data[0]
         min_lat_b, min_lat = min(self.s_raw_data, key=itemgetter(1))
-        return dict(minb_lat=minb_lat, minb_lat_bytes=minb_lat_b,
-                    min_lat=min_lat, min_lat_bytes=min_lat_b,
-                    raw=[{'bytes': b, 'latency': l}
-                         for b, l in self.s_raw_data])
+        return dict(
+            minb_lat=minb_lat,
+            minb_lat_bytes=minb_lat_b,
+            min_lat=min_lat,
+            min_lat_bytes=min_lat_b,
+            raw=[{'bytes': b, 'latency': l} for b, l in self.s_raw_data],
+        )
 
 
 class OSU(Benchmark):
@@ -228,6 +227,7 @@ class OSU(Benchmark):
 
     the `srun_nodes` does not apply to the PingPong benchmark.
     """
+
     OSU_BW = 'osu_bw'
     OSU_LAT = 'osu_latency'
     OSU_MBW_MR = 'osu_mbw_mr'
@@ -239,12 +239,7 @@ class OSU(Benchmark):
     OSU_ALLREDUCE = 'osu_allreduce'
     NODE_PAIRING = {'node', 'tag'}
     DEFAULT_NODE_PAIRING = 'node'
-    DEFAULT_CATEGORIES = [
-        OSU_BW,
-        OSU_LAT,
-        OSU_ALLGATHERV,
-        OSU_ALLTOALLV,
-    ]
+    DEFAULT_CATEGORIES = [OSU_BW, OSU_LAT, OSU_ALLGATHERV, OSU_ALLTOALLV]
     DEFAULT_ARGUMENTS = {
         OSU_BW: ["-x", "200", "-i", "100"],
         OSU_MBW_MR: [],
@@ -266,6 +261,7 @@ class OSU(Benchmark):
                 node_pairing=OSU.DEFAULT_NODE_PAIRING,
             )
         )
+
     name = 'osu'
 
     description = "Provides MPI-based interconnect benchmarking."
@@ -319,28 +315,26 @@ class OSU(Benchmark):
             arguments = self.arguments.get(category) or []
             if category in {OSU.OSU_BW, OSU.OSU_LAT}:
                 if context.implicit_nodes:
-                    context.logger.warn('Category %s does not support '
-                                        'SLURM implicit nodes', category)
+                    context.logger.warn(
+                        'Category %s does not support ' 'SLURM implicit nodes', category
+                    )
                 else:
-                    executable = find_executable(self.executable(category),
-                                                 required=False)
+                    executable = find_executable(
+                        self.executable(category), required=False
+                    )
                     for pair in self.node_pairs(context):
                         yield dict(
                             category=category,
                             command=[executable] + arguments,
                             srun_nodes=pair,
-                            metas=dict(
-                                from_node=pair[0],
-                                to_node=pair[1],
-                            )
+                            metas=dict(from_node=pair[0], to_node=pair[1]),
                         )
             else:
                 yield dict(
                     category=category,
-                    command=[find_executable(self.executable(category),
-                                             required=False)]
+                    command=[find_executable(self.executable(category), required=False)]
                     + arguments,
-                    srun_nodes=self.srun_nodes
+                    srun_nodes=self.srun_nodes,
                 )
 
     @cached_property
