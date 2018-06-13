@@ -5,10 +5,7 @@ import shutil
 import tempfile
 import unittest
 
-from hpcbench.cli import (
-    bencsv,
-    bensh,
-)
+from hpcbench.cli import bencsv, bensh
 from hpcbench.export.csvexport import CSVExporter
 from hpcbench.toolbox.contextlib_ext import pushd
 from . import FakeBenchmark
@@ -32,8 +29,7 @@ class TestCSV(unittest.TestCase):
             csv_exporter.export()
             with open(self.OUTFILE, 'r') as f:
                 table = [row for row in csv.DictReader(f)]
-                metric_perf = {float(p[self.PERFORMANCE_METRIC])
-                               for p in table}
+                metric_perf = {float(p[self.PERFORMANCE_METRIC]) for p in table}
                 self.assertEqual(metric_perf, set(FakeBenchmark.INPUTS))
 
     def test_csv_cli(self):
@@ -42,8 +38,7 @@ class TestCSV(unittest.TestCase):
             bencsv.main(['--output', self.OUTFILE, bench.campaign_path])
             with open(self.OUTFILE, 'r') as f:
                 table = [row for row in csv.DictReader(f)]
-                metric_perf = {float(p[self.PERFORMANCE_METRIC])
-                               for p in table}
+                metric_perf = {float(p[self.PERFORMANCE_METRIC]) for p in table}
                 self.assertEqual(metric_perf, set(FakeBenchmark.INPUTS))
 
     @classmethod

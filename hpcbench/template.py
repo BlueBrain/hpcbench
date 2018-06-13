@@ -6,11 +6,7 @@ from cookiecutter.main import cookiecutter
 
 
 def plugins_dir():
-    return osp.join(
-        osp.dirname(__file__),
-        'templates',
-        'plugins'
-    )
+    return osp.join(osp.dirname(__file__), 'templates', 'plugins')
 
 
 def plugin_path(name):

@@ -39,6 +39,7 @@ def main(argv=None):
             kwargs.update(output_dir=arguments['--output-dir'])
         if arguments['--interactive']:
             kwargs.update(no_input=False)
-        logging.info('generating template in directory ' +
-                     kwargs.get('output_dir', os.getcwd()))
+        logging.info(
+            'generating template in directory ' + kwargs.get('output_dir', os.getcwd())
+        )
         template.generate_template(plugin, **kwargs)

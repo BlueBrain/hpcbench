@@ -7,11 +7,7 @@ import shlex
 from cached_property import cached_property
 import six
 
-from hpcbench.api import (
-    Benchmark,
-    Metrics,
-    MetricsExtractor,
-)
+from hpcbench.api import Benchmark, Metrics, MetricsExtractor
 from hpcbench.toolbox.process import find_executable
 
 
@@ -74,6 +70,7 @@ class SHOCExtractor(MetricsExtractor):
 class SHOC(Benchmark):
     """Benchmark wrapper for the SHOCbench utility
     """
+
     DEFAULT_DEVICE = 0
     DEFAULT_EXECUTABLE = 'shocdriver'
     DEFAULT_SIZE = 1
@@ -89,6 +86,7 @@ class SHOC(Benchmark):
                 options=[],
             )
         )
+
     name = 'shoc'
 
     description = "Multiple benchmark of the GPU."
@@ -101,17 +99,17 @@ class SHOC(Benchmark):
 
     def execution_matrix(self, context):
         del context  # unused
-        yield dict(
-            category=SHOC.CATEGORY,
-            command=self.command,
-        )
+        yield dict(category=SHOC.CATEGORY, command=self.command)
 
     @property
     def command(self):
         return [
-            find_executable(self.executable, required=False), '-cuda',
-            '-d', self.device,
-            '-s', self.size,
+            find_executable(self.executable, required=False),
+            '-cuda',
+            '-d',
+            self.device,
+            '-s',
+            self.size,
         ] + self.options
 
     @property

@@ -4,7 +4,7 @@ import unittest
 import mock
 
 from hpcbench.benchmark.nvidia import NvidiaP2pBandwidthLatencyTest
-from . benchmark import AbstractBenchmarkTest
+from .benchmark import AbstractBenchmarkTest
 
 
 class TestNvidiaP2pBandwidthLatency(AbstractBenchmarkTest, unittest.TestCase):
@@ -24,7 +24,7 @@ class TestNvidiaP2pBandwidthLatency(AbstractBenchmarkTest, unittest.TestCase):
         bidirectional_bandwidth=10.32 * 1024,
         p2p_bidirectional_bandwidth=10.40 * 1024,
         latency=22.48,
-        p2p_latency=22.55
+        p2p_latency=22.55,
     )
 
     def get_benchmark_clazz(self):
@@ -36,9 +36,7 @@ class TestNvidiaP2pBandwidthLatency(AbstractBenchmarkTest, unittest.TestCase):
 
     @property
     def attributes(self):
-        return dict(
-            executable='/fake-stream',
-        )
+        return dict(executable='/fake-stream')
 
     def get_benchmark_categories(self):
         return [NvidiaP2pBandwidthLatencyTest.CATEGORY]
@@ -46,44 +44,39 @@ class TestNvidiaP2pBandwidthLatency(AbstractBenchmarkTest, unittest.TestCase):
     @mock.patch('subprocess.check_output')
     def test_custom_attributes(self, mock_co):
         self.assertExecutionMatrix(
-            dict(
-                executable='/deviceQuery',
-            ),
+            dict(executable='/deviceQuery'),
             [
                 dict(
                     category='gpu',
                     command=['/deviceQuery'],
                     environment=dict(CUDA_VISIBLE_DEVICES="42,46"),
-                    metas=dict(device1=42, device2=46)
+                    metas=dict(device1=42, device2=46),
                 )
-            ]
+            ],
         )
         os.environ.pop('CUDA_VISIBLE_DEVICES')
         with open('tests/benchmark/nvidia-deviceQuery.stdout') as istr:
             mock_co.return_value = istr.read()
         self.assertExecutionMatrix(
-            dict(
-                executable='/deviceQuery',
-                devicequery_executable='/fake'
-            ),
+            dict(executable='/deviceQuery', devicequery_executable='/fake'),
             [
                 dict(
                     category='gpu',
                     command=['/deviceQuery'],
                     environment=dict(CUDA_VISIBLE_DEVICES="6,8"),
-                    metas=dict(device1=6, device2=8)
+                    metas=dict(device1=6, device2=8),
                 ),
                 dict(
                     category='gpu',
                     command=['/deviceQuery'],
                     environment=dict(CUDA_VISIBLE_DEVICES="6,10"),
-                    metas=dict(device1=6, device2=10)
+                    metas=dict(device1=6, device2=10),
                 ),
                 dict(
                     category='gpu',
                     command=['/deviceQuery'],
                     environment=dict(CUDA_VISIBLE_DEVICES="8,10"),
-                    metas=dict(device1=8, device2=10)
+                    metas=dict(device1=8, device2=10),
                 ),
-            ]
+            ],
         )

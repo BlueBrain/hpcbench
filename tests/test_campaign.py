@@ -8,10 +8,7 @@ import unittest
 
 import yaml
 
-from hpcbench.campaign import (
-    default_campaign,
-    pip_installer_url,
-)
+from hpcbench.campaign import default_campaign, pip_installer_url
 from hpcbench.cli import bensh
 from hpcbench.driver import (
     BenchmarkCategoryDriver,
@@ -21,7 +18,8 @@ from hpcbench.driver import (
     ConstraintTag,
     ExecutionDriver,
     FixedAttempts,
-    HostDriver)
+    HostDriver,
+)
 from hpcbench.toolbox.contextlib_ext import modified_environ
 
 
@@ -33,19 +31,19 @@ class TestVersion(unittest.TestCase):
         self.assertEqual(pip_installer_url('1.2.3'), 'hpcbench==1.2.3')
         self.assertEqual(
             pip_installer_url('0.1.dev'),
-            'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench'
+            'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench',
         )
         self.assertEqual(
             pip_installer_url('0.1.dev64+gff343d5.d20170803'),
-            'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench'
+            'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench',
         )
         self.assertEqual(
             pip_installer_url('0.1.dev64+gff343d5'),
-            'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench'
+            'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench',
         )
         self.assertEqual(
             pip_installer_url('0.1.dev'),
-            'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench'
+            'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench',
         )
 
 
@@ -54,15 +52,9 @@ class TestCampaign(unittest.TestCase):
     def new_config(self):
         config = default_campaign(frozen=False)
         config['network']['tags'] = dict(
-            by_node=dict(
-                nodes=['node1', 'node2']
-            ),
-            by_regex=dict(
-                match='.*'
-            ),
-            by_nodeset=dict(
-                nodes='node[1-2]'
-            ),
+            by_node=dict(nodes=['node1', 'node2']),
+            by_regex=dict(match='.*'),
+            by_nodeset=dict(nodes='node[1-2]'),
         )
         return config
 
@@ -70,18 +62,13 @@ class TestCampaign(unittest.TestCase):
         RE_TYPE = type(re.compile('foo'))
         config = default_campaign(self.new_config)
         self.assertIsInstance(
-            config['network']['tags']['by_regex'][0]['match'],
-            RE_TYPE
+            config['network']['tags']['by_regex'][0]['match'], RE_TYPE
         )
 
     def test_nodeset(self):
         config = default_campaign(self.new_config)
         self.assertEqual(
-            config['network']['tags']['by_nodeset'][0]['nodes'],
-            [
-                'node1',
-                'node2',
-            ]
+            config['network']['tags']['by_nodeset'][0]['nodes'], ['node1', 'node2']
         )
 
     def test_constraint_tag(self):
@@ -101,17 +88,16 @@ class TestCampaign(unittest.TestCase):
             self.assertEqual(['foo0', 'foo1'], driver.network.nodes('foo'))
 
     def test_constraint_tag_is_a_string(self):
-        for invalid_constraint in [
-            ["skylake"],
-            dict(sky='lake')
-        ]:
+        for invalid_constraint in [["skylake"], dict(sky='lake')]:
             config = default_campaign(frozen=False)
             config.network.tags['foo'] = dict(constraint=invalid_constraint)
             with self.assertRaises(Exception) as exc:
                 config = default_campaign(config)
-            self.assertTrue(str(exc.exception).startswith(
-                "Constraint tag 'foo' may be a string, not: "
-            ))
+            self.assertTrue(
+                str(exc.exception).startswith(
+                    "Constraint tag 'foo' may be a string, not: "
+                )
+            )
 
     def test_cannot_mix_constraint_and_node_tags(self):
         config = self.new_config
@@ -119,53 +105,41 @@ class TestCampaign(unittest.TestCase):
         config.network.tags['D'] = dict(tags=['by_node', 'Cons'])
         with self.assertRaises(Exception) as exc:
             config = default_campaign(config)
-        self.assertEqual(
-            str(exc.exception),
-            "Tag 'D': cannot combine constraint tags"
-        )
+        self.assertEqual(str(exc.exception), "Tag 'D': cannot combine constraint tags")
 
     def test_tags_tag_as_string(self):
         config = self.new_config
         config.network.tags['A'] = dict(tags='by_node')
         filled_config = default_campaign(config)
-        self.assertEqual(
-            filled_config.network.tags.A,
-            [dict(nodes=['node1', 'node2'])]
-        )
+        self.assertEqual(filled_config.network.tags.A, [dict(nodes=['node1', 'node2'])])
 
     def test_tag_multiple_decl(self):
         config = self.new_config
-        config.network.tags['A'] = dict(
-            tags='by_node',
-            nodes=['node1']
-        )
+        config.network.tags['A'] = dict(tags='by_node', nodes=['node1'])
         with self.assertRaises(Exception) as exc:
             default_campaign(config)
-        self.assertTrue(str(exc.exception).startswith(
-            "Tag 'A' is based on more than one criterion: "
-        ))
+        self.assertTrue(
+            str(exc.exception).startswith(
+                "Tag 'A' is based on more than one criterion: "
+            )
+        )
 
     def test_cyclic_tags(self):
         config = self.new_config
-        config['network']['tags']['A'] = dict(
-            tags=['B'])
-        config['network']['tags']['B'] = dict(
-            tags=['A'])
+        config['network']['tags']['A'] = dict(tags=['B'])
+        config['network']['tags']['B'] = dict(tags=['A'])
         with self.assertRaises(Exception):
             default_campaign(config)
 
     def test_recursive_tag_missing(self):
         config = self.new_config
-        config['network']['tags']['atag'] = dict(
-            tags=['dontexist'])
+        config['network']['tags']['atag'] = dict(tags=['dontexist'])
         with self.assertRaises(Exception):
             default_campaign(config)
 
     def test_tags_invalid_mode(self):
         config = self.new_config
-        config['network']['tags']['invalid'] = dict(
-            unknown=''
-        )
+        config['network']['tags']['invalid'] = dict(unknown='')
         with self.assertRaises(Exception):
             default_campaign(config)
 
@@ -192,39 +166,29 @@ class TestBenchmark(unittest.TestCase):
                 BenchmarkCategoryDriver(
                     BenchmarkDriver(
                         BenchmarkTagDriver(
-                            HostDriver(
-                                CampaignDriver(default_campaign()),
-                                'n1'
-                            )
+                            HostDriver(CampaignDriver(default_campaign()), 'n1')
                         ),
                         namedtuple('benchmark', ['name'])(name='benchmark'),
                         dict(exec_prefix=exec_prefix),
                     ),
-                    'category'
+                    'category',
                 ),
-                dict(command=['ls', '-la'])
+                dict(command=['ls', '-la']),
             )
         )
 
     def test_exec_prefix_as_list(self):
         ed = self._top(['numactl', '--all'])
-        self.assertEqual(
-            ['numactl', '--all', 'ls', '-la'],
-            ed.command
-        )
+        self.assertEqual(['numactl', '--all', 'ls', '-la'], ed.command)
 
     def test_exec_prefix_as_string(self):
         ed = self._top('numactl --all')
-        self.assertEqual(
-            ['numactl', '--all', 'ls', '-la'],
-            ed.command
-        )
+        self.assertEqual(['numactl', '--all', 'ls', '-la'], ed.command)
 
 
 class TestGenerator(unittest.TestCase):
     def setUp(self):
-        fd, self.output_file = tempfile.mkstemp(prefix='hpcbench-ut',
-                                                suffix='.yaml')
+        fd, self.output_file = tempfile.mkstemp(prefix='hpcbench-ut', suffix='.yaml')
         os.close(fd)
         os.remove(self.output_file)
 

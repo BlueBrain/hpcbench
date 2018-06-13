@@ -8,18 +8,9 @@ from . import DriverTestCase
 
 class MultipleAttempts(DriverTestCase, unittest.TestCase):
     def test(self):
-        self.assertEqual(
-            self._nb_runs('test01'),
-            2
-        )
-        self.assertEqual(
-            self._nb_runs('test02'),
-            2
-        )
-        self.assertEqual(
-            self._nb_runs('test03'),
-            2
-        )
+        self.assertEqual(self._nb_runs('test01'), 2)
+        self.assertEqual(self._nb_runs('test02'), 2)
+        self.assertEqual(self._nb_runs('test03'), 2)
 
     def _nb_runs(self, test_name):
         cat_dir = osp.join(

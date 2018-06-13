@@ -25,10 +25,5 @@ class TestPrecondition(DriverTestCase, unittest.TestCase):
     @classmethod
     def metrics_file(cls, benchmark):
         return osp.join(
-            cls.CAMPAIGN_PATH,
-            cls.driver.node,
-            '*',
-            benchmark,
-            'main',
-            'metrics.json'
+            cls.CAMPAIGN_PATH, cls.driver.node, '*', benchmark, 'main', 'metrics.json'
         )

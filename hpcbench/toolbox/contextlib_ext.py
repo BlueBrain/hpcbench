@@ -60,6 +60,7 @@ def pushd(path, mkdir=True, cleanup=False):
 class Timer(object):  # pylint: disable=too-few-public-methods
     """Object usable in with-context to time it.
     """
+
     def __init__(self):
         self.start = None
         self.end = None

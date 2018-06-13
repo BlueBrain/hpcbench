@@ -5,32 +5,31 @@ import re
 
 from cached_property import cached_property
 
-from hpcbench.api import (
-    Benchmark,
-    Metrics,
-    MetricsExtractor,
-)
-from hpcbench.toolbox.process import (
-    find_executable,
-)
+from hpcbench.api import Benchmark, Metrics, MetricsExtractor
+from hpcbench.toolbox.process import find_executable
 
 
 class CUDAStreamExtractor(MetricsExtractor):
     """Ignore stdout until this line"""
-    STDOUT_IGNORE_PRIOR = set([
-        '-----------------------------------------------------------------',
-    ])
+
+    STDOUT_IGNORE_PRIOR = set(
+        ['-----------------------------------------------------------------']
+    )
     KEEP_NUMBERS = re.compile('[^0-9.]')
     SECTIONS = ['copy', 'scale', 'add', 'triad']
     REGEX = dict(
-        copy=re.compile('^Copy:[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
-                        '[ \t]*([\\d.]+)[ \t]*([\\d.]+)'),
-        scale=re.compile('^Scale:[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
-                         '[ \t]*([\\d.]+)[ \t]*([\\d.]+)'),
-        add=re.compile('^Add:[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
-                       '[ \t]*([\\d.]+)[ \t]*([\\d.]+)'),
-        triad=re.compile('^Triad:[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
-                         '[ \t]*([\\d.]+)[ \t]*([\\d.]+)')
+        copy=re.compile(
+            '^Copy:[ \t]*([\\d.]+)[ \t]*([\\d.]+)' '[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
+        ),
+        scale=re.compile(
+            '^Scale:[ \t]*([\\d.]+)[ \t]*([\\d.]+)' '[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
+        ),
+        add=re.compile(
+            '^Add:[ \t]*([\\d.]+)[ \t]*([\\d.]+)' '[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
+        ),
+        triad=re.compile(
+            '^Triad:[ \t]*([\\d.]+)[ \t]*([\\d.]+)' '[ \t]*([\\d.]+)[ \t]*([\\d.]+)'
+        ),
     )
 
     METRICS = dict(
@@ -88,6 +87,7 @@ class CUDAStreamExtractor(MetricsExtractor):
 class CUDAStream(Benchmark):
     """Benchmark wrapper for the cuda-stream utility
     """
+
     name = 'custream'
 
     description = "Provides memory bandwidth benchmarking for NVIDIA GPUs."
@@ -112,18 +112,18 @@ class CUDAStream(Benchmark):
     @property
     def blocksizes(self):
         """List of threads per block the command is executed with"""
-        return [
-            str(e)
-            for e in self.attributes['blocksizes']
-        ]
+        return [str(e) for e in self.attributes['blocksizes']]
 
     def execution_matrix(self, context):
         del context  # unused
         for nthreads in self.blocksizes:
             yield dict(
                 category=CUDAStream.name,
-                command=[find_executable(self.executable, required=False),
-                         '-b', nthreads],
+                command=[
+                    find_executable(self.executable, required=False),
+                    '-b',
+                    nthreads,
+                ],
                 metas=dict(blocksizes=nthreads),
             )
 

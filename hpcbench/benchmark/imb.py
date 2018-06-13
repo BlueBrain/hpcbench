@@ -7,11 +7,7 @@ import re
 
 from cached_property import cached_property
 
-from hpcbench.api import (
-    Benchmark,
-    Metrics,
-    MetricsExtractor,
-)
+from hpcbench.api import Benchmark, Metrics, MetricsExtractor
 from hpcbench.toolbox.process import find_executable
 
 
@@ -21,6 +17,7 @@ class IMBExtractor(MetricsExtractor):
 
     """Abstract class for IMB benchmark metrics extractor
     """
+
     @cached_property
     def metrics(self):
         common = dict(
@@ -31,14 +28,18 @@ class IMBExtractor(MetricsExtractor):
             maxb_bw=Metrics.MegaBytesPerSecond,
             maxb_bw_bytes=Metrics.Byte,
             max_bw=Metrics.MegaBytesPerSecond,
-            max_bw_bytes=Metrics.Byte
+            max_bw_bytes=Metrics.Byte,
         )
         if self.with_all_data:
-            common.update(raw=[dict(
-                bytes=Metrics.Byte,
-                bandwidth=Metrics.MegaBytesPerSecond,
-                latency=Metrics.Microsecond,
-            )])
+            common.update(
+                raw=[
+                    dict(
+                        bytes=Metrics.Byte,
+                        bandwidth=Metrics.MegaBytesPerSecond,
+                        latency=Metrics.Microsecond,
+                    )
+                ]
+            )
         return common
 
     @abstractproperty
@@ -78,9 +79,7 @@ class IMBExtractor(MetricsExtractor):
 class IMBPingPongExtractor(IMBExtractor):
     """Metrics extractor for PingPong IMB benchmark"""
 
-    LATENCY_BANDWIDTH_RE = re.compile(
-        r'^\s*(\d+)\s+\d+\s+(\d*\.?\d+)[\s]+(\d*\.?\d+)'
-    )
+    LATENCY_BANDWIDTH_RE = re.compile(r'^\s*(\d+)\s+\d+\s+(\d*\.?\d+)[\s]+(\d*\.?\d+)')
 
     def __init__(self):
         super(IMBPingPongExtractor, self).__init__()
@@ -111,11 +110,9 @@ class IMBPingPongExtractor(IMBExtractor):
 
     def epilog(self):
         minb_lat, minb_lat_b = self.s_latency[0], self.s_bytes[0]
-        min_lat, min_lat_b = min(zip(self.s_latency, self.s_bytes),
-                                 key=itemgetter(0))
+        min_lat, min_lat_b = min(zip(self.s_latency, self.s_bytes), key=itemgetter(0))
         maxb_bw, maxb_bw_b = self.s_bandwidth[-1], self.s_bytes[-1]
-        max_bw, max_bw_b = max(zip(self.s_bandwidth, self.s_bytes),
-                               key=itemgetter(0))
+        max_bw, max_bw_b = max(zip(self.s_bandwidth, self.s_bytes), key=itemgetter(0))
         raw = []
         for i in range(len(self.s_bytes)):
             raw.append(
@@ -125,19 +122,23 @@ class IMBPingPongExtractor(IMBExtractor):
                     bandwidth=self.s_bandwidth[i],
                 )
             )
-        return dict(minb_lat=minb_lat, minb_lat_bytes=minb_lat_b,
-                    min_lat=min_lat, min_lat_bytes=min_lat_b,
-                    maxb_bw=maxb_bw, maxb_bw_bytes=maxb_bw_b,
-                    max_bw=max_bw, max_bw_bytes=max_bw_b,
-                    raw=raw)
+        return dict(
+            minb_lat=minb_lat,
+            minb_lat_bytes=minb_lat_b,
+            min_lat=min_lat,
+            min_lat_bytes=min_lat_b,
+            maxb_bw=maxb_bw,
+            maxb_bw_bytes=maxb_bw_b,
+            max_bw=max_bw,
+            max_bw_bytes=max_bw_b,
+            raw=raw,
+        )
 
 
 class IMBAllToAllExtractor(IMBExtractor):
     """Metrics extractor for AllToAll IMB benchmark"""
 
-    TIME_RE = re.compile(
-        r'^\s*(\d+)\s+\d+\s+\d*\.?\d+[\s]+\d*\.?\d+[\s]+(\d*\.?\d+)'
-    )
+    TIME_RE = re.compile(r'^\s*(\d+)\s+\d+\s+\d*\.?\d+[\s]+\d*\.?\d+[\s]+(\d*\.?\d+)')
 
     def __init__(self):
         super(IMBAllToAllExtractor, self).__init__()
@@ -160,22 +161,26 @@ class IMBAllToAllExtractor(IMBExtractor):
             byte = int(search.group(1))
             if byte != 0:
                 usec = float(search.group(2))
-                bw = round((byte/1024.**2)/(usec/1.e6), 2)
+                bw = round((byte / 1024. ** 2) / (usec / 1.e6), 2)
                 self.s_bytes.append(byte)
                 self.s_latency.append(usec)
                 self.s_bandwidth.append(bw)
 
     def epilog(self):
         minb_lat, minb_lat_b = self.s_latency[0], self.s_bytes[0]
-        min_lat, min_lat_b = min(zip(self.s_latency, self.s_bytes),
-                                 key=itemgetter(0))
+        min_lat, min_lat_b = min(zip(self.s_latency, self.s_bytes), key=itemgetter(0))
         maxb_bw, maxb_bw_b = self.s_bandwidth[-1], self.s_bytes[-1]
-        max_bw, max_bw_b = max(zip(self.s_bandwidth, self.s_bytes),
-                               key=itemgetter(0))
-        return dict(minb_lat=minb_lat, minb_lat_bytes=minb_lat_b,
-                    min_lat=min_lat, min_lat_bytes=min_lat_b,
-                    maxb_bw=maxb_bw, maxb_bw_bytes=maxb_bw_b,
-                    max_bw=max_bw, max_bw_bytes=max_bw_b)
+        max_bw, max_bw_b = max(zip(self.s_bandwidth, self.s_bytes), key=itemgetter(0))
+        return dict(
+            minb_lat=minb_lat,
+            minb_lat_bytes=minb_lat_b,
+            min_lat=min_lat,
+            min_lat_bytes=min_lat_b,
+            maxb_bw=maxb_bw,
+            maxb_bw_bytes=maxb_bw_b,
+            max_bw=max_bw,
+            max_bw_bytes=max_bw_b,
+        )
 
 
 class IMBAllGatherExtractor(IMBAllToAllExtractor):
@@ -194,15 +199,12 @@ class IMB(Benchmark):
 
     the `srun_nodes` does not apply to the PingPong benchmark.
     """
+
     DEFAULT_EXECUTABLE = 'IMB-MPI1'
     PING_PONG = 'PingPong'
     ALL_TO_ALL = 'Alltoallv'
     ALL_GATHER = 'Allgather'
-    DEFAULT_CATEGORIES = [
-        PING_PONG,
-        ALL_TO_ALL,
-        ALL_GATHER,
-    ]
+    DEFAULT_CATEGORIES = [PING_PONG, ALL_TO_ALL, ALL_GATHER]
     DEFAULT_ARGUMENTS = {
         ALL_GATHER: ["-npmin", "{process_count}"],
         ALL_TO_ALL: ["-npmin", "{process_count}"],
@@ -220,6 +222,7 @@ class IMB(Benchmark):
                 node_pairing=IMB.DEFAULT_NODE_PAIRING,
             )
         )
+
     name = 'imb'
 
     description = "Provides latency/bandwidth of the network."
@@ -270,22 +273,20 @@ class IMB(Benchmark):
                 for pair in self._node_pairs(context):
                     yield dict(
                         category=category,
-                        command=[find_executable(self.executable,
-                                                 required=False),
-                                 category] + arguments,
+                        command=[
+                            find_executable(self.executable, required=False),
+                            category,
+                        ]
+                        + arguments,
                         srun_nodes=pair,
-                        metas=dict(
-                            from_node=pair[0],
-                            to_node=pair[1]
-                        )
+                        metas=dict(from_node=pair[0], to_node=pair[1]),
                     )
             else:
                 yield dict(
                     category=category,
-                    command=[find_executable(self.executable,
-                                             required=False),
-                             category] + arguments,
-                    srun_nodes=self.srun_nodes
+                    command=[find_executable(self.executable, required=False), category]
+                    + arguments,
+                    srun_nodes=self.srun_nodes,
                 )
 
     @cached_property

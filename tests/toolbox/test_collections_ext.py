@@ -40,21 +40,13 @@ class TestNamedDict(unittest.TestCase):
             self.assertIsNotNone(e.foo)
 
     def test_nested_dict(self):
-        data = {
-            'foo': {
-                'bar': {
-                    'pika': 'value'
-                }
-            },
-        }
+        data = {'foo': {'bar': {'pika': 'value'}}}
         e = nameddict(data)
         self.assertEqual(e.foo, {'bar': {'pika': 'value'}})
         self.assertEqual(e.foo.bar, {'pika': 'value'})
         self.assertEqual(e.foo.bar.pika, 'value')
 
-        e['pika'] = {
-            'key': 'value'
-        }
+        e['pika'] = {'key': 'value'}
         self.assertEqual(e.pika, {'key': 'value'})
         self.assertEqual(e.pika.key, 'value')
 
@@ -95,48 +87,21 @@ class TestFlattenDict(unittest.TestCase):
 
     def test_nested_dict(self):
         self.assertEqual(
-            flatten_dict({
-                'foo': 42,
-                'bar': {
-                    'foo': 43
-                }
-            }),
-            {
-                'foo': 42,
-                'bar.foo': 43
-            }
+            flatten_dict({'foo': 42, 'bar': {'foo': 43}}), {'foo': 42, 'bar.foo': 43}
         )
 
     @unittest.skip("not implemented")
     def test_conflict(self):
         self.assertEqual(
-            flatten_dict({
-                'bar.foo': 42,
-                'bar': {
-                    'foo': 43
-                }
-            }),
-            {
-                'bar.foo': 42,
-                'bar.foo.2': 43,
-            }
+            flatten_dict({'bar.foo': 42, 'bar': {'foo': 43}}),
+            {'bar.foo': 42, 'bar.foo.2': 43},
         )
 
     @unittest.skip("not implemented")
     def test_list(self):
         self.assertEqual(
-            flatten_dict({
-                'foo': [
-                    dict(bar=42),
-                    dict(pika='plop'),
-                    dict(bar=43),
-                ]
-            }),
-            {
-                'foo.0.bar': 42,
-                'foo.1.pika': 'plop',
-                'foo.2.bar': 43,
-            }
+            flatten_dict({'foo': [dict(bar=42), dict(pika='plop'), dict(bar=43)]}),
+            {'foo.0.bar': 42, 'foo.1.pika': 'plop', 'foo.2.bar': 43},
         )
 
 
@@ -169,46 +134,17 @@ class TestDictMapKV(unittest.TestCase):
         self.assertMapKVEquals([1, 2], str, ["1", "2"])
 
     def test_simple_dict(self):
-        self.assertMapKVEquals(
-            {'foo': 42, 1: 'bar'},
-            str,
-            {'foo': '42', '1': 'bar'}
-        )
+        self.assertMapKVEquals({'foo': 42, 1: 'bar'}, str, {'foo': '42', '1': 'bar'})
 
     def test_nested_dict(self):
         self.assertMapKVEquals(
-            {
-                42: {
-                    1: [
-                        43,
-                        {
-                            2: 44,
-                            3: [45, 46],
-                        }
-                    ]
-                },
-                43: 47,
-            },
+            {42: {1: [43, {2: 44, 3: [45, 46]}]}, 43: 47},
             str,
-            {
-                '42': {
-                    '1': [
-                        '43',
-                        {
-                            '2': '44',
-                            '3': ['45', '46'],
-                        }
-                    ]
-                },
-                '43': '47',
-            },
+            {'42': {'1': ['43', {'2': '44', '3': ['45', '46']}]}, '43': '47'},
         )
 
     def assertMapKVEquals(self, obj, func, result):
-        self.assertEqual(
-            dict_map_kv(obj, func),
-            result
-        )
+        self.assertEqual(dict_map_kv(obj, func), result)
 
 
 class TestFrozenDataStructures(unittest.TestCase):

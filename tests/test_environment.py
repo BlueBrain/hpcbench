@@ -34,9 +34,10 @@ def popen_module_load(command, **kwargs):
     env_var = EnvBenchmark.MODULE_TO_VAR_RE.sub('_', module)
     python_code = 'os.environ["{}"] = "loaded"'.format(env_var)
 
-    class _popen():
+    class _popen:
         def communicate(self):
             return python_code, None
+
     return _popen()
 
 
@@ -50,12 +51,7 @@ class EnvBenchmark(Benchmark):
     description = "only for testing purpose"
 
     def __init__(self):
-        super(EnvBenchmark, self).__init__(
-            attributes=dict(
-                environment={},
-                modules=[]
-            )
-        )
+        super(EnvBenchmark, self).__init__(attributes=dict(environment={}, modules=[]))
 
     @property
     def metric_required(self):
@@ -79,7 +75,7 @@ class EnvBenchmark(Benchmark):
             command=['true'],
             environment=self.environment,
             modules=self.modules,
-            metas=dict(foo='foo')
+            metas=dict(foo='foo'),
         )
 
     def pre_execute(self, execution, context):
@@ -101,16 +97,11 @@ class EnvBenchmark(Benchmark):
         """
         env_vars = []
         for module in execution.get('modules') or []:
-            env_vars.append(
-                self.MODULE_TO_VAR_RE.sub('_', module)
-            )
+            env_vars.append(self.MODULE_TO_VAR_RE.sub('_', module))
         for var in execution.get('environment') or {}:
             env_vars.append(var)
         with open(file, 'w') as ostr:
-            yaml.dump(
-                dict((name, os.environ.get(name)) for name in env_vars),
-                ostr
-            )
+            yaml.dump(dict((name, os.environ.get(name)) for name in env_vars), ostr)
 
 
 class TestEnvironment(DriverTestCase, unittest.TestCase):
@@ -191,8 +182,7 @@ class TestEnvironment(DriverTestCase, unittest.TestCase):
         `pre_execute` and `post_execute` member methods"""
         environment = self.expected_env[context.benchmark]
         for hook_file_prefix in ['pre', 'post']:
-            hook_file = osp.join(context.path,
-                                 hook_file_prefix + '_execute.yaml')
+            hook_file = osp.join(context.path, hook_file_prefix + '_execute.yaml')
             with open(hook_file) as istr:
                 hook_env = yaml.safe_load(istr)
             for var, value in environment['environment'].items():

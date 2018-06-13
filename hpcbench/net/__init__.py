@@ -32,6 +32,7 @@ RE_TYPE = type(re.compile('hello'))
 class CampaignHolder(object):
     """Abstract class to ease usage of ``campaign`` configuration
     """
+
     def __init__(self, campaign):
         self.campaign = campaign
 
@@ -81,6 +82,7 @@ class CampaignHolder(object):
 class BeNet(CampaignHolder):
     """Main driver
     """
+
     INSTALLER_SCRIPT = 'hpcbench-benet.sh'
     REMOTE_BENCH_RUNNER = osp.join(tempfile.gettempdir(), INSTALLER_SCRIPT)
 
@@ -111,6 +113,7 @@ class BeNet(CampaignHolder):
                 for node in nodes:
                     runner(node)
             return nodes
+
         with pushd(self.campaign_path):
             _run()
 
@@ -122,8 +125,7 @@ class BeNet(CampaignHolder):
         return self.campaign.network.nodes
 
     def _build_installer(self):
-        self.log.info('Generating installer script %s',
-                      BeNet.REMOTE_BENCH_RUNNER)
+        self.log.info('Generating installer script %s', BeNet.REMOTE_BENCH_RUNNER)
         template = jinja_environment.get_template(self.installer_template)
         prelude = ''
         if self.campaign.network.installer_prelude_file:
@@ -133,15 +135,16 @@ class BeNet(CampaignHolder):
             prelude=prelude,
             work_dir=self.remote_work_dir,
             hpcbench_pip_pkg=self.pip_installer_url,
-            output_dir=self.remote_output_dir
+            output_dir=self.remote_output_dir,
         )
         with open(BeNet.REMOTE_BENCH_RUNNER, 'w') as ostr:
             template.stream(**properties).dump(ostr)
 
     def _prelude(self, *nodes):
         if osp.isdir(self.campaign_path):
-            raise RuntimeError('Campaign output directory already exists: %s' %
-                               self.campaign_path)
+            raise RuntimeError(
+                'Campaign output directory already exists: %s' % self.campaign_path
+            )
         has_error = False
         for node in nodes:
             if not self._check_ssh_access(node):
@@ -173,6 +176,7 @@ def run_on_host(campaign, node, **kwargs):
 class BeNetHost(CampaignHolder):
     """Remote benchmark execution
     """
+
     def __init__(self, campaign, node, logger=None):
         """
         :param campaign: campaign configuration as a dictionary
@@ -215,9 +219,7 @@ class BeNetHost(CampaignHolder):
                     value = _nameddict_to_dict(value)
                 elif isinstance(value, (list)):
                     value = [
-                        _nameddict_to_dict(item)
-                        if isinstance(item, dict)
-                        else item
+                        _nameddict_to_dict(item) if isinstance(item, dict) else item
                         for item in value
                     ]
                 elif isinstance(value, RE_TYPE):
@@ -231,13 +233,11 @@ class BeNetHost(CampaignHolder):
 
     def _retrieve_tarball(self):
         fdesc, archive = tempfile.mkstemp(
-            prefix='hpcbench-campaign-result',
-            suffix='.tar.bz2'
+            prefix='hpcbench-campaign-result', suffix='.tar.bz2'
         )
         os.close(fdesc)
         remote_file = osp.join(
-            self.remote_work_dir,
-            self.remote_output_dir + '.tar.bz2'
+            self.remote_work_dir, self.remote_output_dir + '.tar.bz2'
         )
         cmd = self.scp('{}:{}'.format(self.node, remote_file), archive)
         subprocess.check_call(cmd)
@@ -254,23 +254,22 @@ class BeNetHost(CampaignHolder):
                     if osp.isdir(osp.join(self.remote_output_dir, _dir))
                 ]
                 if len(dirs) != 1:
-                    raise Exception('Expected one directory but got: %s' %
-                                    dirs)
+                    raise Exception('Expected one directory but got: %s' % dirs)
                 shutil.move(
                     osp.join(self.remote_output_dir, dirs[0]),
-                    osp.join(local_output_dir, self.node)
+                    osp.join(local_output_dir, self.node),
                 )
 
     @contextmanager
     def _scp_bensh_runner(self):
         self.log.info('installing remote installer')
-        command = self.scp(BeNet.REMOTE_BENCH_RUNNER,
-                           self.node + ':' + BeNet.REMOTE_BENCH_RUNNER)
+        command = self.scp(
+            BeNet.REMOTE_BENCH_RUNNER, self.node + ':' + BeNet.REMOTE_BENCH_RUNNER
+        )
         subprocess.check_call(command)
         try:
             yield
         finally:
             self.log.info('removing remote installer')
-            command = self.ssh(self.node, 'rm', '-f',
-                               BeNet.REMOTE_BENCH_RUNNER)
+            command = self.ssh(self.node, 'rm', '-f', BeNet.REMOTE_BENCH_RUNNER)
             subprocess.check_call(command)

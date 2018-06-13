@@ -4,7 +4,7 @@ import unittest
 import mock
 
 from hpcbench.benchmark.babelstream import BabelStream
-from . benchmark import AbstractBenchmarkTest
+from .benchmark import AbstractBenchmarkTest
 
 
 class TestBabelStream(AbstractBenchmarkTest, unittest.TestCase):
@@ -25,42 +25,30 @@ class TestBabelStream(AbstractBenchmarkTest, unittest.TestCase):
 
     @property
     def attributes(self):
-        return dict(
-            executable='/fake-stream',
-            devices=["0"],
-        )
+        return dict(executable='/fake-stream', devices=["0"])
 
     def get_benchmark_categories(self):
         return [BabelStream.CATEGORY]
 
     def test_custom_attributes(self):
         self.assertExecutionMatrix(
-            dict(
-                devices=42,
-                executable='/foo',
-                options=[
-                    '--csv',
-                ],
-            ),
+            dict(devices=42, executable='/foo', options=['--csv']),
             [
                 dict(
                     category='stream',
-                    command=[
-                        '/foo',
-                        '--device',
-                        '42',
-                        '--csv'
-                    ],
-                    metas=dict(device=42)
+                    command=['/foo', '--device', '42', '--csv'],
+                    metas=dict(device=42),
                 )
-            ]
+            ],
         )
 
-    DEVICES_MOCK_OUTPUT = textwrap.dedent("""\
+    DEVICES_MOCK_OUTPUT = textwrap.dedent(
+        """\
     Devices:
     01: Tesla K20m
     02: Tesla K20m
-    """)
+    """
+    )
 
     @mock.patch('subprocess.check_output')
     def test_list_devices(self, mock_co):
@@ -70,23 +58,13 @@ class TestBabelStream(AbstractBenchmarkTest, unittest.TestCase):
             [
                 dict(
                     category='stream',
-                    command=[
-                        '/bar',
-                        '--device',
-                        '01',
-                        '--csv'
-                    ],
+                    command=['/bar', '--device', '01', '--csv'],
                     metas=dict(device=1),
                 ),
                 dict(
                     category='stream',
-                    command=[
-                        '/bar',
-                        '--device',
-                        '02',
-                        '--csv'
-                    ],
+                    command=['/bar', '--device', '02', '--csv'],
                     metas=dict(device=2),
                 ),
-            ]
+            ],
         )

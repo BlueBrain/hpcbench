@@ -4,10 +4,7 @@ import unittest
 
 from hpcbench.cli import bennett
 from hpcbench.net import CampaignHolder
-from hpcbench.toolbox.contextlib_ext import (
-    mkdtemp,
-    pushd,
-)
+from hpcbench.toolbox.contextlib_ext import mkdtemp, pushd
 
 
 def custom_ssh(self, *args):
@@ -36,8 +33,9 @@ class TestNet(unittest.TestCase):
     def get_campaign_file():
         return osp.splitext(__file__)[0] + '.yaml'
 
-    @unittest.skipIf('TRAVIS_TAG' in os.environ,
-                     'version to deploy is not available on PyPi yet')
+    @unittest.skipIf(
+        'TRAVIS_TAG' in os.environ, 'version to deploy is not available on PyPi yet'
+    )
     def test_local(self):
         with mkdtemp() as temp_dir:
             with pushd(temp_dir):

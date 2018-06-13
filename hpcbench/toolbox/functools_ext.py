@@ -10,8 +10,10 @@ def compose(*functions):
     :return: callable object that will perform
     function composition of callables given in argument.
     """
+
     def _compose2(f, g):  # pylint: disable=invalid-name
         return lambda x: f(g(x))
+
     return functools.reduce(_compose2, functions, lambda x: x)
 
 
@@ -56,11 +58,14 @@ def listify(func=None, wrapper=list):
         >>> get_lengths_tuple(["foo", "bar"])
         (3, 3)
     """
+
     def _listify_return(func):
         @functools.wraps(func)
         def _listify_helper(*args, **kw):
             return wrapper(func(*args, **kw))
+
         return _listify_helper
+
     if func is None:
         return _listify_return
     return _listify_return(func)

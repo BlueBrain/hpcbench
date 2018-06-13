@@ -6,11 +6,7 @@ import os.path as osp
 
 from cached_property import cached_property
 
-from hpcbench.api import (
-    Benchmark,
-    Metrics,
-    MetricsExtractor,
-)
+from hpcbench.api import Benchmark, Metrics, MetricsExtractor
 
 
 class BasicExtractor(MetricsExtractor):
@@ -54,27 +50,22 @@ class Basic(Benchmark):
         - NETWORK_PATH: perform tests on network path (nfs, gpfs, ...)
         - OUTSIDE_URL: test URL (ping, download)
     """
+
     EXECUTABLE = osp.join(osp.dirname(osp.abspath(__file__)), 'basic.bash')
     CATEGORY = 'canary'
     PING_IPS_FILE = 'ping-ips.txt'
     PING_IPS = ['localhost']
 
     def __init__(self):
-        super(Basic, self).__init__(
-            attributes=dict(
-                ping_ips=Basic.PING_IPS
-            )
-        )
+        super(Basic, self).__init__(attributes=dict(ping_ips=Basic.PING_IPS))
+
     name = 'basic'
 
     description = "Basic linux functionalities of BB5."
 
     def execution_matrix(self, context):
         del context  # unused
-        yield dict(
-            category=Basic.CATEGORY,
-            command=[Basic.EXECUTABLE]
-        )
+        yield dict(category=Basic.CATEGORY, command=[Basic.EXECUTABLE])
 
     def pre_execute(self, execution, context):
         del execution  # unused

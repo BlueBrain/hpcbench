@@ -2,10 +2,7 @@ import os
 import os.path as osp
 import unittest
 
-from hpcbench.toolbox.contextlib_ext import (
-    mkdtemp,
-    pushd,
-)
+from hpcbench.toolbox.contextlib_ext import mkdtemp, pushd
 
 
 class TestTempfile(unittest.TestCase):

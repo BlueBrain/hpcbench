@@ -16,6 +16,7 @@ class nameddict(dict):  # pragma pylint: disable=invalid-name
     """ Provides dictionary whose keys are accessible via the property
     syntax: `obj.key`
     """
+
     def __init__(self, *args, **kwargs):
         dict.__init__(self, *args, **kwargs)
         self.__dict__ = self
@@ -50,6 +51,7 @@ class nameddict(dict):  # pragma pylint: disable=invalid-name
 class Configuration(nameddict):
     """nameddict reflecting a YAML file
     """
+
     @classmethod
     def from_file(cls, path):
         """Create a ``Configuration`` from a file
@@ -105,8 +107,9 @@ def flatten_dict(dic, parent_key='', sep='.'):
             items.extend(flatten_dict(value, new_key, sep=sep).items())
         elif isinstance(value, list):
             for idx, elt in enumerate(value):
-                items.extend(flatten_dict(elt, new_key + sep + str(idx),
-                                          sep=sep).items())
+                items.extend(
+                    flatten_dict(elt, new_key + sep + str(idx), sep=sep).items()
+                )
         else:
             items.append((new_key, value))
     return dict(items)
@@ -122,8 +125,11 @@ def dict_merge(dct, merge_dct):
     :return: None
     """
     for key in merge_dct.keys():
-        if (key in dct and isinstance(dct[key], dict)
-                and isinstance(merge_dct[key], collections.Mapping)):
+        if (
+            key in dct
+            and isinstance(dct[key], dict)
+            and isinstance(merge_dct[key], collections.Mapping)
+        ):
             dict_merge(dct[key], merge_dct[key])
         else:
             dct[key] = merge_dct[key]
@@ -131,10 +137,7 @@ def dict_merge(dct, merge_dct):
 
 def dict_map_kv(obj, func):
     if isinstance(obj, collections.Mapping):
-        return {
-            func(k): dict_map_kv(v, func)
-            for k, v in six.iteritems(obj)
-        }
+        return {func(k): dict_map_kv(v, func) for k, v in six.iteritems(obj)}
     elif isinstance(obj, list):
         return [dict_map_kv(e, func) for e in obj]
     else:
@@ -150,8 +153,7 @@ def byteify(data, ignore_dicts=False):
     elif isinstance(data, list):
         return [byteify(el) for el in data]
     elif not ignore_dicts and isinstance(data, dict):
-        return {byteify(k, ignore_dicts=True): byteify(v)
-                for k, v in data.items()}
+        return {byteify(k, ignore_dicts=True): byteify(v) for k, v in data.items()}
 
 
 class FrozenDict(collections.Mapping):
@@ -198,6 +200,7 @@ yaml.add_representer(FrozenDict, SafeRepresenter.represent_dict)
 
 class FrozenList(collections.Sequence):
     """Read only list"""
+
     def __init__(self, *args, **kwargs):
         self._l = list(*args, **kwargs)
 
@@ -230,10 +233,7 @@ def freeze(obj):
     in FrozenList.
     """
     if isinstance(obj, collections.Mapping):
-        return FrozenDict({
-            freeze(k): freeze(v)
-            for k, v in six.iteritems(obj)
-        })
+        return FrozenDict({freeze(k): freeze(v) for k, v in six.iteritems(obj)})
     elif isinstance(obj, list):
         return FrozenList([freeze(e) for e in obj])
     else:

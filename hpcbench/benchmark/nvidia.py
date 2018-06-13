@@ -4,11 +4,7 @@ import subprocess
 
 from cached_property import cached_property
 
-from hpcbench.api import (
-    Benchmark,
-    Metrics,
-    MetricsExtractor,
-)
+from hpcbench.api import Benchmark, Metrics, MetricsExtractor
 from hpcbench.toolbox.functools_ext import listify
 from hpcbench.toolbox.process import find_executable
 
@@ -45,16 +41,8 @@ class NvidiaP2pBandwidthLatencyTestExtractor(MetricsExtractor):
             Metrics.MegaBytesPerSecond,
             1024,
         ),
-        'P2P=Disabled Latency Matrix (us)': (
-            'latency',
-            Metrics.Microsecond,
-            1.0,
-        ),
-        'P2P=Enabled Latency Matrix (us)': (
-            'p2p_latency',
-            Metrics.Microsecond,
-            1.0,
-        ),
+        'P2P=Disabled Latency Matrix (us)': ('latency', Metrics.Microsecond, 1.0),
+        'P2P=Enabled Latency Matrix (us)': ('p2p_latency', Metrics.Microsecond, 1.0),
     }
 
     @cached_property
@@ -126,11 +114,9 @@ class NvidiaBandwidthTestExtractor(MetricsExtractor):
             value = value.split(' = ', 1)[1]  # 382.1 MB/s
             value = value.split(' ', 1)[0]  # 382.1
             return float(value)
+
         metric = cls.OPERATIONS[operation()]
-        metrics[metric] = max(
-            metrics.setdefault(metric, 0),
-            bandwidth()
-        )
+        metrics[metric] = max(metrics.setdefault(metric, 0), bandwidth())
 
 
 class NvidiaP2pBandwidthLatencyTest(Benchmark):
@@ -139,8 +125,9 @@ class NvidiaP2pBandwidthLatencyTest(Benchmark):
     CATEGORY = 'gpu'
 
     name = 'p2pBandwidthLatencyTest'
-    description = 'compute latency and bandwidth of devices ' + \
-        'with and without Peer-To-Peer'
+    description = (
+        'compute latency and bandwidth of devices ' + 'with and without Peer-To-Peer'
+    )
 
     @cached_property
     def executable(self):
@@ -182,13 +169,8 @@ class NvidiaP2pBandwidthLatencyTest(Benchmark):
             yield dict(
                 category=NvidiaP2pBandwidthLatencyTest.CATEGORY,
                 command=[find_executable(self.executable)],
-                metas=dict(
-                    device1=dev1,
-                    device2=dev2
-                ),
-                environment=dict(
-                    CUDA_VISIBLE_DEVICES="%s,%s" % (dev1, dev2)
-                ),
+                metas=dict(device1=dev1, device2=dev2),
+                environment=dict(CUDA_VISIBLE_DEVICES="%s,%s" % (dev1, dev2)),
             )
 
     @cached_property
@@ -203,8 +185,10 @@ class NvidiaBandwidthTest(Benchmark):
     CATEGORY = 'gpu'
 
     name = 'nvidia-bandwidthtest'
-    description = 'measure the memcopy bandwidth of the GPU' + \
-                  ' and memcpy bandwidth across PCI-e'
+    description = (
+        'measure the memcopy bandwidth of the GPU'
+        + ' and memcpy bandwidth across PCI-e'
+    )
 
     def __init__(self):
         super(NvidiaBandwidthTest, self).__init__(
@@ -240,9 +224,7 @@ class NvidiaBandwidthTest(Benchmark):
         yield dict(
             category=NvidiaBandwidthTest.CATEGORY,
             command=self._command,
-            metas=dict(
-                device=int(self.device)
-            )
+            metas=dict(device=int(self.device)),
         )
 
     @property
@@ -252,7 +234,7 @@ class NvidiaBandwidthTest(Benchmark):
             '--device',
             str(self.device),
             '--mode',
-            self.mode
+            self.mode,
         ] + self.options
         if '--csv' not in self.options:
             cmd.append('--csv')

@@ -14,6 +14,7 @@ class AnySequenceResult(Sequence):
     a list of user-data from a user-data-list with the `isinstance`
     builtin.
     """
+
     def __init__(self, data, join_operation):
         self.__data = data
         self.join_operation = join_operation
@@ -98,6 +99,7 @@ class kwargsql(object):  # pragma pylint: disable=invalid-name
            of a sequence. The result is `True` if the operation is `True`
            for every element of the sequence.
     """
+
     OPERATIONS = {
         'ne': operator.ne,
         'lt': operator.lt,
@@ -119,10 +121,7 @@ class kwargsql(object):  # pragma pylint: disable=invalid-name
         'issubclass': issubclass,
     }
 
-    SEQUENCE_OPERATIONS = dict(
-        any=operator.or_,
-        each=operator.and_,
-    )
+    SEQUENCE_OPERATIONS = dict(any=operator.or_, each=operator.and_)
 
     @classmethod
     def and_(cls, obj, **kwargs):
@@ -238,8 +237,7 @@ class kwargsql(object):  # pragma pylint: disable=invalid-name
     def __eval_seqexp(cls, obj, operation, **kwargs):
         return functools.reduce(
             operation,
-            [cls._eval_exp(obj, exp, value)
-             for (exp, value) in kwargs.items()]
+            [cls._eval_exp(obj, exp, value) for (exp, value) in kwargs.items()],
         )
 
     @classmethod
@@ -261,8 +259,7 @@ class kwargsql(object):  # pragma pylint: disable=invalid-name
             if join_operation is not None:
                 return (
                     AnySequenceResult(
-                        cls._sequence_map(obj, path[pos + 1:]),
-                        join_operation
+                        cls._sequence_map(obj, path[pos + 1 :]), join_operation
                     ),
                     len(path) + 1,
                 )
@@ -292,8 +289,10 @@ class kwargsql(object):  # pragma pylint: disable=invalid-name
     @classmethod
     def _not(cls, operation):
         """not operation"""
+
         def _wrap(*args, **kwargs):
             return not operation(*args, **kwargs)
+
         return _wrap
 
     @classmethod
@@ -315,10 +314,7 @@ class kwargsql(object):  # pragma pylint: disable=invalid-name
         if isinstance(computed, AnySequenceResult):
             data = [operation(item, value) for item in computed]
             if any(data):
-                return functools.reduce(
-                    computed.join_operation,
-                    data,
-                )
+                return functools.reduce(computed.join_operation, data)
             return False
         else:
             return operation(computed, value)

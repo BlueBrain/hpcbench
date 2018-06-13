@@ -5,8 +5,8 @@ import subprocess
 
 from cached_property import cached_property
 
-from .. functools_ext import listify
-from .. process import find_executable
+from ..functools_ext import listify
+from ..process import find_executable
 
 
 SINFO = find_executable('sinfo', required=False)
@@ -32,10 +32,20 @@ class SlurmCluster:
 
         def sanitize(field):
             return sanitizer_re.sub('_', field.strip()).lower()
+
         commasplit_fields = {'available_features', 'active_features'}
         int_fields = {
-            'sockets', 'cpus', 'prio_tier', 'threads', 'cores', 'nodes',
-            'tmp_disk', 'weigth', 'free_mem', 'prio_job_factor', 'memory'
+            'sockets',
+            'cpus',
+            'prio_tier',
+            'threads',
+            'cores',
+            'nodes',
+            'tmp_disk',
+            'weigth',
+            'free_mem',
+            'prio_job_factor',
+            'memory',
         }
         float_fields = {'cpu_load'}
         reader.fieldnames = [sanitize(field) for field in reader.fieldnames]

@@ -8,8 +8,6 @@ __version__ = get_distribution(__name__).version
 jinja_environment = Environment(
     loader=PackageLoader('hpcbench', 'templates'),
     autoescape=select_autoescape(
-        disabled_extensions=('txt',),
-        default_for_string=False,
-        default=False
+        disabled_extensions=('txt',), default_for_string=False, default=False
     ),
 )

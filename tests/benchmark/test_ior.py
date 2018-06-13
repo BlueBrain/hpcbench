@@ -1,7 +1,7 @@
 import unittest
 
 from hpcbench.benchmark.ior import IOR
-from . benchmark import AbstractBenchmarkTest
+from .benchmark import AbstractBenchmarkTest
 
 
 class TestIORBenchmark(AbstractBenchmarkTest, unittest.TestCase):
@@ -51,6 +51,4 @@ class TestIORBenchmark(AbstractBenchmarkTest, unittest.TestCase):
 
     @property
     def attributes(self):
-        return dict(
-            executable='/path/to/fake'
-        )
+        return dict(executable='/path/to/fake')

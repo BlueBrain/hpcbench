@@ -1,7 +1,7 @@
 import os
 from subprocess import PIPE, Popen
 
-from . process import find_executable
+from .process import find_executable
 
 
 class Module:

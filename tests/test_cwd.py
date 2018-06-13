@@ -12,9 +12,6 @@ class CwdTest(DriverTestCase, unittest.TestCase):
         report = ReportNode(CwdTest.CAMPAIGN_PATH)
         count = 0
         for metrics in report.collect('metrics'):
-            self.assertEqual(
-                metrics[0]['measurement']['path'],
-                path
-            )
+            self.assertEqual(metrics[0]['measurement']['path'], path)
             count += 1
         self.assertEqual(count, 3)

@@ -11,15 +11,8 @@ import unittest
 import mock
 from mock import Mock
 
-from hpcbench.campaign import (
-    from_file,
-    ReportNode,
-)
-from hpcbench.driver import (
-    CampaignDriver,
-    SbatchDriver,
-    SlurmDriver,
-)
+from hpcbench.campaign import from_file, ReportNode
+from hpcbench.driver import CampaignDriver, SbatchDriver, SlurmDriver
 from hpcbench.toolbox.edsl import kwargsql
 from . import DriverTestCase
 
@@ -33,7 +26,9 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
         cls.SLURM_UT_DIR = tempfile.mkdtemp(prefix='hpcbench-ut')
         sbatch_ut = osp.join(cls.SLURM_UT_DIR, 'sbatch-ut')
         with open(sbatch_ut, 'w') as ostr:
-            ostr.write(textwrap.dedent("""\
+            ostr.write(
+                textwrap.dedent(
+                    """\
                 #!/bin/bash -e
                 # output a job id
                 while [[ "$1" == -* ]] ; do shift ; done
@@ -41,21 +36,28 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
                 echo "Starting job"
                 source $@ > slurm-12345.out 2>&1
                 echo "12345"
-                """.format(node=cls.SLURM_ALLOC_NODE)))
+                """.format(
+                        node=cls.SLURM_ALLOC_NODE
+                    )
+                )
+            )
         st = os.stat(sbatch_ut)
         os.chmod(sbatch_ut, st.st_mode | stat.S_IEXEC)
         srun_ut = osp.join(cls.SLURM_UT_DIR, 'srun-ut')
         with open(srun_ut, 'w') as ostr:
-            ostr.write(textwrap.dedent("""\
+            ostr.write(
+                textwrap.dedent(
+                    """\
                 #!/bin/bash -e
                 # skip options
                 while [[ "$1" == -* ]] ; do shift ; done
                 exec $@ >slurm-localhost-1.stdout 2>slurm-localhost-1.stderr
-                """))
+                """
+                )
+            )
         st = os.stat(srun_ut)
         os.chmod(srun_ut, st.st_mode | stat.S_IEXEC)
-        os.environ['PATH'] = (cls.SLURM_UT_DIR + os.pathsep +
-                              os.environ['PATH'])
+        os.environ['PATH'] = cls.SLURM_UT_DIR + os.pathsep + os.environ['PATH']
         super(cls, cls).setUpClass()
 
     def test_sbatch_command(self):
@@ -68,8 +70,7 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
             self.assertEqual(jobid, 12345)
             slurm_report = ReportNode(path)
             sbatch_f = osp.join(path, slurm_report['sbatch'])
-            self.assertTrue(osp.isfile(sbatch_f),
-                            "Not file: " + sbatch_f)
+            self.assertTrue(osp.isfile(sbatch_f), "Not file: " + sbatch_f)
             with open(sbatch_f) as f:
                 sbatch_content = f.readlines()
             self.assertFalse(sbatch_content[-1].find(tag) == -1)
@@ -90,7 +91,8 @@ class TestSbatchFail(DriverTestCase, unittest.TestCase):
 
     check_output = Mock()
     check_output.side_effect = subprocess.CalledProcessError(
-        42, 'sbatch-ut', output="Error")
+        42, 'sbatch-ut', output="Error"
+    )
     find_exec = Mock()
     find_exec.return_value = 'sbatch-ut'
 
@@ -106,20 +108,18 @@ class TestSbatchFail(DriverTestCase, unittest.TestCase):
 
 
 class TestSbatchTemplate(unittest.TestCase):
-    SBATCH_PRELUDE = textwrap.dedent("""\
+    SBATCH_PRELUDE = textwrap.dedent(
+        """\
         #!/bin/bash
         {sbatch_args}
         module load nix/spack
         spack load nix
-    """)
+    """
+    )
 
-    def _test_template(self, yaml_file, uc, expected_sbatch_opts,
-                       assert_method=None):
+    def _test_template(self, yaml_file, uc, expected_sbatch_opts, assert_method=None):
         yaml_file = osp.join(osp.dirname(__file__), yaml_file)
-        sbatch_driver = SbatchDriver(
-            SlurmDriver(CampaignDriver(yaml_file)),
-            uc
-        )
+        sbatch_driver = SbatchDriver(SlurmDriver(CampaignDriver(yaml_file)), uc)
         sbatch = StringIO()
         sbatch_driver._create_sbatch(sbatch)
         expected = TestSbatchTemplate.SBATCH_PRELUDE.format(
@@ -131,82 +131,57 @@ class TestSbatchTemplate(unittest.TestCase):
 
     def test_embedded_sbatch_template(self):
         """Globally override sbatch template"""
-        sbatch_str = "\n".join([
-            "#SBATCH --account=42",
-            "#SBATCH --nodelist=n1,n2",
-            "#SBATCH --nodes=2",
-        ])
+        sbatch_str = "\n".join(
+            ["#SBATCH --account=42", "#SBATCH --nodelist=n1,n2", "#SBATCH --nodes=2"]
+        )
         self._test_template(
-            'test_slurm_embedded_sbatch_template.yaml',
-            'uc1',
-            sbatch_str
+            'test_slurm_embedded_sbatch_template.yaml', 'uc1', sbatch_str
         )
 
     def test_sbatch_template_per_uc(self):
         """Override sbatch template per UC"""
-        sbatch_str = "\n".join([
-            "#SBATCH --account=42",
-            "#SBATCH --nodelist=n1,n2",
-            "#SBATCH --nodes=2",
-        ])
-        self._test_template(
-            'test_slurm_sbatch_template_per_uc.yaml',
-            'uc1',
-            sbatch_str
+        sbatch_str = "\n".join(
+            ["#SBATCH --account=42", "#SBATCH --nodelist=n1,n2", "#SBATCH --nodes=2"]
         )
+        self._test_template('test_slurm_sbatch_template_per_uc.yaml', 'uc1', sbatch_str)
 
         # fallback on default hpcbench sbatch template
         self._test_template(
             'test_slurm_sbatch_template_per_uc.yaml',
             'uc2',
             42,
-            assert_method=self.assertFalse
+            assert_method=self.assertFalse,
         )
 
     def test_default_sbatch_template_per_uc(self):
         """Override sbatch template per UC with default value"""
-        sbatch_str = "\n".join([
-            "#SBATCH --account=43",
-            "#SBATCH --nodelist=n1,n2",
-            "#SBATCH --nodes=2",
-        ])
+        sbatch_str = "\n".join(
+            ["#SBATCH --account=43", "#SBATCH --nodelist=n1,n2", "#SBATCH --nodes=2"]
+        )
 
         self._test_template(
-            'test_slurm_default_sbatch_template_per_uc.yaml',
-            'uc1',
-            sbatch_str
+            'test_slurm_default_sbatch_template_per_uc.yaml', 'uc1', sbatch_str
         )
-        sbatch_str = "\n".join([
-            "#SBATCH --account=42",
-            "#SBATCH --nodelist=n3,n4",
-            "#SBATCH --nodes=2",
-        ])
+        sbatch_str = "\n".join(
+            ["#SBATCH --account=42", "#SBATCH --nodelist=n3,n4", "#SBATCH --nodes=2"]
+        )
 
         # fallback on default template in YAML
         self._test_template(
-            'test_slurm_default_sbatch_template_per_uc.yaml',
-            'uc2',
-            sbatch_str
+            'test_slurm_default_sbatch_template_per_uc.yaml', 'uc2', sbatch_str
         )
 
     def test_per_tag_sbatch_args(self):
         """Override sbatch arguments in a benchmark tag"""
-        sbatch_str = "\n".join([
-            "#SBATCH --account=43",
-            "#SBATCH --nodelist=n1,n2",
-            "#SBATCH --nodes=2",
-        ])
-        self._test_template(
-            'test_slurm_per_tag_sbatch_args.yaml',
-            'uc1',
-            sbatch_str
+        sbatch_str = "\n".join(
+            ["#SBATCH --account=43", "#SBATCH --nodelist=n1,n2", "#SBATCH --nodes=2"]
         )
+        self._test_template('test_slurm_per_tag_sbatch_args.yaml', 'uc1', sbatch_str)
 
 
 class TestSlurmCluster(unittest.TestCase):
     CAMPAIGN_FILE = osp.join(osp.dirname(__file__), 'test_slurm_cluster.yaml')
-    SINFO_OUTPUT_FILE = osp.join(osp.dirname(__file__),
-                                 'toolbox', 'sinfo-mock.txt')
+    SINFO_OUTPUT_FILE = osp.join(osp.dirname(__file__), 'toolbox', 'sinfo-mock.txt')
 
     @mock.patch('subprocess.check_output')
     def test_campaign_network(self, co_mock):
@@ -215,7 +190,13 @@ class TestSlurmCluster(unittest.TestCase):
         campaign = from_file(self.__class__.CAMPAIGN_FILE)
         self.assertEqual(35, len(campaign.network.nodes))
         self.assertEqual(
-            {'partition_2_rack1', 'uc1', 'uc2', 'rack1',
-             'partition_1_rack1', 'partition_3_rack1'},
-            set(campaign.network.tags)
+            {
+                'partition_2_rack1',
+                'uc1',
+                'uc2',
+                'rack1',
+                'partition_1_rack1',
+                'partition_3_rack1',
+            },
+            set(campaign.network.tags),
         )

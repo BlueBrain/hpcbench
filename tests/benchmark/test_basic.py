@@ -1,7 +1,7 @@
 import unittest
 
 from hpcbench.benchmark.basic import Basic
-from . benchmark import AbstractBenchmarkTest
+from .benchmark import AbstractBenchmarkTest
 
 
 class TestBasic(AbstractBenchmarkTest, unittest.TestCase):

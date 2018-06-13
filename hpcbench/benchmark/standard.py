@@ -10,17 +10,14 @@ import re
 from cached_property import cached_property
 import six
 
-from hpcbench.api import (
-    Benchmark,
-    Metrics,
-    MetricsExtractor,
-)
+from hpcbench.api import Benchmark, Metrics, MetricsExtractor
 from hpcbench.toolbox.collections_ext import FrozenList
 from hpcbench.toolbox.functools_ext import listify
 
 
 class MetaFunctions(object):
     """Functions callable in the `meta` values section"""
+
     FUNC_NAME_RE = re.compile(r"[a-zA-Z]\w*")
     COMBINE_FUNCTIONS = {'geomspace', 'logspace', 'linspace', 'arange'}
 
@@ -37,11 +34,13 @@ class MetaFunctions(object):
     @classmethod
     def _func_linspace(cls, *args, **kwargs):
         import numpy as np
+
         return list(np.linspace(*args, **kwargs))
 
     @classmethod
     def _func_arange(cls, *args, **kwargs):
         import numpy as np
+
         return list(np.arange(*args, **kwargs))
 
     @classmethod
@@ -52,13 +51,10 @@ class MetaFunctions(object):
     @listify
     def _func_correlate(cls, *series, **kwargs):
         import numpy as np
+
         explore = kwargs.get('explore')
         with_overflow = kwargs.get('with_overflow') or False
-        types_map = dict(
-            int=int,
-            float=float,
-            bool=bool,
-        )
+        types_map = dict(int=int, float=float, bool=bool)
         series = copy.deepcopy(series)
 
         def _build_serie(params):
@@ -68,8 +64,8 @@ class MetaFunctions(object):
             func, params = params[0], params[1:]
             if func not in func_set:
                 raise Exception(
-                    'Unknown function %s. Allowed functions: %s' %
-                    (func, ', '.join(func_set))
+                    'Unknown function %s. Allowed functions: %s'
+                    % (func, ', '.join(func_set))
                 )
 
             def try_coerce(k, v):
@@ -103,10 +99,10 @@ class MetaFunctions(object):
             if cast:
                 eax = list(int(round(e)) for e in eax)
             return eax
+
         values = list(_build_serie(serie) for serie in series)
         if len(set([len(e) for e in values])) != 1:
-            raise Exception('Series should have the same size: ' +
-                            repr(values))
+            raise Exception('Series should have the same size: ' + repr(values))
         count = len(values[0])
         dims = len(series)
         world = np.zeros(shape=(count,) * dims, dtype=bool)
@@ -116,24 +112,17 @@ class MetaFunctions(object):
         def _get_coords(w):
             points = np.nonzero(w)
             for point in range(len(points[0])):
-                yield tuple([
-                    t[point]
-                    for t in points
-                ])
+                yield tuple([t[point] for t in points])
 
         def _get_values(w):
             for point in _get_coords(w):
-                yield tuple([
-                    values[i][point[i]]
-                    for i in range(len(point))
-                ])
+                yield tuple([values[i][point[i]] for i in range(len(point))])
+
         for v in _get_values(world):
             yield v
-        for vector in (explore or []):
+        for vector in explore or []:
             shifted_world = np.roll(
-                world,
-                tuple(vector),
-                axis=tuple(range(0, len(vector), 1))
+                world, tuple(vector), axis=tuple(range(0, len(vector), 1))
             )
             if not with_overflow:
                 # remove out-of-bound values
@@ -197,10 +186,7 @@ class Configuration(object):
             execution = dict(cmd)
             execution['metas'] = metas
             if not shells:
-                execution['command'] = self._fmtcmd(
-                    execution['command'],
-                    metas
-                )
+                execution['command'] = self._fmtcmd(execution['command'], metas)
                 yield Configuration._fill_default_execution(execution)
             else:
                 for shell in shells:
@@ -221,8 +207,7 @@ class Configuration(object):
                         else:
                             all_commands.append(sexec['command'])
                         sexec['command'] = [
-                            self._fmtcmd(cmd_, sexec['metas'])
-                            for cmd_ in all_commands
+                            self._fmtcmd(cmd_, sexec['metas']) for cmd_ in all_commands
                         ]
                         yield Configuration._fill_default_execution(sexec)
 
@@ -245,8 +230,7 @@ class Configuration(object):
 
         for metas_c in metas:
             metas_c = dict(
-                (k, Configuration._expand_meta(v))
-                for k, v in six.iteritems(metas_c)
+                (k, Configuration._expand_meta(v)) for k, v in six.iteritems(metas_c)
             )
             metas_c = list(
                 list((name, value) for value in values)
@@ -254,10 +238,11 @@ class Configuration(object):
             )
             for combination in itertools.product(*metas_c):
                 eax = list(combination)
-                eax = dict(itertools.chain.from_iterable(
-                    Configuration._expand_multi_metas(*e)
-                    for e in eax
-                ))
+                eax = dict(
+                    itertools.chain.from_iterable(
+                        Configuration._expand_multi_metas(*e) for e in eax
+                    )
+                )
                 yield dict(eax)
 
     def metrics_extractors(self):
@@ -266,7 +251,7 @@ class Configuration(object):
     @classmethod
     def _expand_multi_metas(cls, name, value):
         if name[0] == '[' and name[-1] == ']':
-            names = [str.strip(s) for s in name[1: -1].split(',')]
+            names = [str.strip(s) for s in name[1:-1].split(',')]
             for i, name in enumerate(names):
                 yield name, value[i]
         else:
@@ -290,6 +275,7 @@ class Configuration(object):
 class StdExtractor(MetricsExtractor):
     """Generic Metric extractor for a particular category
     """
+
     def __init__(self, metrics):
         """Metrics as specified in the benchmark `metrics` section
         """
@@ -312,16 +298,14 @@ class StdExtractor(MetricsExtractor):
         """
         eax = {}
         for name, config in six.iteritems(self._metrics):
-            from_ = self._get_property(config, 'from',
-                                       default=self.stdout)
+            from_ = self._get_property(config, 'from', default=self.stdout)
             eax.setdefault(from_, {})[name] = config
         return eax
 
     @listify(wrapper=dict)
     def extract_metrics(self, metas):
         return itertools.chain.from_iterable(
-            six.iteritems(self._metrics_from_file(from_,
-                                                  metrics, metas))
+            six.iteritems(self._metrics_from_file(from_, metrics, metas))
             for from_, metrics in six.iteritems(self.froms)
         )
 
@@ -333,17 +317,14 @@ class StdExtractor(MetricsExtractor):
         regex = {}
         metas = metas or {}
         for name, config in six.iteritems(metrics):
-            expression = self._get_property(config, 'match',
-                                            metas=metas, required=True)
+            expression = self._get_property(config, 'match', metas=metas, required=True)
             expression = expression.format(**metas)
             regex[name] = dict(
                 re=re.compile(expression),
                 metric=getattr(
-                    Metrics,
-                    self._get_property(config, 'type', required=True)
+                    Metrics, self._get_property(config, 'type', required=True)
                 ),
-                multiply_by=self._get_property(config, 'multiply_by',
-                                               metas=metas),
+                multiply_by=self._get_property(config, 'multiply_by', metas=metas),
             )
         metrics = dict()
         for line in istr:
@@ -361,8 +342,7 @@ class StdExtractor(MetricsExtractor):
             (
                 name,
                 self._reduce_metric(
-                    self._get_property(config, 'reduce', default='max'),
-                    values
+                    self._get_property(config, 'reduce', default='max'), values
                 ),
             )
             for name, values in six.iteritems(metrics)
@@ -373,18 +353,13 @@ class StdExtractor(MetricsExtractor):
         if len(metrics) == 1:
             return metrics[0]
         try:
-            op = dict(
-                avg=lambda l: sum(l) / elt_type(len(l)),
-                max=max,
-                min=min,
-            )[op]
+            op = dict(avg=lambda l: sum(l) / elt_type(len(l)), max=max, min=min)[op]
         except KeyError:
             raise Exception('Unknown reduce operation: "{}"'.format(op))
         else:
             return reduce(op, metrics)
 
-    def _get_property(self, config, name, metas=None,
-                      default=None, required=False):
+    def _get_property(self, config, name, metas=None, default=None, required=False):
         lookups = []
         whens = config.get('when', [])
         for when in whens if metas else []:

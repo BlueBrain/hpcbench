@@ -2,15 +2,8 @@
 """
 from __future__ import print_function
 
-from abc import (
-    ABCMeta,
-    abstractmethod,
-    abstractproperty,
-)
-from collections import (
-    Mapping,
-    namedtuple,
-)
+from abc import ABCMeta, abstractmethod, abstractproperty
+from collections import Mapping, namedtuple
 import contextlib
 import copy
 import datetime
@@ -32,6 +25,7 @@ import uuid
 
 from cached_property import cached_property
 import jinja2.exceptions
+
 try:
     import magic
 except ImportError:
@@ -42,14 +36,8 @@ import six
 import yaml
 
 from . import jinja_environment
-from . api import (
-    Benchmark,
-    Cluster,
-    ExecutionContext,
-    Metric,
-    NoMetricException,
-)
-from . campaign import (
+from .api import Benchmark, Cluster, ExecutionContext, Metric, NoMetricException
+from .campaign import (
     from_file,
     JSON_METRICS_FILE,
     NodeSet,
@@ -57,20 +45,12 @@ from . campaign import (
     YAML_CAMPAIGN_FILE,
     YAML_REPORT_FILE,
 )
-from . toolbox.buildinfo import extract_build_info
-from . toolbox.collections_ext import (
-    dict_merge,
-    FrozenDict,
-    FrozenList,
-    nameddict,
-)
-from . toolbox.contextlib_ext import (
-    pushd,
-    Timer,
-)
-from . toolbox.edsl import kwargsql
-from . toolbox.environment_modules import Module
-from . toolbox.functools_ext import listify
+from .toolbox.buildinfo import extract_build_info
+from .toolbox.collections_ext import dict_merge, FrozenDict, FrozenList, nameddict
+from .toolbox.contextlib_ext import pushd, Timer
+from .toolbox.edsl import kwargsql
+from .toolbox.environment_modules import Module
+from .toolbox.functools_ext import listify
 from .toolbox.process import (
     build_slurm_arguments,
     find_executable,
@@ -89,6 +69,7 @@ ConstraintTag = namedtuple('ConstraintTag', ['name', 'constraint'])
 def write_yaml_report(func):
     """Decorator used in campaign node post-processing
     """
+
     @wraps(func)
     def _wrapper(*args, **kwargs):
         now = datetime.datetime.now()
@@ -106,13 +87,14 @@ def write_yaml_report(func):
             with open(YAML_REPORT_FILE, 'w') as ostr:
                 yaml.dump(report, ostr, default_flow_style=False)
         return report
+
     return _wrapper
 
 
 class Enumerator(six.with_metaclass(ABCMeta, object)):
     """Common class for every campaign node"""
-    def __init__(self, parent, name=None, logger=None,
-                 catch_child_exception=False):
+
+    def __init__(self, parent, name=None, logger=None, catch_child_exception=False):
         """
         :keyword catch_child_exception: if True, then
         report exception raised by children but do not
@@ -160,8 +142,11 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
     def _call_without_report(self, **kwargs):
         for child in self._children:
             child_obj = self.child_builder(child)
-            with pushd(str(child), cleanup=isinstance(child_obj, Enumerator)
-                       and not child_obj.has_children):
+            with pushd(
+                str(child),
+                cleanup=isinstance(child_obj, Enumerator)
+                and not child_obj.has_children,
+            ):
                 try:
                     child_obj(**kwargs)
                 except Exception:
@@ -175,6 +160,7 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
         """class function that MUST be specified as decorator
         to the `__call__` method overriden by sub-classes.
         """
+
         @wraps(func)
         def _wrap(self, *args, **kwargs):
             try:
@@ -183,6 +169,7 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
                 self.logger.exception('While executing benchmark')
                 if not self.catch_child_exception:
                     raise
+
         return _wrap
 
     @write_yaml_report
@@ -207,6 +194,7 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
 class Leaf(Enumerator):
     """Enumerator class for classes at the bottom of the hierarchy
     """
+
     def child_builder(self, child):
         del child  # unused
 
@@ -216,7 +204,7 @@ class Leaf(Enumerator):
 
 
 Top = namedtuple('top', ['campaign', 'node', 'logger', 'root', 'name'])
-Top.__new__.__defaults__ = (None, ) * len(Top._fields)
+Top.__new__.__defaults__ = (None,) * len(Top._fields)
 
 
 class ClusterWrapper(Cluster):
@@ -254,12 +242,10 @@ class Network(object):
         try:
             pos = nodes.index(node)
         except ValueError:
-            self.logger.error('Could not find node %s in nodes %s',
-                              node, ', '.join(nodes))
-        return [
-            [node, nodes[i]]
-            for i in range(pos + 1, len(nodes))
-        ]
+            self.logger.error(
+                'Could not find node %s in nodes %s', node, ', '.join(nodes)
+            )
+        return [[node, nodes[i]] for i in range(pos + 1, len(nodes))]
 
     def nodes(self, tag):
         """get nodes that belong to a tag
@@ -277,10 +263,15 @@ class Network(object):
                 continue
             mode, value = list(definition.items())[0]
             if mode == 'match':
-                nodes = nodes.union(set([
-                    node for node in self.campaign.network.nodes
-                    if value.match(node)
-                ]))
+                nodes = nodes.union(
+                    set(
+                        [
+                            node
+                            for node in self.campaign.network.nodes
+                            if value.match(node)
+                        ]
+                    )
+                )
             elif mode == 'constraint':
                 slurm_nodes = os.environ.get('SLURM_JOB_NODELIST')
                 if slurm_nodes:
@@ -295,9 +286,16 @@ class Network(object):
 
 class CampaignDriver(Enumerator):
     """Abstract representation of an entire campaign"""
-    def __init__(self, campaign,
-                 node=None, output_dir=None, srun=None,
-                 logger=None, expandcampvars=True):
+
+    def __init__(
+        self,
+        campaign,
+        node=None,
+        output_dir=None,
+        srun=None,
+        logger=None,
+        expandcampvars=True,
+    ):
         node = node or socket.gethostname()
         if isinstance(campaign, six.string_types):
             campaign_path = osp.normpath(osp.abspath(campaign))
@@ -314,12 +312,7 @@ class CampaignDriver(Enumerator):
             self.existing_campaign = True
             self.campaign_path = None
         super(CampaignDriver, self).__init__(
-            Top(
-                campaign=campaign,
-                node=node,
-                logger=logger or LOGGER,
-                root=self
-            ),
+            Top(campaign=campaign, node=node, logger=logger or LOGGER, root=self)
         )
         self.network = Network(self.campaign)
         self.filter_tag = srun
@@ -328,8 +321,7 @@ class CampaignDriver(Enumerator):
 
         if not self.existing_campaign:
             now = datetime.datetime.now()
-            self.campaign_path = now.strftime(output_dir or
-                                              self.campaign.output_dir)
+            self.campaign_path = now.strftime(output_dir or self.campaign.output_dir)
             self.campaign_path = self.campaign_path.format(node=node)
 
     def child_builder(self, child):
@@ -350,8 +342,7 @@ class CampaignDriver(Enumerator):
                     shutil.copy(self.campaign_file, YAML_CAMPAIGN_FILE)
                 else:
                     with open(YAML_CAMPAIGN_FILE, 'w') as ostr:
-                        yaml.dump(self.campaign, ostr,
-                                  default_flow_style=False)
+                        yaml.dump(self.campaign, ostr, default_flow_style=False)
             super(CampaignDriver, self).__call__(**kwargs)
 
 
@@ -364,8 +355,13 @@ class SlurmDriver(Enumerator):
 
     @cached_property
     def children(self):
-        bench_tags = set([tag for tag in self.campaign.benchmarks
-                          if any(self.campaign.benchmarks[tag])])
+        bench_tags = set(
+            [
+                tag
+                for tag in self.campaign.benchmarks
+                if any(self.campaign.benchmarks[tag])
+            ]
+        )
 
         cluster_tags = bench_tags & set(self.campaign.network.tags)
         return list(cluster_tags)
@@ -390,11 +386,13 @@ class SbatchDriver(Enumerator):
             verb = '-v '
         elif level == logging.DEBUG:
             verb = '-vv '
-        cmd = ('ben-sh --srun={tag} '
-               + verb
-               + '-n $SLURMD_NODENAME '
-               + '--output-dir={tag}-%Y%m%d-%H%M%S '
-               + self.parent.parent.campaign_file)
+        cmd = (
+            'ben-sh --srun={tag} '
+            + verb
+            + '-n $SLURMD_NODENAME '
+            + '--output-dir={tag}-%Y%m%d-%H%M%S '
+            + self.parent.parent.campaign_file
+        )
         self.sbatch_filename = now.strftime(sbatch_filename)
         self.sbatch_filename = self.sbatch_filename.format(tag=tag)
         self.sbatch_outdir = osp.splitext(self.sbatch_filename)[0]
@@ -408,8 +406,7 @@ class SbatchDriver(Enumerator):
         if isinstance(nodes, ConstraintTag):
             sbatch_options['constraint'] = nodes.constraint
         if self.tag in self.campaign.benchmarks:
-            tag_sbatch_opts = self.campaign.benchmarks[
-                self.tag].get('sbatch', dict())
+            tag_sbatch_opts = self.campaign.benchmarks[self.tag].get('sbatch', dict())
             sbatch_options.update(tag_sbatch_opts)
         sbatch_options = build_slurm_arguments(sbatch_options)
         if not isinstance(nodes, ConstraintTag):
@@ -427,9 +424,11 @@ class SbatchDriver(Enumerator):
     def _filter_nodes(self, nodes, count):
         assert count <= len(nodes)
         if count < len(nodes):
-            self.logger.warning("Asking to run SBATCH job with "
-                                "%d of %d declared nodes in tag",
-                                count, len(nodes))
+            self.logger.warning(
+                "Asking to run SBATCH job with " "%d of %d declared nodes in tag",
+                count,
+                len(nodes),
+            )
         return nodes[:count]
 
     @cached_property
@@ -469,17 +468,18 @@ class SbatchDriver(Enumerator):
         with open(self.sbatch_filename, 'w') as sbatch:
             self._create_sbatch(sbatch)
         sbatch_jobid = self._execute_sbatch()
-        return dict(sbatch=self.sbatch_filename,
-                    jobid=sbatch_jobid,
-                    children=[self.sbatch_outdir])
+        return dict(
+            sbatch=self.sbatch_filename,
+            jobid=sbatch_jobid,
+            children=[self.sbatch_outdir],
+        )
 
     def _create_sbatch(self, ostr):
         """Write sbatch template to output stream
         :param ostr: opened file to write to
         """
         properties = dict(
-            sbatch_arguments=self.sbatch_args,
-            hpcbench_command=self.hpcbench_cmd
+            sbatch_arguments=self.sbatch_args, hpcbench_command=self.hpcbench_cmd
         )
         try:
             self.sbatch_template.stream(**properties).dump(ostr)
@@ -500,15 +500,19 @@ class SbatchDriver(Enumerator):
         sbatch = find_executable(commands.get('sbatch', 'sbatch'))
         sbatch_command = [sbatch, '--parsable', self.sbatch_filename]
         try:
-            self.logger.debug('Executing command: %s',
-                              ' '.join(map(six.moves.shlex_quote,
-                                           sbatch_command)))
-            sbatch_out = subprocess.check_output(sbatch_command,
-                                                 universal_newlines=True)
+            self.logger.debug(
+                'Executing command: %s',
+                ' '.join(map(six.moves.shlex_quote, sbatch_command)),
+            )
+            sbatch_out = subprocess.check_output(
+                sbatch_command, universal_newlines=True
+            )
         except subprocess.CalledProcessError as cpe:
-            self.logger.error("SBATCH return non-zero exit"
-                              "status %d for tag %s",
-                              cpe.returncode, self.tag)
+            self.logger.error(
+                "SBATCH return non-zero exit" "status %d for tag %s",
+                cpe.returncode,
+                self.tag,
+            )
             sbatch_out = cpe.output
         jobidre = re.compile('^([\d]+)(?:;\S*)?$')
         jobid = None
@@ -516,8 +520,7 @@ class SbatchDriver(Enumerator):
             res = jobidre.match(line)
             if res is not None:
                 jobid = res.group(1)
-                self.logger.info("Submitted SBATCH job %s for tag %s",
-                                 jobid, self.tag)
+                self.logger.info("Submitted SBATCH job %s for tag %s", jobid, self.tag)
             elif line:
                 self.logger.warning("SBATCH: %s", line)
         if jobid is None:
@@ -546,8 +549,7 @@ class HostDriver(Enumerator):
             for config in configs:
                 for mode, kconfig in config.items():
                     if mode == 'match':
-                        if (kconfig.match(self.name) or
-                                kconfig.match(LOCALHOST)):
+                        if kconfig.match(self.name) or kconfig.match(LOCALHOST):
                             tags.add(tag)
                             break
                     elif mode == 'nodes':
@@ -573,8 +575,8 @@ class BenchmarkTagDriver(Enumerator):
     @listify
     def children(self):
         return [
-            name for name in
-            self.campaign.benchmarks.get(self.name, [])
+            name
+            for name in self.campaign.benchmarks.get(self.name, [])
             if self._precondition_is_met(name)
         ]
 
@@ -595,19 +597,18 @@ class BenchmarkTagDriver(Enumerator):
         conf = self.campaign.benchmarks[self.name][child]
         benchmark = Benchmark.get_subclass(conf['type'])()
         if 'attributes' in conf:
-            dict_merge(
-                benchmark.attributes,
-                conf['attributes'] or {}
-            )
+            dict_merge(benchmark.attributes, conf['attributes'] or {})
         return BenchmarkDriver(self, benchmark, conf)
 
 
 class BenchmarkDriver(Enumerator):
     """Abstract representation of a benchmark, part of a campaign tag
     """
+
     def __init__(self, parent, benchmark, config):
-        super(BenchmarkDriver, self).__init__(parent, benchmark.name,
-                                              catch_child_exception=True)
+        super(BenchmarkDriver, self).__init__(
+            parent, benchmark.name, catch_child_exception=True
+        )
         self.benchmark = benchmark
         self.config = BenchmarkDriver._prepare_config(config)
 
@@ -617,10 +618,7 @@ class BenchmarkDriver(Enumerator):
         config.setdefault('srun_options', [])
         if isinstance(config['srun_options'], six.string_types):
             config['srun_options'] = shlex.split(config['srun_options'])
-        config['srun_options'] = [
-            str(e)
-            for e in config['srun_options']
-        ]
+        config['srun_options'] = [str(e) for e in config['srun_options']]
         return config
 
     @cached_property
@@ -653,6 +651,7 @@ class BenchmarkDriver(Enumerator):
 class BenchmarkCategoryDriver(Enumerator):
     """Abstract representation of one benchmark to execute
     (one of "benchmarks" YAML tag values")"""
+
     def __init__(self, parent, category):
         super(BenchmarkCategoryDriver, self).__init__(parent, category)
         self.category = category
@@ -744,22 +743,21 @@ class BenchmarkCategoryDriver(Enumerator):
         try:
             exepath = find_executable(executable, required=True)
         except NameError:
-            self.logger.info("Could not find exe %s to examine for build info",
-                             executable)
+            self.logger.info(
+                "Could not find exe %s to examine for build info", executable
+            )
         else:
             try:
                 file_type = magic.from_file(osp.realpath(exepath))
             except IOError as exc:
-                self.logger.warn('Could not find file type of %s: %s',
-                                 exepath, exc)
+                self.logger.warn('Could not find file type of %s: %s', exepath, exc)
             else:
                 if file_type.startswith('ELF'):
                     binfo = extract_build_info(exepath)
                     if binfo:
                         execution.setdefault('metas', {})['build_info'] = binfo
                 else:
-                    self.logger.info('%s is not pointing to an ELF executable',
-                                     exepath)
+                    self.logger.info('%s is not pointing to an ELF executable', exepath)
 
     def _execute(self, **kwargs):
         runs = dict()
@@ -767,8 +765,10 @@ class BenchmarkCategoryDriver(Enumerator):
             if _HAS_MAGIC and 'shell' not in execution:
                 self._add_build_info(execution)
             else:
-                self.logger.info("No build information recorded "
-                                 "(libmagic available: %s)", _HAS_MAGIC)
+                self.logger.info(
+                    "No build information recorded " "(libmagic available: %s)",
+                    _HAS_MAGIC,
+                )
             runs.setdefault(execution['category'], []).append(run_dir)
             with pushd(run_dir, mkdir=True):
                 attempt_cls = self.attempt_run_class(execution)
@@ -808,6 +808,7 @@ class MetricsDriver(object):
     """Abstract representation of metrics already
     built by a previous run
     """
+
     def __init__(self, campaign, benchmark):
         self.campaign = campaign
         self.benchmark = benchmark
@@ -822,8 +823,7 @@ class MetricsDriver(object):
         all_extractors = self.benchmark.metrics_extractors
         if isinstance(all_extractors, Mapping):
             if cat not in all_extractors:
-                raise Exception('No extractor for benchmark category %s' %
-                                cat)
+                raise Exception('No extractor for benchmark category %s' % cat)
             extractors = all_extractors[cat]
         else:
             extractors = all_extractors
@@ -839,8 +839,7 @@ class MetricsDriver(object):
                     except NoMetricException:
                         pass
                     else:
-                        MetricsDriver._check_metrics(extractor.metrics,
-                                                     run_metrics)
+                        MetricsDriver._check_metrics(extractor.metrics, run_metrics)
                         metrics.update(run_metrics)
             if metrics:
                 rc = dict(context=log.context, measurement=metrics)
@@ -855,8 +854,7 @@ class MetricsDriver(object):
         def context(self):
             return dict(executor='local')
 
-    class SrunLog(namedtuple('SrunLog',
-                             ['path', 'log_prefix', 'node', 'rank'])):
+    class SrunLog(namedtuple('SrunLog', ['path', 'log_prefix', 'node', 'rank'])):
         @property
         def context(self):
             return dict(executor='slurm', node=self.node, rank=self.rank)
@@ -873,13 +871,15 @@ class MetricsDriver(object):
                 match = STDOUT_RE.match(file)
                 if match:
                     node, rank = match.groups()
-                    yield MetricsDriver.SrunLog(path=os.getcwd(),
-                                                log_prefix=file[:-6],
-                                                node=node,
-                                                rank=rank)
+                    yield MetricsDriver.SrunLog(
+                        path=os.getcwd(), log_prefix=file[:-6], node=node, rank=rank
+                    )
                 else:
-                    logging.warn('"%s" does not match regular expression "%s"',
-                                 file, STDOUT_RE_PATTERN)
+                    logging.warn(
+                        '"%s" does not match regular expression "%s"',
+                        file,
+                        STDOUT_RE_PATTERN,
+                    )
 
     @classmethod
     def _check_metrics(cls, schema, metrics):
@@ -897,22 +897,19 @@ class MetricsDriver(object):
         if isinstance(metric, Metric):
             if not isinstance(value, metric.type):
                 message = "Unexpected type for metrics {}:\n".format(name)
-                message += "expected {}, but got {}".format(metric.type,
-                                                            type(value))
+                message += "expected {}, but got {}".format(metric.type, type(value))
                 raise Exception(message)
         elif isinstance(metric, list):
             if not isinstance(value, list):
                 message = "Unexpected type for metrics {}".format(name)
-                message += "expected {}, but got {}".format(list,
-                                                            type(value))
+                message += "expected {}, but got {}".format(list, type(value))
                 raise Exception(message)
             for item in value:
                 cls._check_metric(schema, metric[0], name, item)
         elif isinstance(metric, dict):
             if not isinstance(value, dict):
                 message = "Unexpected type for metrics {}".format(name)
-                message += "expected {}, but got {}".format(dict,
-                                                            type(value))
+                message += "expected {}, but got {}".format(dict, type(value))
                 raise Exception(message)
             cls._check_metrics(metric, value)
         else:
@@ -954,10 +951,7 @@ class FixedAttempts(Enumerator):
             attempt += 1
         attempt_path = self.last_attempt()
         for file_ in os.listdir(attempt_path):
-            os.symlink(
-                osp.join(attempt_path, file_),
-                file_
-            )
+            os.symlink(osp.join(attempt_path, file_), file_)
 
     def child_builder(self, child):
         def _wrap(**kwargs):
@@ -967,6 +961,7 @@ class FixedAttempts(Enumerator):
                 mdriver = MetricsDriver(self.campaign, self.benchmark)
                 mdriver(**kwargs)
             return self.report
+
         return _wrap
 
     def _should_run(self, attempt):
@@ -1000,10 +995,7 @@ class FixedAttempts(Enumerator):
                 report['path'] = path
                 attempts.append(report)
             attempts = sorted(attempts, **self.sort_config)
-            self.paths = [
-                report_['path']
-                for report_ in attempts
-            ]
+            self.paths = [report_['path'] for report_ in attempts]
 
     @cached_property
     def sort_config(self):
@@ -1015,10 +1007,8 @@ class FixedAttempts(Enumerator):
                     sql = [sql]
 
                 def key_func(report):
-                    return tuple([
-                        kwargsql.get(report, query)
-                        for query in sql
-                    ])
+                    return tuple([kwargsql.get(report, query) for query in sql])
+
                 config['key'] = key_func
         return config
 
@@ -1058,6 +1048,7 @@ class DynamicAttempts(FixedAttempts):
         def get_metric(report):
             # Only use first command result
             return report['metrics'][0]['measurement'][self.metric]
+
         value_n1 = get_metric(data_n1)
         value_n = get_metric(data_n)
         if self.epsilon is not None:
@@ -1077,9 +1068,7 @@ class ExecutionDriver(Leaf):
         super(ExecutionDriver, self).__init__(parent)
         self.benchmark = self.parent.benchmark
         self.execution = parent.execution
-        self.command_expansion_vars = dict(
-            process_count=1
-        )
+        self.command_expansion_vars = dict(process_count=1)
         self.config = parent.config
         self.exec_context = parent.exec_context
 
@@ -1131,8 +1120,7 @@ class ExecutionDriver(Leaf):
         exec_prefix = self.parent.parent.parent.config.get('exec_prefix', [])
         command = self.execution['command']
         if isinstance(command, SEQUENCES):
-            command = [arg.format(**self.command_expansion_vars)
-                       for arg in command]
+            command = [arg.format(**self.command_expansion_vars) for arg in command]
         else:
             command = command.format(**self.command_expansion_vars)
         if self.execution.get('shell', False):
@@ -1140,8 +1128,7 @@ class ExecutionDriver(Leaf):
                 exec_prefix = ' '.join(exec_prefix)
             if not isinstance(command, six.string_types):
                 msg = "Expected string for shell command, not {type}: {value}"
-                msg = msg.format(type=type(command).__name__,
-                                 value=repr(command))
+                msg = msg.format(type=type(command).__name__, value=repr(command))
                 raise Exception(msg)
             eax = [exec_prefix + command]
         else:
@@ -1162,10 +1149,7 @@ class ExecutionDriver(Leaf):
         """
         if isinstance(self.command, six.string_types):
             return self.command
-        return ' '.join(map(
-            six.moves.shlex_quote,
-            self.command
-        ))
+        return ' '.join(map(six.moves.shlex_quote, self.command))
 
     def popen(self, stdout, stderr):
         """Build popen object to run
@@ -1173,8 +1157,7 @@ class ExecutionDriver(Leaf):
         :rtype: subprocess.Popen
         """
         self.logger.info('Executing command: %s', self.command_str)
-        return subprocess.Popen([self._executor_script],
-                                stdout=stdout, stderr=stderr)
+        return subprocess.Popen([self._executor_script], stdout=stdout, stderr=stderr)
 
     @contextlib.contextmanager
     def module_env(self):
@@ -1201,8 +1184,7 @@ class ExecutionDriver(Leaf):
     @write_yaml_report
     @Enumerator.call_decorator
     def __call__(self, **kwargs):
-        with open('stdout', 'w') as stdout, \
-                open('stderr', 'w') as stderr:
+        with open('stdout', 'w') as stdout, open('stderr', 'w') as stderr:
             cwd = self.execution.get('cwd')
             if cwd is not None:
                 ctx = self.parent.parent.parent.exec_context
@@ -1220,8 +1202,7 @@ class ExecutionDriver(Leaf):
         expected_es = self.execution.get('expected_exit_statuses', {0})
         report['command_succeeded'] = exit_status in expected_es
         if not report['command_succeeded']:
-            self.logger.error('Command failed with exit status: %s',
-                              exit_status)
+            self.logger.error('Command failed with exit status: %s', exit_status)
         report.update(self.execution)
 
         report.update(command=self.command)
@@ -1231,6 +1212,7 @@ class ExecutionDriver(Leaf):
 class SrunExecutionDriver(ExecutionDriver):
     """Manage process execution with srun (SLURM)
     """
+
     name = 'srun'
 
     @cached_property
@@ -1249,10 +1231,7 @@ class SrunExecutionDriver(ExecutionDriver):
         :rtype: list of string
         """
         default = dict(self.campaign.process.get('srun') or {})
-        default.update(
-            output='slurm-%N-%t.stdout',
-            error='slurm-%N-%t.error',
-        )
+        default.update(output='slurm-%N-%t.stdout', error='slurm-%N-%t.error')
         return default
 
     @cached_property
@@ -1313,4 +1292,4 @@ class SrunExecutionDriver(ExecutionDriver):
         assert count <= len(nodes)
         pos = nodes.index(self.node)
         nodes = nodes * 2
-        return nodes[pos:pos + count]
+        return nodes[pos : pos + count]

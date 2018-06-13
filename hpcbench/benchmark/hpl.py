@@ -7,12 +7,7 @@ import shlex
 from cached_property import cached_property
 import six
 
-from hpcbench.api import (
-    Benchmark,
-    Metric,
-    Metrics,
-    MetricsExtractor,
-)
+from hpcbench.api import Benchmark, Metric, Metrics, MetricsExtractor
 from hpcbench.toolbox.process import find_executable
 
 
@@ -29,6 +24,7 @@ def get_precision_regex():
 
 class HPLExtractor(MetricsExtractor):
     """Ignore stdout until this line"""
+
     STDOUT_IGNORE_PRIOR = (
         "T/V                N    NB"
         "     P     Q               Time                 Gflops"
@@ -39,7 +35,7 @@ class HPLExtractor(MetricsExtractor):
             r'^[\w]+[\s]+([\d]+)[\s]+([\d]+)[\s]+([\d]+)[\s]+'
             r'([\d]+)[\s]+([\d.]+)[\s]+([\d.]+e[+-][\d]+)'
         ),
-        precision=get_precision_regex()
+        precision=get_precision_regex(),
     )
 
     METRICS = dict(
@@ -50,7 +46,7 @@ class HPLExtractor(MetricsExtractor):
         time=Metrics.Second,
         flops=Metrics.GFlops,
         validity=Metrics.Bool,
-        precision=Metric(unit='', type=float)
+        precision=Metric(unit='', type=float),
     )
 
     METRICS_NAMES = set(METRICS)
@@ -64,9 +60,7 @@ class HPLExtractor(MetricsExtractor):
             time=(float, 5),
             flops=(float, 6),
         ),
-        precision=dict(
-            precision=(float, 1),
-        )
+        precision=dict(precision=(float, 1)),
     )
 
     @property
@@ -111,6 +105,7 @@ class HPLExtractor(MetricsExtractor):
 class HPL(Benchmark):
     """Benchmark wrapper for the HPLbench utility
     """
+
     DEFAULT_THREADS = 1
     DEFAULT_DEVICE = 'cpu'
     DEFAULT_EXECUTABLE = 'xhpl'
@@ -127,6 +122,7 @@ class HPL(Benchmark):
                 options=[],
             )
         )
+
     name = 'hpl'
 
     description = "Provides Intensive FLOPS benchmark."
@@ -149,9 +145,7 @@ class HPL(Benchmark):
 
     @property
     def command(self):
-        return [
-            find_executable(self.executable, required=False),
-        ] + self.options
+        return [find_executable(self.executable, required=False)] + self.options
 
     def execution_matrix(self, context):
         del context  # unused
@@ -161,7 +155,7 @@ class HPL(Benchmark):
             environment=dict(
                 OMP_NUM_THREADS=self.threads,
                 MKL_NUM_THREADS=self.threads,
-                KMP_AFFINITY='scatter'
+                KMP_AFFINITY='scatter',
             ),
         )
         if self.srun_nodes is not None:
