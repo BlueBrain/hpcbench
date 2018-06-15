@@ -173,8 +173,10 @@ class IOR(Benchmark):
         """List of API to test"""
         return self.attributes['apis']
 
-    def pre_execute(self, execution):
+    def pre_execute(self, execution, context):
         """Make sure the named directory is created if possible"""
+        del execution  # not used
+        del context  # not used
         if self.path:
             if not osp.exists(self.path):
                 os.mkdir(self.path)
