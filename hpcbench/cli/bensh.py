@@ -24,7 +24,7 @@ from __future__ import print_function
 import os.path as osp
 
 from hpcbench.campaign import Generator
-from hpcbench.driver.campaign import CampaignDriver
+from hpcbench.driver import CampaignDriver
 from . import cli_common
 
 

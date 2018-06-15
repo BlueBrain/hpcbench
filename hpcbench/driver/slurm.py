@@ -11,7 +11,7 @@ import six
 
 from hpcbench import jinja_environment
 from hpcbench.campaign import SBATCH_JINJA_TEMPLATE
-from hpcbench.driver.base import Enumerator, LOGGER, ConstraintTag, write_yaml_report
+from .base import Enumerator, LOGGER, ConstraintTag, write_yaml_report
 from hpcbench.toolbox.process import (
     build_slurm_arguments,
     parse_constraint_in_args,

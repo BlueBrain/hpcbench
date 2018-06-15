@@ -10,8 +10,9 @@ import yaml
 
 from hpcbench.campaign import default_campaign, pip_installer_url
 from hpcbench.cli import bensh
+from hpcbench.driver import CampaignDriver
 from hpcbench.driver.executor import ExecutionDriver
-from hpcbench.driver.campaign import CampaignDriver, HostDriver, BenchmarkTagDriver
+from hpcbench.driver.campaign import HostDriver, BenchmarkTagDriver
 from hpcbench.driver.benchmark import (
     BenchmarkDriver,
     BenchmarkCategoryDriver,

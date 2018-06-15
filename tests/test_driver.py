@@ -15,8 +15,9 @@ import yaml
 from hpcbench.api import Benchmark
 from hpcbench.campaign import ReportNode
 from hpcbench.cli import bendoc, benelastic, benumb
+from hpcbench.driver import CampaignDriver
 from hpcbench.driver.executor import SrunExecutionDriver
-from hpcbench.driver.campaign import CampaignDriver, HostDriver, BenchmarkTagDriver
+from hpcbench.driver.campaign import HostDriver, BenchmarkTagDriver
 from hpcbench.driver.benchmark import (
     BenchmarkDriver,
     BenchmarkCategoryDriver,

@@ -22,7 +22,7 @@ from cached_property import cached_property
 
 from hpcbench.api import ExecutionContext, NoMetricException, Metric
 from hpcbench.campaign import YAML_REPORT_FILE, JSON_METRICS_FILE
-from hpcbench.driver.executor import ExecutionDriver, SrunExecutionDriver
+from .executor import ExecutionDriver, SrunExecutionDriver
 from .base import Enumerator, ClusterWrapper, write_yaml_report
 from hpcbench.toolbox.buildinfo import extract_build_info
 from hpcbench.toolbox.collections_ext import nameddict

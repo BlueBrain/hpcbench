@@ -1,5 +1,3 @@
-"""Campaign execution and post-processing
-"""
 from __future__ import print_function
 
 from collections import Mapping
@@ -13,14 +11,7 @@ import tempfile
 
 from cached_property import cached_property
 
-from hpcbench.driver.base import (
-    Enumerator,
-    Leaf,
-    Top,
-    SEQUENCES,
-    ConstraintTag,
-    write_yaml_report,
-)
+from .base import Enumerator, Leaf, Top, SEQUENCES, ConstraintTag, write_yaml_report
 
 import six
 
