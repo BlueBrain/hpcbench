@@ -7,7 +7,7 @@ import tempfile
 import textwrap
 import unittest
 
-from hpcbench.driver import CampaignDriver
+from hpcbench.driver.campaign import CampaignDriver
 from . import DriverTestCase
 
 

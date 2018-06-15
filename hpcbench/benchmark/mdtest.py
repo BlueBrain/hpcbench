@@ -9,7 +9,7 @@ import shutil
 from cached_property import cached_property
 
 from hpcbench.api import Benchmark, Metrics, MetricsExtractor
-from hpcbench.driver import LOGGER
+from hpcbench.driver.base import LOGGER
 from hpcbench.toolbox.functools_ext import listify
 from hpcbench.toolbox.process import find_executable
 
