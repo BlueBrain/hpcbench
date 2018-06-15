@@ -12,7 +12,8 @@ from six import assertCountEqual, string_types, with_metaclass
 import yaml
 
 from hpcbench.api import Benchmark, ExecutionContext, MetricsExtractor
-from hpcbench.driver import MetricsDriver, YAML_REPORT_FILE
+from hpcbench.campaign import YAML_REPORT_FILE
+from hpcbench.driver.benchmark import MetricsDriver
 from hpcbench.toolbox.collections_ext import dict_merge
 from hpcbench.toolbox.contextlib_ext import mkdtemp, pushd
 from .. import FakeCluster

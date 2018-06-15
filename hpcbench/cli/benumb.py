@@ -12,7 +12,7 @@ Options:
   -v -vv            Increase program verbosity
 """
 
-from hpcbench.driver import CampaignDriver
+from hpcbench.driver.campaign import CampaignDriver
 from . import cli_common
 
 

@@ -18,7 +18,7 @@ import yaml
 
 from hpcbench import jinja_environment
 from hpcbench.campaign import from_file as campaign_from_file
-from hpcbench.driver import write_yaml_report
+from hpcbench.driver.base import write_yaml_report
 from hpcbench.toolbox.contextlib_ext import mkdtemp, pushd
 from hpcbench.toolbox.process import find_executable
 

@@ -12,7 +12,8 @@ import mock
 from mock import Mock
 
 from hpcbench.campaign import from_file, ReportNode
-from hpcbench.driver import CampaignDriver, SbatchDriver, SlurmDriver
+from hpcbench.driver.campaign import CampaignDriver
+from hpcbench.driver.slurm import SlurmDriver, SbatchDriver
 from hpcbench.toolbox.edsl import kwargsql
 from . import DriverTestCase
 
@@ -98,7 +99,7 @@ class TestSbatchFail(DriverTestCase, unittest.TestCase):
 
     @classmethod
     @mock.patch('subprocess.check_output', check_output)
-    @mock.patch('hpcbench.driver.find_executable', find_exec)
+    @mock.patch('hpcbench.driver.slurm.find_executable', find_exec)
     def setUpClass(cls):
         super(cls, cls).setUpClass()
 

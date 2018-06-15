@@ -12,7 +12,7 @@ import yaml
 
 from hpcbench.api import Benchmark, Metric, MetricsExtractor
 from hpcbench.cli import bensh
-from hpcbench.driver import ClusterWrapper
+from hpcbench.driver.base import ClusterWrapper
 from hpcbench.toolbox.contextlib_ext import pushd
 from .toolbox.test_buildinfo import TestExtractBuildinfo
 

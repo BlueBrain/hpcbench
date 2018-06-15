@@ -15,14 +15,12 @@ import yaml
 from hpcbench.api import Benchmark
 from hpcbench.campaign import ReportNode
 from hpcbench.cli import bendoc, benelastic, benumb
-from hpcbench.driver import (
-    BenchmarkCategoryDriver,
+from hpcbench.driver.executor import SrunExecutionDriver
+from hpcbench.driver.campaign import CampaignDriver, HostDriver, BenchmarkTagDriver
+from hpcbench.driver.benchmark import (
     BenchmarkDriver,
-    BenchmarkTagDriver,
-    CampaignDriver,
+    BenchmarkCategoryDriver,
     FixedAttempts,
-    HostDriver,
-    SrunExecutionDriver,
 )
 from hpcbench.toolbox.contextlib_ext import capture_stdout, mkdtemp, pushd
 from . import BuildInfoBench, DriverTestCase, FakeBenchmark
