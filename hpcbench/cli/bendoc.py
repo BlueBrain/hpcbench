@@ -15,7 +15,7 @@ Options:
   -v -vv                  Increase program verbosity
 """
 
-from hpcbench.driver.campaign import CampaignDriver
+from hpcbench.driver import CampaignDriver
 from hpcbench.report import render
 from hpcbench.toolbox.contextlib_ext import pushd
 from . import cli_common

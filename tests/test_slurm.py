@@ -12,7 +12,7 @@ import mock
 from mock import Mock
 
 from hpcbench.campaign import from_file, ReportNode
-from hpcbench.driver.campaign import CampaignDriver
+from hpcbench.driver import CampaignDriver
 from hpcbench.driver.slurm import SlurmDriver, SbatchDriver
 from hpcbench.toolbox.edsl import kwargsql
 from . import DriverTestCase
