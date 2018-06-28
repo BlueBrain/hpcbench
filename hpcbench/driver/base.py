@@ -24,6 +24,9 @@ MAPPINGS = (dict, FrozenDict)
 ConstraintTag = namedtuple('ConstraintTag', ['name', 'constraint'])
 
 
+Top = namedtuple('top', ['campaign', 'node', 'logger', 'root', 'name'])
+
+
 def write_yaml_report(func):
     """Decorator used in campaign node post-processing
     """
@@ -159,9 +162,6 @@ class Leaf(Enumerator):
     @cached_property
     def children(self):
         return []
-
-
-Top = namedtuple('top', ['campaign', 'node', 'logger', 'root', 'name'])
 
 
 class ClusterWrapper(Cluster):

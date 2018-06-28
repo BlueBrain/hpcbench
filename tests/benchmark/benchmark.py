@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from collections import Mapping
+from collections import Mapping, namedtuple
 import inspect
 import itertools
 import logging
@@ -13,7 +13,12 @@ import yaml
 
 from hpcbench.api import Benchmark, ExecutionContext, MetricsExtractor
 from hpcbench.campaign import YAML_REPORT_FILE
-from hpcbench.driver.benchmark import MetricsDriver
+from hpcbench.driver.base import Top
+from hpcbench.driver.benchmark import (
+    MetricsDriver,
+    BenchmarkCategoryDriver,
+    BenchmarkDriver,
+)
 from hpcbench.toolbox.collections_ext import dict_merge
 from hpcbench.toolbox.contextlib_ext import mkdtemp, pushd
 from .. import FakeCluster
@@ -127,7 +132,20 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
                         yaml.dump(
                             dict(category=category, metas=metas, executor='local'), ostr
                         )
-                    md = MetricsDriver('test-category', benchmark)
+
+                    md = MetricsDriver(
+                        BenchmarkCategoryDriver(
+                            BenchmarkDriver(
+                                Top(
+                                    logger=LOGGER, root=namedtuple('root', ['network'])
+                                ),
+                                benchmark,
+                                dict(),
+                            ),
+                            'test-category',
+                        ),
+                        benchmark,
+                    )
                     report = md()
                     parsed_metrics = report['metrics'][0]['measurement']
                     self.assertEqual(parsed_metrics, next(expected_metrics))
