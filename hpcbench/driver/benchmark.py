@@ -23,7 +23,7 @@ from cached_property import cached_property
 from hpcbench.api import ExecutionContext, NoMetricException, Metric
 from hpcbench.campaign import YAML_REPORT_FILE, JSON_METRICS_FILE
 from .executor import ExecutionDriver, SrunExecutionDriver
-from .base import Enumerator, ClusterWrapper, write_yaml_report
+from .base import Enumerator, ClusterWrapper, write_yaml_report, Leaf
 from hpcbench.toolbox.buildinfo import extract_build_info
 from hpcbench.toolbox.collections_ext import nameddict
 from hpcbench.toolbox.contextlib_ext import pushd
@@ -235,7 +235,7 @@ class BenchmarkCategoryDriver(Enumerator):
             return json.load(istr)
 
 
-class MetricsDriver(object):
+class MetricsDriver(Leaf):
     """Abstract representation of metrics already
     built by a previous run
     """
@@ -244,14 +244,14 @@ class MetricsDriver(object):
         super(MetricsDriver, self).__init__(parent)
         self.campaign = parent.campaign
         self.benchmark = benchmark
-        with open(YAML_REPORT_FILE) as istr:
-            self.report = yaml.safe_load(istr)
 
     @write_yaml_report
     @Enumerator.call_decorator
     def __call__(self, **kwargs):
-        cat = self.report.get('category')
-        metas = self.report.get('metas')
+        with open(YAML_REPORT_FILE) as istr:
+            report = yaml.safe_load(istr)
+        cat = report.get('category')
+        metas = report.get('metas')
         all_extractors = self.benchmark.metrics_extractors
         if isinstance(all_extractors, Mapping):
             if cat not in all_extractors:
@@ -261,7 +261,7 @@ class MetricsDriver(object):
             extractors = all_extractors
         if not isinstance(extractors, list):
             extractors = [extractors]
-        all_metrics = self.report.setdefault('metrics', [])
+        all_metrics = report.setdefault('metrics', [])
         for log in self.logs:
             metrics = {}
             for extractor in extractors:
@@ -279,7 +279,7 @@ class MetricsDriver(object):
         if self.benchmark.metric_required and not all_metrics:
             # at least one of the logs must provide metrics
             raise NoMetricException()
-        return self.report
+        return report
 
     class LocalLog(namedtuple('LocalLog', ['path', 'log_prefix'])):
         @property

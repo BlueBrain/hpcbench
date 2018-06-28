@@ -60,7 +60,9 @@ class IORMetricsExtractor(MetricsExtractor):
         metrics = {}
         for operation in IORMetricsExtractor.OPERATIONS:
             for meta, desc in IORMetricsExtractor.METAS.items():
-                name = IORMetricsExtractor.get_meta_name(operation, desc.get('name') or meta)
+                name = IORMetricsExtractor.get_meta_name(
+                    operation, desc.get('name') or meta
+                )
                 metrics[name] = desc['metric']
         return metrics
 
