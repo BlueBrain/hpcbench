@@ -166,7 +166,7 @@ class BenchmarkCategoryDriver(Enumerator):
             child_config.pop('children', None)
             runs.setdefault(self.category, []).append(child)
             with pushd(child):
-                MetricsDriver(self.campaign, self.benchmark)(**kwargs)
+                MetricsDriver(self, self.benchmark)(**kwargs)
         self.gather_metrics(runs)
 
     def _add_build_info(self, execution):
@@ -240,8 +240,9 @@ class MetricsDriver(object):
     built by a previous run
     """
 
-    def __init__(self, campaign, benchmark):
-        self.campaign = campaign
+    def __init__(self, parent, benchmark):
+        super(MetricsDriver, self).__init__(parent)
+        self.campaign = parent.campaign
         self.benchmark = benchmark
         with open(YAML_REPORT_FILE) as istr:
             self.report = yaml.safe_load(istr)
@@ -389,8 +390,7 @@ class FixedAttempts(Enumerator):
             driver = self.execution_layer()
             driver(**kwargs)
             if self.report['command_succeeded']:
-                mdriver = MetricsDriver(self.campaign, self.benchmark)
-                mdriver(**kwargs)
+                MetricsDriver(self, self.benchmark)(**kwargs)
             return self.report
 
         return _wrap

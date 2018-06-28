@@ -15,7 +15,7 @@ from hpcbench.toolbox.functools_ext import listify
 from hpcbench.toolbox.process import find_executable
 
 
-class Extractor(MetricsExtractor):
+class IORMetricsExtractor(MetricsExtractor):
     """Parser for IOR outputs
     """
 
@@ -58,9 +58,9 @@ class Extractor(MetricsExtractor):
     @cached_property
     def metrics(self):
         metrics = {}
-        for operation in Extractor.OPERATIONS:
-            for meta, desc in Extractor.METAS.items():
-                name = Extractor.get_meta_name(operation, desc.get('name') or meta)
+        for operation in IORMetricsExtractor.OPERATIONS:
+            for meta, desc in IORMetricsExtractor.METAS.items():
+                name = IORMetricsExtractor.get_meta_name(operation, desc.get('name') or meta)
                 metrics[name] = desc['metric']
         return metrics
 
@@ -68,16 +68,16 @@ class Extractor(MetricsExtractor):
         columns = None
         metrics = {}
         with open(self.stdout) as istr:
-            Extractor._skip_output_header(istr)
+            IORMetricsExtractor._skip_output_header(istr)
             for line in istr:
                 line = line.strip()
-                if line.startswith(Extractor.RESULTS_HEADER_START):
-                    columns = Extractor.parse_results_header(line)
+                if line.startswith(IORMetricsExtractor.RESULTS_HEADER_START):
+                    columns = IORMetricsExtractor.parse_results_header(line)
                 elif line == '':
                     # end of results
                     break
                 else:
-                    Extractor.parse_result_line(columns, line, metrics)
+                    IORMetricsExtractor.parse_result_line(columns, line, metrics)
         return metrics
 
     @classmethod
@@ -103,7 +103,7 @@ class Extractor(MetricsExtractor):
         :param header: content of the results header line
         :return: list of string providing columns
         """
-        header = Extractor.RE_MULTIPLE_SPACES.sub(' ', header)
+        header = IORMetricsExtractor.RE_MULTIPLE_SPACES.sub(' ', header)
         header = header.split(' ')
         return header
 
@@ -115,7 +115,7 @@ class Extractor(MetricsExtractor):
         :param line: string of results below the columns line
         :param metrics: output dict where metrics are written
         """
-        line = Extractor.RE_MULTIPLE_SPACES.sub(' ', line)
+        line = IORMetricsExtractor.RE_MULTIPLE_SPACES.sub(' ', line)
         line = line.split(' ')
         operation = line[0]
         assert len(line) == len(columns)
@@ -240,4 +240,4 @@ class IOR(Benchmark):
     @cached_property
     def metrics_extractors(self):
         # Use same extractor for all categories of commands
-        return Extractor()
+        return IORMetricsExtractor()

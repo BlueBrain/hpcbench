@@ -125,7 +125,7 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
                 return func(self, *args, **kwargs)
             except Exception:
                 self.logger.exception('While executing benchmark')
-                if not self.catch_child_exception:
+                if not (self.catch_child_exception or False):
                     raise
 
         return _wrap
