@@ -2,6 +2,7 @@
 
     https://github.com/LLNL/ior
 """
+import itertools
 import os
 import os.path as osp
 import re
@@ -142,8 +143,10 @@ class IOR(Benchmark):
 
     APIS = ['POSIX', 'MPIIO', 'HDF5']
     DEFAULT_BLOCK_SIZE = "1G"
+    DEFAULT_TRANSFER_SIZE = "32M"
     DEFAULT_EXECUTABLE = 'ior'
     DEFAULT_SRUN_NODES = 1
+    DEFAULT_FILE_MODE = 'fpp'
     DEFAULT_OPTIONS = []
 
     def __init__(self):
@@ -152,9 +155,11 @@ class IOR(Benchmark):
                 apis=IOR.APIS,
                 block_size=IOR.DEFAULT_BLOCK_SIZE,
                 executable=IOR.DEFAULT_EXECUTABLE,
+                file_mode=IOR.DEFAULT_FILE_MODE,
                 options=IOR.DEFAULT_OPTIONS,
-                srun_nodes=0,
                 path=None,
+                srun_nodes=0,
+                transfer_size=IOR.DEFAULT_TRANSFER_SIZE,
             )
         )
 
@@ -191,12 +196,15 @@ class IOR(Benchmark):
         del context  # unused
         # FIXME: Design the real set of commands to execute
         for api in set(self.attributes['apis']) & set(IOR.APIS):
-            for command in self._execution_matrix(api):
-                yield command
+            for fm, bs, ts in itertools.product(
+                self.file_mode, self.block_size, self.transfer_size
+            ):
+                for command in self._execution_matrix(api, fm, bs, ts):
+                    yield command
 
-    def _execution_matrix(self, api):
+    def _execution_matrix(self, api, file_mode, block_size, transfer_size):
         if self.path:
-            if '-F' not in self.options:
+            if file_mode == '-F':
                 opath = ['-o', osp.join(self.path, 'data')]
             else:
                 opath = ['-o', self.path]
@@ -208,12 +216,15 @@ class IOR(Benchmark):
                 find_executable(self.executable, required=False),
                 '-a',
                 api,
+                file_mode,
                 '-b',
-                str(self.block_size),
+                block_size,
+                '-t',
+                transfer_size,
             ]
             + opath
             + self.options,
-            metas=dict(api=api, block_size=self.block_size),
+            metas=dict(api=api, block_size=block_size, transfer_size=transfer_size),
             srun_nodes=self.srun_nodes,
         )
         yield cmd
@@ -230,8 +241,32 @@ class IOR(Benchmark):
         return options
 
     @property
+    def file_mode(self):
+        fm = self.attributes['file_mode']
+        if fm == 'fpp':
+            return ['-F']
+        elif fm == 'onefile':
+            return ['']
+        elif fm == 'both':
+            return ['-F', '']
+        else:
+            raise NameError('{} not a valid IOR file mode'.format(fm))
+
+    @property
     def block_size(self):
-        return self.attributes['block_size']
+        bs = self.attributes['block_size']
+        if isinstance(bs, six.string_types):
+            bs = shlex.split(bs)
+        bs = [str(e) for e in bs]
+        return bs
+
+    @property
+    def transfer_size(self):
+        ts = self.attributes['transfer_size']
+        if isinstance(ts, six.string_types):
+            ts = shlex.split(ts)
+        ts = [str(e) for e in ts]
+        return ts
 
     @property
     def srun_nodes(self):
