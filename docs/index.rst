@@ -210,7 +210,7 @@ Build instructions
 
 Grab the source code::
 
-  $ git clone https://github.com/tristan0x/hpcbench.git
+  $ git clone https://github.com/BlueBrain/hpcbench.git
   $ cd hpcbench
 
 We suggest you use a dedicated virtual environment. For that you can use
@@ -310,7 +310,7 @@ How to integrate a new benchmark utility in the HPCBench repository?
 
    $ tox
 
-9. Submit a `pull-request <https://github.com/tristan0x/hpcbench>`_
+9. Submit a `pull-request <https://github.com/BlueBrain/hpcbench>`_
 
 LICENSE
 =======

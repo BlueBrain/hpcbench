@@ -99,7 +99,7 @@ html_theme = 'alabaster'
 # documentation.
 html_theme_options = {
     "extra_nav_links": {
-        u"🚀 Github": "https://github.com/tristan0x/hpcbench",
+        u"🚀 Github": "https://github.com/BlueBrain/hpcbench",
         u"💾 Download Releases": "https://pypi.python.org/pypi/hpcbench",
         }
     }

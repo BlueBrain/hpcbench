@@ -173,7 +173,7 @@ HPCBench version to install on nodes. By default it is the current ``ben-nett``
 version managing the cluster. This is an argument given to ``pip`` installer, here are a some examples:
 
 * ``hpcbench==2.0`` to force a version available PyPi
-* ``git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench`` to install the bleeding edge version.
+* ``git+http://github.com/BlueBrain/hpcbench@master#egg=hpcbench`` to install the bleeding edge version.
 * ``git+http://github.com/me/hpcbench@feat/awesome-feature#egg=hpcbench`` to deploy a fork's branch.
 
 Benchmarks configuration reference
