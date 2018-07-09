@@ -245,13 +245,39 @@ class NetworkConfig(object):
         self.network.nodes = NetworkConfig._expand_nodes(self.network.nodes)
         self._expand_tags()
 
+    @cached_property
+    def blacklist_states(self):
+        states = set(self.network.slurm_blacklist_states)
+        if self.campaign.process.type == 'slurm':
+            if 'reservation' in self.campaign.process.get('sbatch') or dict():
+                states.discard('reserved')
+        return states
+
+    @cached_property
+    def _reserved_nodes(self):
+        if self.campaign.process.type == 'slurm':
+            if 'reservation' in self.campaign.process.get('sbatch') or {}:
+                rsv_name = self.campaign.process.sbatch.reservation
+                try:
+                    rsv = SlurmCluster.reservation(rsv_name)
+                except KeyError:
+                    return None
+                finally:
+                    return rsv.nodes
+        return None
+
+    def _filter_node(self, node):
+        if node.state in self.blacklist_states:
+            return True
+        if self._reserved_nodes is not None:
+            return str(node) not in self._reserved_nodes
+
     def _introspect_slurm_cluster(self):
         cluster = SlurmCluster()
         node_names = set()
         tags = dict()
-        blacklist_states = set(self.network.slurm_blacklist_states)
         for node in cluster.nodes:
-            if node.state in blacklist_states:
+            if self._filter_node(node):
                 continue
             node_names.add(str(node))
             for feature in node.active_features:

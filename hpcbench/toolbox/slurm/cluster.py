@@ -1,15 +1,38 @@
 import collections
+import datetime
 import csv
 import re
 import subprocess
 
 from cached_property import cached_property
+from ClusterShell.NodeSet import NodeSet
 
 from ..functools_ext import listify
 from ..process import find_executable
 
 
+RESERVATION_FIELDS = ['name', 'state', 'start', 'end', 'duration', 'nodes']
 SINFO = find_executable('sinfo', required=False)
+SINFO_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
+SINFO_ENV = dict(SINFO_TIME_FORMAT=SINFO_TIME_FORMAT)
+
+
+class Reservation(collections.namedtuple('Reservation', RESERVATION_FIELDS)):
+    @property
+    def active(self):
+        return self.state == 'ACTIVE'
+
+    @classmethod
+    def from_sinfo(cls, output):
+        fields = output.split()
+        return cls(
+            name=fields[0],
+            state=fields[1],
+            start=datetime.datetime.strptime(fields[2], SINFO_TIME_FORMAT),
+            end=datetime.datetime.strptime(fields[3], SINFO_TIME_FORMAT),
+            duration=fields[4],
+            nodes=NodeSet(fields[5]),
+        )
 
 
 class SlurmCluster:
@@ -24,9 +47,27 @@ class SlurmCluster:
                 yield node
 
     @classmethod
+    def reservation(cls, name):
+        """get nodes of a given reservation"""
+        return cls.reservations()[name]
+
+    @classmethod
+    @listify(wrapper=dict)
+    def reservations(self):
+        """get nodes of every reservations"""
+        command = [SINFO, '--reservation']
+        output = subprocess.check_output(command, env=SINFO_ENV)
+        output = output.decode()
+        it = iter(output.splitlines())
+        next(it)
+        for line in it:
+            rsv = Reservation.from_sinfo(line)
+            yield rsv.name, rsv
+
+    @classmethod
     def discover_partitions(cls):
         command = [SINFO, '--Node', '--format', '%all']
-        output = subprocess.check_output(command)
+        output = subprocess.check_output(command, env=SINFO_ENV)
         reader = csv.DictReader(output.decode().splitlines(), delimiter='|')
         sanitizer_re = re.compile('[^0-9a-zA-Z]+')
 
