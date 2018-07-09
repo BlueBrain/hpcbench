@@ -1,9 +1,9 @@
+from collections import Mapping
 import datetime
 import logging
 import re
 import subprocess
 from os import path as osp
-from typing import Mapping
 
 import jinja2.exceptions
 from cached_property import cached_property

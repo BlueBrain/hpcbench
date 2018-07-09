@@ -30,19 +30,19 @@ class TestVersion(unittest.TestCase):
         self.assertEqual(pip_installer_url('1.2.3'), 'hpcbench==1.2.3')
         self.assertEqual(
             pip_installer_url('0.1.dev'),
-            'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench',
+            'git+http://github.com/BlueBrain/hpcbench@master#egg=hpcbench',
         )
         self.assertEqual(
             pip_installer_url('0.1.dev64+gff343d5.d20170803'),
-            'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench',
+            'git+http://github.com/BlueBrain/hpcbench@master#egg=hpcbench',
         )
         self.assertEqual(
             pip_installer_url('0.1.dev64+gff343d5'),
-            'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench',
+            'git+http://github.com/BlueBrain/hpcbench@master#egg=hpcbench',
         )
         self.assertEqual(
             pip_installer_url('0.1.dev'),
-            'git+http://github.com/tristan0x/hpcbench@master#egg=hpcbench',
+            'git+http://github.com/BlueBrain/hpcbench@master#egg=hpcbench',
         )
 
 

@@ -5,9 +5,8 @@ import os
 import re
 import shlex
 import uuid
-from collections import namedtuple
+from collections import namedtuple, Mapping
 from os import path as osp
-from typing import Mapping
 
 try:
     import magic
