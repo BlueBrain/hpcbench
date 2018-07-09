@@ -1,0 +1,6 @@
+network:
+  cluster: slurm
+process:
+  type: slurm
+  sbatch:
+    reservation: foo

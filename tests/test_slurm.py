@@ -181,14 +181,17 @@ class TestSbatchTemplate(unittest.TestCase):
 
 
 class TestSlurmCluster(unittest.TestCase):
-    CAMPAIGN_FILE = osp.join(osp.dirname(__file__), 'test_slurm_cluster.yaml')
     SINFO_OUTPUT_FILE = osp.join(osp.dirname(__file__), 'toolbox', 'sinfo-mock.txt')
+    SINFO_RESERVATIONS_FILE = osp.join(
+        osp.dirname(__file__), 'toolbox', 'sinfo-reservations-mock.txt'
+    )
 
     @mock.patch('subprocess.check_output')
     def test_campaign_network(self, co_mock):
         with open(self.__class__.SINFO_OUTPUT_FILE) as istr:
             co_mock.return_value = istr.read().encode()
-        campaign = from_file(self.__class__.CAMPAIGN_FILE)
+        campaign = osp.join(osp.dirname(__file__), 'test_slurm_cluster.yaml')
+        campaign = from_file(campaign)
         self.assertEqual(35, len(campaign.network.nodes))
         self.assertEqual(
             {
@@ -201,3 +204,18 @@ class TestSlurmCluster(unittest.TestCase):
             },
             set(campaign.network.tags),
         )
+
+    @mock.patch('subprocess.check_output')
+    def test_reservation(self, co_mock):
+        inputs = [
+            self.__class__.SINFO_OUTPUT_FILE,
+            self.__class__.SINFO_RESERVATIONS_FILE,
+        ]
+        outputs = []
+        for file in inputs:
+            with open(file) as istr:
+                outputs.append(istr.read().encode())
+        co_mock.side_effect = outputs
+        campaign = osp.join(osp.dirname(__file__), 'test_slurm_cluster_rsv.yaml')
+        campaign = from_file(campaign)
+        self.assertEqual(11, len(campaign.network.nodes))
