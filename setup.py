@@ -36,7 +36,7 @@ setup(
         'Topic :: Utilities',
     ],
     setup_requires=[
-        'setuptools_scm==1.15.6',
+        'setuptools_scm==1.17.0',
     ],
     install_requires=[
         'cached-property>=1.3.1',
