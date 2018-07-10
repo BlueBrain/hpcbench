@@ -112,23 +112,44 @@ class TestSbatchTemplate(unittest.TestCase):
     SBATCH_PRELUDE = textwrap.dedent(
         """\
         #!/bin/bash
-        {sbatch_args}
-        module load nix/spack
-        spack load nix
+        {sbatch_args}{spack_prelude}
     """
     )
 
-    def _test_template(self, yaml_file, uc, expected_sbatch_opts, assert_method=None):
+    SPACK_PRELUDE = textwrap.dedent(
+        """\
+
+        module load nix/spack
+        spack load nix"""
+    )
+
+    def _test_template(
+        self, yaml_file, uc, expected_sbatch_opts, spack=True, assert_method=None
+    ):
         yaml_file = osp.join(osp.dirname(__file__), yaml_file)
         sbatch_driver = SbatchDriver(SlurmDriver(CampaignDriver(yaml_file)), uc)
         sbatch = StringIO()
         sbatch_driver._create_sbatch(sbatch)
         expected = TestSbatchTemplate.SBATCH_PRELUDE.format(
-            sbatch_args=expected_sbatch_opts
+            sbatch_args=expected_sbatch_opts,
+            spack_prelude=self.SPACK_PRELUDE if spack else '',
         )
         assert_method = assert_method or self.assertTrue
         assert_method(sbatch.getvalue().startswith(expected))
         sbatch.close()
+
+    def test_sbatch_list_arg(self):
+        sbatch_str = "\n".join(
+            [
+                "#SBATCH --mail-user=john.doe@acme.com",
+                "#SBATCH --mail-user=johnny.begood@acme.com",
+                "#SBATCH --nodelist=n1,n2",
+                "#SBATCH --nodes=2",
+            ]
+        )
+        self._test_template(
+            'test_slurm_sbatch_list_arg.yaml', 'uc1', sbatch_str, spack=False
+        )
 
     def test_embedded_sbatch_template(self):
         """Globally override sbatch template"""

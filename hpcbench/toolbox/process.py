@@ -8,6 +8,8 @@ import subprocess
 
 import six
 
+from .collections_ext import FrozenList
+
 
 def find_in_paths(name, paths):
     """Find an executable is a list of directories
@@ -80,7 +82,10 @@ def build_slurm_arguments(argdict):
         elif v is True:  # specifically check if it is true
             args.append('--{}'.format(k))
         else:
-            args.append('--{}={}'.format(k, six.moves.shlex_quote(str(v))))
+            if not isinstance(v, (list, FrozenList)):
+                v = [v]
+            for arg in v:
+                args.append('--{}={}'.format(k, six.moves.shlex_quote(str(arg))))
     return args
 
 
