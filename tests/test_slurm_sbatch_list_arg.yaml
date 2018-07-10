@@ -1,0 +1,20 @@
+network:
+  nodes:
+    - n[1-4]
+  tags:
+    uc1:
+      nodes: [n1, n2]
+    uc2:
+      nodes: [n3, n4]
+
+process:
+  type: slurm
+  sbatch:
+    mail-user:
+    - john.doe@acme.com
+    - johnny.begood@acme.com
+
+benchmarks:
+  uc1:
+    test-slurm:
+      type: fake
