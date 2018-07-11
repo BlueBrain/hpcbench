@@ -2,6 +2,7 @@
 
 Usage:
   ben-sh [-v | -vv] [-r TAG] [-n HOST] [-o OUTDIR] [-l LOGFILE]
+         [--campaign-path-fd FD]
          [-g] CAMPAIGN_FILE
   ben-sh (-h | --help)
   ben-sh --version
@@ -16,11 +17,13 @@ Options:
                           a SLURM job.
   -h --help               Show this screen
   -g                      Generate a default YAML campaign file
+  --campaign-path-fd=FD   Write campaign path to file descriptor
   --version               Show version
   -v -vv                  Increase program verbosity
 """
 from __future__ import print_function
 
+import os
 import os.path as osp
 
 from hpcbench.campaign import Generator
@@ -47,4 +50,6 @@ def main(argv=None):
         driver()
         if argv is not None:
             return driver
-        print(osp.abspath(driver.campaign_path))
+        campaign_fd = int(arguments.get('--campaign-path-fd') or 1)
+        message = (osp.abspath(driver.campaign_path) + '\n').encode()
+        os.write(campaign_fd, message)
