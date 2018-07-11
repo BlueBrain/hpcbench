@@ -27,9 +27,8 @@ def is_slurm_job_terminated(jobid):
     output = subprocess.check_output(
         [find_executable('sacct'), '-n', '-X', '-o', "end", '-j', str(jobid)]
     )
-    end = output.strip()
-    end = end.decode()
-    return end != 'Unknown'
+    end = output.strip().decode()
+    return end not in {'Unknown', ''}
 
 
 @listify
@@ -43,9 +42,11 @@ def wait_for_completion(report, interval=10):
     :return: list of asynchronous job identifiers
     """
     for jobid in report.collect('jobid'):
-        while not is_slurm_job_terminated(jobid):
+        if not is_slurm_job_terminated(jobid):
             logging.info('waiting for SLURM job %s', jobid)
             time.sleep(interval)
+            while not is_slurm_job_terminated(jobid):
+                time.sleep(interval)
         yield jobid
 
 
