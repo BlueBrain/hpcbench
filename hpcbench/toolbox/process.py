@@ -76,7 +76,9 @@ def physical_cpus():
 
 def build_slurm_arguments(argdict):
     args = []
-    for k, v in argdict.items():
+    keys = sorted(argdict.keys())
+    for k in keys:
+        v = argdict[k]
         if v is None:
             continue
         elif v is True:  # specifically check if it is true

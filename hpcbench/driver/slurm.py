@@ -83,10 +83,24 @@ class SbatchDriver(Enumerator):
             return bensh
         return 'ben-sh'
 
+    @property
+    def default_job_name(self):
+        """Slurm job name if not already specified
+        in the `sbatch` section"""
+        name = ''
+        if not self.root.existing_campaign:
+            campaign_file = osp.basename(self.root.campaign_file)
+            campaign = osp.splitext(campaign_file)[0]
+            name += campaign + '/'
+        name += self.tag
+        return name
+
     @cached_property
     def sbatch_args(self):
         nodes = self.root.network.nodes(self.tag)
         sbatch_options = dict(self.campaign.process.get('sbatch', {}))
+        if 'job-name' not in sbatch_options:
+            sbatch_options['job-name'] = self.default_job_name
         if isinstance(nodes, ConstraintTag):
             sbatch_options['constraint'] = nodes.constraint
         if self.tag in self.campaign.benchmarks:
