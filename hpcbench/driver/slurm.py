@@ -4,6 +4,7 @@ import logging
 import re
 import subprocess
 from os import path as osp
+import sys
 
 import jinja2.exceptions
 from cached_property import cached_property
@@ -60,17 +61,27 @@ class SbatchDriver(Enumerator):
         elif level == logging.DEBUG:
             verb = '-vv '
         cmd = (
-            'ben-sh --srun={tag} '
+            '{bensh} --srun={tag} '
             + verb
             + '-n $SLURMD_NODENAME '
             + '--output-dir={tag}-%Y%m%d-%H%M%S '
             + self.parent.parent.campaign_file
         )
+
         self.sbatch_filename = now.strftime(sbatch_filename)
         self.sbatch_filename = self.sbatch_filename.format(tag=tag)
         self.sbatch_outdir = osp.splitext(self.sbatch_filename)[0]
         self.hpcbench_cmd = now.strftime(cmd)
-        self.hpcbench_cmd = self.hpcbench_cmd.format(tag=tag)
+        self.hpcbench_cmd = self.hpcbench_cmd.format(
+            tag=tag, bensh=self.bensh_executable
+        )
+
+    @cached_property
+    def bensh_executable(self):
+        bensh = osp.realpath(osp.join(osp.dirname(sys.executable), 'ben-sh'))
+        if osp.exists(bensh):
+            return bensh
+        return 'ben-sh'
 
     @cached_property
     def sbatch_args(self):

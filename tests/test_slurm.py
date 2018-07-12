@@ -136,7 +136,14 @@ class TestSbatchTemplate(unittest.TestCase):
         )
         assert_method = assert_method or self.assertTrue
         assert_method(sbatch.getvalue().startswith(expected))
+        self._test_bensh_isabs(sbatch.getvalue())
         sbatch.close()
+
+    def _test_bensh_isabs(self, template):
+        cmd = template.splitlines()[-1]
+        executable = cmd.split()[0]
+        self.assertTrue(osp.isabs(executable))
+        self.assertTrue(os.access(executable, os.X_OK))
 
     def test_sbatch_list_arg(self):
         sbatch_str = "\n".join(
