@@ -91,5 +91,6 @@ class TestBenWait(unittest.TestCase):
     def test_benwait_executable(self):
         """Test ben-wait entry-point"""
         with sacct().r().cd().r().cd().mock() as mock:
-            benwait(["-n", "0.5", self.REPORT.path])
+            status = benwait(["-n", "0.5", self.REPORT.path])
+        six.assertCountEqual(self, status['slurm_jobs'], [1, 2])
         self.assertEqual(mock.call_count, 4)
