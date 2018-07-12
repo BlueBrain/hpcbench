@@ -571,6 +571,8 @@ class ReportNode(collections.Mapping):
     """Navigate across hpcbench.yaml files of a campaign
     """
 
+    CONTEXT_ATTRS = ['node', 'tag', 'benchmark', 'category', 'attempt']
+
     def __init__(self, path):
         """
         :param path: path to an existing campaign directory
@@ -592,7 +594,7 @@ class ReportNode(collections.Mapping):
         prefix = os.path.commonprefix([path, self._path])
         relative_path = path[len(prefix) :]
         relative_path = relative_path.strip(os.sep)
-        attrs = ['node', 'tag', 'benchmark', 'category', 'attempt']
+        attrs = self.CONTEXT_ATTRS
         for i, elt in enumerate(relative_path.split(os.sep)):
             yield attrs[i], elt
         yield 'path', path

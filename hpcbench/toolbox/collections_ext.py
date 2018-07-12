@@ -48,6 +48,9 @@ class nameddict(dict):  # pragma pylint: disable=invalid-name
         return result
 
 
+yaml.add_representer(nameddict, SafeRepresenter.represent_dict)
+
+
 class Configuration(nameddict):
     """nameddict reflecting a YAML file
     """
