@@ -132,7 +132,17 @@ class BenchmarkCategoryDriver(Enumerator):
                 metas.update(execution.setdefault('metas', {}))
                 execution['metas'] = metas
             name = execution.get('name') or ''
-            yield execution, osp.join(name, str(uuid.uuid4()))
+            yield execution, osp.join(name, self.child_id())
+
+    def child_id(self):
+        while True:
+            child_id = str(uuid.uuid4()).split('-', 2)[0]
+            if not hasattr(self, '__child_ids'):
+                self.__child_ids = set()
+            if child_id not in self.__child_ids:
+                self.__child_ids.add(child_id)
+                break
+        return child_id
 
     def child_builder(self, child):
         del child  # unused
@@ -376,7 +386,7 @@ class FixedAttempts(Enumerator):
         attempt = 1
         self.paths = []
         while self._should_run(attempt):
-            path = str(uuid.uuid4())
+            path = 'attempt-' + str(attempt)
             self.paths.append(path)
             yield path
             attempt += 1
