@@ -186,7 +186,7 @@ class IOR(Benchmark):
         del context  # not used
         if self.path:
             if not osp.exists(self.path):
-                os.mkdir(self.path)
+                os.makedirs(self.path)
             else:
                 if not osp.isdir(osp.realpath(self.path)):
                     raise IOError
