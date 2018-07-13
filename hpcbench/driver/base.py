@@ -25,6 +25,7 @@ ConstraintTag = namedtuple('ConstraintTag', ['name', 'constraint'])
 
 
 Top = namedtuple('top', ['campaign', 'node', 'logger', 'root', 'name'])
+Top.__new__.__defaults__ = (None,) * len(Top._fields)
 
 
 def write_yaml_report(func):

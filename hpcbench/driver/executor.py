@@ -1,8 +1,9 @@
 from __future__ import print_function
 
-from collections import Mapping
+from collections import Mapping, namedtuple
 import contextlib
 import copy
+import itertools
 import os
 import shlex
 import stat
@@ -11,7 +12,7 @@ import tempfile
 
 from cached_property import cached_property
 
-from .base import Enumerator, Leaf, Top, SEQUENCES, ConstraintTag, write_yaml_report
+from .base import Enumerator, Leaf, SEQUENCES, ConstraintTag, write_yaml_report
 
 import six
 
@@ -24,7 +25,8 @@ from hpcbench.toolbox.process import (
     parse_constraint_in_args,
 )
 
-Top.__new__.__defaults__ = (None,) * len(Top._fields)
+Command = namedtuple('Command', ['execution', 'srun'])
+Command.__new__.__defaults__ = (None,) * len(Command._fields)
 
 
 class ExecutionDriver(Leaf):
@@ -41,6 +43,16 @@ class ExecutionDriver(Leaf):
         self.command_expansion_vars = dict(process_count=1)
         self.config = parent.config
         self.exec_context = parent.exec_context
+
+    @classmethod
+    def commands(cls, campaign, config, execution):
+        """
+        :param campaign: global configuration
+        :param config: benchmark YAML configuration
+        :param execution: one benchmark to execute,
+        provided by `Benchmark.execution_matrix`
+        """
+        yield Command(execution=execution, srun=None)
 
     @cached_property
     def _executor_script(self):
@@ -185,6 +197,30 @@ class SrunExecutionDriver(ExecutionDriver):
 
     name = 'srun'
 
+    @classmethod
+    def commands(cls, campaign, config, execution):
+        top = super(SrunExecutionDriver, cls)
+        for top_cmd in top.commands(campaign, config, execution):
+            top_cmd = top_cmd._asdict()
+            for srun in cls.srun_cartesian_product(campaign, config):
+                top_cmd.update(srun=srun)
+                yield Command(**top_cmd)
+
+    @classmethod
+    def srun_cartesian_product(cls, campaign, config):
+        """
+        :param campaign: global YAML configuration
+        :param config: benchmark YAML configuration
+        """
+        options = copy.copy(cls.common_srun_options(campaign))
+        options.update(config.get('srun') or {})
+        options_tuple = []
+        for k, v in options.items():
+            if not isinstance(v, SEQUENCES):
+                v = [v]
+            options_tuple.append([(k, e) for e in v])
+        return [dict(combination) for combination in itertools.product(*options_tuple)]
+
     @cached_property
     def srun(self):
         """Get path to srun executable
@@ -194,13 +230,13 @@ class SrunExecutionDriver(ExecutionDriver):
         commands = self.campaign.process.get('commands', {})
         return find_executable(commands.get('srun', 'srun'))
 
-    @cached_property
-    def common_srun_options(self):
+    @classmethod
+    def common_srun_options(cls, campaign):
         """Get options to be given to all srun commands
 
         :rtype: list of string
         """
-        default = dict(self.campaign.process.get('srun') or {})
+        default = dict(campaign.process.get('srun') or {})
         default.update(output='slurm-%N-%t.stdout', error='slurm-%N-%t.error')
         return default
 
@@ -214,9 +250,7 @@ class SrunExecutionDriver(ExecutionDriver):
 
         :return: list of string
         """
-        srun_options = copy.copy(self.common_srun_options)
-        srun_options.update(self.config.get('srun') or {})
-        srun_optlist = build_slurm_arguments(srun_options)
+        srun_optlist = build_slurm_arguments(self.parent.command.srun or {})
         if not isinstance(self.root.network.nodes(self.tag), ConstraintTag):
             pargs = parse_constraint_in_args(srun_optlist)
             self.command_expansion_vars['process_count'] = pargs.ntasks

@@ -16,7 +16,7 @@ from hpcbench.api import Benchmark
 from hpcbench.campaign import ReportNode
 from hpcbench.cli import bendoc, benelastic, benumb
 from hpcbench.driver import CampaignDriver
-from hpcbench.driver.executor import SrunExecutionDriver
+from hpcbench.driver.executor import SrunExecutionDriver, Command
 from hpcbench.driver.campaign import HostDriver, BenchmarkTagDriver
 from hpcbench.driver.benchmark import (
     BenchmarkDriver,
@@ -183,10 +183,12 @@ class TestHostDriver(unittest.TestCase):
         tag = kwargs.get('tag', 'group_nodes')
         srun_nodes = kwargs.get('srun_nodes', 1)
         benchmark_config = kwargs.get('benchmark_config')
-        execution = dict(command=['ls', '-la'])
+        srun = benchmark_config.get('srun') if benchmark_config else None
+        command = Command(execution=dict(command=['ls', '-la']),
+                          srun=srun)
         campaign_file = TestHostDriver.CAMPAIGN_FILE
         if srun_nodes is not None:
-            execution.update(srun_nodes=srun_nodes)
+            command.execution.update(srun_nodes=srun_nodes)
         return SrunExecutionDriver(
             FixedAttempts(
                 BenchmarkCategoryDriver(
@@ -200,7 +202,7 @@ class TestHostDriver(unittest.TestCase):
                     ),
                     'category',
                 ),
-                execution,
+                command,
             )
         )
 
@@ -213,8 +215,6 @@ class TestHostDriver(unittest.TestCase):
             slurm.command,
             [
                 'true',
-                '--output=slurm-%N-%t.stdout',
-                '--error=slurm-%N-%t.error',
                 "--constraint='uc1*6|uc2*6'",
                 'ls',
                 '-la',
