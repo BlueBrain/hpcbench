@@ -21,6 +21,7 @@ Exit status:
   exits 1 if at least one of the benchmark executions fails, 0 otherwise.
 """
 from __future__ import print_function
+import errno
 import json
 import logging
 import sys
@@ -37,35 +38,39 @@ from . import cli_common
 
 class ReportStatus:
     """Build a dictionary reporting benchmarks execution status"""
-    def __init__(self, report, job_ids):
+
+    def __init__(self, report, jobs):
         self.__report = report
-        self.__job_ids = job_ids
+        self.__jobs = jobs
 
     @property
     def slurm_sbatches(self):
-        return bool(self.__job_ids)
+        return bool(self.jobs)
 
     @property
     def report(self):
         return self.__report
 
     @property
+    def jobs(self):
+        return self.__jobs
+
+    @property
     def job_ids(self):
-        return self.__job_ids
+        return [job['id'] for job in self.__job_ids]
 
     @cached_property
     def status(self):
-        status = dict(benchmarks=self._benchmarks_status())
+        status = dict(benchmark=self._benchmarks_status(), succeeded=self.succeeded)
         if self.slurm_sbatches:
-            status.update(slurm_jobs=self.job_ids)
+            status.update(sbatch=self.jobs)
         return status
 
     @cached_property
-    def successfull(self):
-        return all(
-            benchmark['succeeded']
-            for benchmark in self.status['benchmarks']
-        )
+    def succeeded(self):
+        ok = all(benchmark['succeeded'] for benchmark in self._benchmarks_status())
+        ok &= all(job.get('exit_code', True) for job in self.jobs)
+        return ok
 
     def log(self, fmt):
         if fmt == 'yaml':
@@ -75,12 +80,11 @@ class ReportStatus:
             print()
         elif fmt == 'log':
             attrs = self.report.CONTEXT_ATTRS + ['succeeded']
-            for benchmark in self.status['benchmarks']:
-                fields = [
-                    field + '=' + str(benchmark[field])
-                    for field in attrs
-                ]
-                print(*fields)
+            for benchmark in self.status['benchmark']:
+                fields = [field + '=' + str(benchmark[field]) for field in attrs]
+                print('benchmark', *fields)
+            for job in self.jobs:
+                print('sbatch', *[k + '=' + str(v) for k, v in job.items()])
         else:
             raise Exception('Unknown format: ' + fmt)
 
@@ -112,23 +116,29 @@ def wait_for_completion(report, interval=10):
     :return: list of asynchronous job identifiers
     """
     for jobid in report.collect('jobid'):
-        if not Job.finished(jobid):
-            logging.info('waiting for SLURM job %s', jobid)
-            time.sleep(interval)
-            while not Job.finished(jobid):
+        try:
+            if not Job.finished(jobid):
+                logging.info('waiting for SLURM job %s', jobid)
                 time.sleep(interval)
-        yield jobid
+                while not Job.finished(jobid):
+                    time.sleep(interval)
+            yield Job.fromid(jobid)._asdict()
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                yield dict(id=str(jobid))
+            else:
+                raise e
 
 
 def main(argv=None):
     """ben-wait entry point"""
     arguments = cli_common(__doc__, argv=argv)
     report = ReportNode(arguments['CAMPAIGN-DIR'])
-    job_ids = wait_for_completion(report, float(arguments['--interval']))
-    status = ReportStatus(report, job_ids)
+    jobs = wait_for_completion(report, float(arguments['--interval']))
+    status = ReportStatus(report, jobs)
     if not arguments['--silent']:
         fmt = arguments['--format'] or 'log'
         status.log(fmt)
     if argv is None:
-        sys.exit(0 if status.successfull else 1)
+        sys.exit(0 if status.succeeded else 1)
     return status.status
