@@ -94,8 +94,9 @@ class ReportStatus:
         if self.slurm_sbatches:
             for sbatch in self.report.children.values():
                 for tag in sbatch.children.values():
-                    assert len(tag.children) == 1
-                    roots.append(tag.children.values()[0])
+                    assert len(tag.children) <= 1
+                    for root in tag.children.values():
+                        roots.append(root)
         else:
             roots.append(self.report)
         for root in roots:
