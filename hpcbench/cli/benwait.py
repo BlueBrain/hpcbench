@@ -23,7 +23,6 @@ Exit status:
 from __future__ import print_function
 import json
 import logging
-import subprocess
 import sys
 import time
 
@@ -32,16 +31,8 @@ import yaml
 
 from hpcbench.campaign import ReportNode
 from hpcbench.toolbox.functools_ext import listify
-from hpcbench.toolbox.process import find_executable
+from hpcbench.toolbox.slurm import Job
 from . import cli_common
-
-
-def is_slurm_job_terminated(sacct, jobid):
-    output = subprocess.check_output(
-        [sacct, '-n', '-X', '-o', "end", '-j', str(jobid)]
-    )
-    end = output.strip().decode()
-    return end not in {'Unknown', ''}
 
 
 class ReportStatus:
@@ -120,19 +111,12 @@ def wait_for_completion(report, interval=10):
     :type interval: int or float
     :return: list of asynchronous job identifiers
     """
-    try:
-        sacct = find_executable('sacct')
-    except NameError:
-        sacct = None
-    if not sacct:
-        logging.warn('Could not find executable sacct')
     for jobid in report.collect('jobid'):
-        if sacct:
-            if not is_slurm_job_terminated(sacct, jobid):
-                logging.info('waiting for SLURM job %s', jobid)
+        if not Job.finished(jobid):
+            logging.info('waiting for SLURM job %s', jobid)
+            time.sleep(interval)
+            while not Job.finished(jobid):
                 time.sleep(interval)
-                while not is_slurm_job_terminated(sacct, jobid):
-                    time.sleep(interval)
         yield jobid
 
 
