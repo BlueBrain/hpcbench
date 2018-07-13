@@ -13,6 +13,7 @@ from hpcbench.api import Benchmark
 from hpcbench.campaign import YAML_CAMPAIGN_FILE, from_file
 from .benchmark import BenchmarkDriver
 from .base import Enumerator, Top, LOGGER, LOCALHOST, ConstraintTag
+from .executor import ExecutionDriver, SrunExecutionDriver
 from .slurm import SlurmDriver
 from hpcbench.toolbox.collections_ext import dict_merge
 from hpcbench.toolbox.contextlib_ext import pushd
@@ -134,6 +135,16 @@ class CampaignDriver(Enumerator):
                     with open(YAML_CAMPAIGN_FILE, 'w') as ostr:
                         yaml.dump(self.campaign, ostr, default_flow_style=False)
             super(CampaignDriver, self).__call__(**kwargs)
+
+    @cached_property
+    def execution_cls(self):
+        """Get execution layer class
+        """
+        name = self.campaign.process.type
+        for clazz in [ExecutionDriver, SrunExecutionDriver]:
+            if name == clazz.name:
+                return clazz
+        raise NameError("Unknown execution layer: '%s'" % name)
 
 
 class HostDriver(Enumerator):

@@ -12,6 +12,8 @@ benchmarks:
             type: fake
             srun:
                 exclusive:
+                nodes: [1, 2, 8, 16, 32]
+                ntasks-per-node: [1, 8, 16, 36, 72]
             attributes:
                 input:
                 - "{process_count}"

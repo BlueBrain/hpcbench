@@ -11,7 +11,7 @@ import yaml
 from hpcbench.campaign import default_campaign, pip_installer_url
 from hpcbench.cli import bensh
 from hpcbench.driver import CampaignDriver
-from hpcbench.driver.executor import ExecutionDriver
+from hpcbench.driver.executor import ExecutionDriver, Command
 from hpcbench.driver.campaign import HostDriver, BenchmarkTagDriver
 from hpcbench.driver.benchmark import (
     BenchmarkDriver,
@@ -172,7 +172,7 @@ class TestBenchmark(unittest.TestCase):
                     ),
                     'category',
                 ),
-                dict(command=['ls', '-la']),
+                Command(execution=dict(command=['ls', '-la'])),
             )
         )
 

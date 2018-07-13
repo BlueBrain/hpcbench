@@ -21,8 +21,8 @@ from cached_property import cached_property
 
 from hpcbench.api import ExecutionContext, NoMetricException, Metric
 from hpcbench.campaign import YAML_REPORT_FILE, JSON_METRICS_FILE
-from .executor import ExecutionDriver, SrunExecutionDriver
 from .base import Enumerator, ClusterWrapper, write_yaml_report, Leaf
+from .executor import Command
 from hpcbench.toolbox.buildinfo import extract_build_info
 from hpcbench.toolbox.collections_ext import nameddict
 from hpcbench.toolbox.contextlib_ext import pushd
@@ -100,11 +100,18 @@ class BenchmarkCategoryDriver(Enumerator):
                 command = yaml.safe_load(istr)['command']
                 yield ' '.join(map(six.moves.shlex_quote, command))
 
+    @property
+    def _commands(self):
+        exec_cls = self.root.execution_cls
+        for em in self.parent.execution_matrix:
+            for cmd in exec_cls.commands(self.campaign, self.config, em):
+                yield cmd
+
     @cached_property
     @listify
     def children(self):
-        for execution in self.parent.execution_matrix:
-            category = execution.get('category')
+        for cmd in self._commands:
+            category = cmd.execution.get('category')
             if category != self.category:
                 continue
             # Override `environment` if specified in YAML
@@ -112,9 +119,9 @@ class BenchmarkCategoryDriver(Enumerator):
                 yaml_env = self.config.get('environment')
                 if not yaml_env:
                     # empty dict or None wipes environment
-                    execution['environment'] = {}
+                    cmd.execution['environment'] = {}
                 else:
-                    env = execution.setdefault('environment', {})
+                    env = cmd.execution.setdefault('environment', {})
                     for name, value in yaml_env.items():
                         if value is None:
                             env.pop(name, None)
@@ -125,14 +132,14 @@ class BenchmarkCategoryDriver(Enumerator):
             # Override `modules` if specified in YAML
             if 'modules' in self.config:
                 yaml_modules = self.config['modules'] or []
-                execution['modules'] = list(yaml_modules)
+                cmd.execution['modules'] = list(yaml_modules)
             # Enrich `metas` if specified in YAML
             if 'metas' in self.campaign:
                 metas = dict(self.campaign.metas)
-                metas.update(execution.setdefault('metas', {}))
-                execution['metas'] = metas
-            name = execution.get('name') or ''
-            yield execution, osp.join(name, self.child_id())
+                metas.update(cmd.execution.setdefault('metas', {}))
+                cmd.execution['metas'] = metas
+            name = cmd.execution.get('name') or ''
+            yield cmd, osp.join(name, self.child_id())
 
     def child_id(self):
         while True:
@@ -147,7 +154,8 @@ class BenchmarkCategoryDriver(Enumerator):
     def child_builder(self, child):
         del child  # unused
 
-    def attempt_run_class(self, execution):
+    @property
+    def attempt_cls(self):
         config = self.parent.config.get('attempts')
         if config:
             fixed = config.get('fixed')
@@ -201,18 +209,17 @@ class BenchmarkCategoryDriver(Enumerator):
 
     def _execute(self, **kwargs):
         runs = dict()
-        for execution, run_dir in self.children:
-            if _HAS_MAGIC and 'shell' not in execution:
-                self._add_build_info(execution)
+        for command, run_dir in self.children:
+            if _HAS_MAGIC and 'shell' not in command.execution:
+                self._add_build_info(command.execution)
             else:
                 self.logger.info(
                     "No build information recorded " "(libmagic available: %s)",
                     _HAS_MAGIC,
                 )
-            runs.setdefault(execution['category'], []).append(run_dir)
+            runs.setdefault(command.execution['category'], []).append(run_dir)
             with pushd(run_dir, mkdir=True):
-                attempt_cls = self.attempt_run_class(execution)
-                attempt = attempt_cls(self, execution)
+                attempt = self.attempt_cls(self, command)
                 for attempt in attempt(**kwargs):
                     pass
                 yield run_dir
@@ -360,14 +367,19 @@ class MetricsDriver(Leaf):
 
 
 class FixedAttempts(Enumerator):
-    def __init__(self, parent, execution):
+    def __init__(self, parent, command):
         super(FixedAttempts, self).__init__(parent)
-        self.execution = execution
+        assert isinstance(command, Command)
+        self.command = command
         self.paths = []
         self.config = parent.config
         self.exec_context = parent.exec_context
 
     __call__ = Enumerator._call_without_report
+
+    @property
+    def execution(self):
+        return self.command.execution
 
     @property
     def benchmark(self):
@@ -407,20 +419,10 @@ class FixedAttempts(Enumerator):
     def _should_run(self, attempt):
         return attempt <= self.attempts
 
-    @cached_property
-    def execution_layer_class(self):
-        """Get execution layer class
-        """
-        name = self.campaign.process.type
-        for clazz in [ExecutionDriver, SrunExecutionDriver]:
-            if name == clazz.name:
-                return clazz
-        raise NameError("Unknown execution layer: '%s'" % name)
-
     def execution_layer(self):
         """Build the proper execution layer
         """
-        return self.execution_layer_class(self)
+        return self.root.execution_cls(self)
 
     def last_attempt(self):
         self._sort_attempts()

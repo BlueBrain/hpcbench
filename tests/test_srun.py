@@ -68,6 +68,7 @@ class TestSrun(DriverTestCase, unittest.TestCase):
         with open(aggregated_metrics_f) as istr:
             data = json.load(istr)
         self.assertEqual(self._srun_metrics(data)['performance'], 42.0)
+        self.assertEqual(len(data), 25)
 
     def test_srun_dependent(self):
         yaml_file = 'test_srun_dependent.yaml'
