@@ -184,8 +184,7 @@ class TestHostDriver(unittest.TestCase):
         srun_nodes = kwargs.get('srun_nodes', 1)
         benchmark_config = kwargs.get('benchmark_config')
         srun = benchmark_config.get('srun') if benchmark_config else None
-        command = Command(execution=dict(command=['ls', '-la']),
-                          srun=srun)
+        command = Command(execution=dict(command=['ls', '-la']), srun=srun)
         campaign_file = TestHostDriver.CAMPAIGN_FILE
         if srun_nodes is not None:
             command.execution.update(srun_nodes=srun_nodes)
@@ -211,14 +210,7 @@ class TestHostDriver(unittest.TestCase):
         slurm = self.slurm(benchmark_config=dict(srun=dict(constraint="uc1*6|uc2*6")))
         os.environ['SRUN'] = 'true'  # otherwise `find_executable` crashes
         six.assertCountEqual(
-            self,
-            slurm.command,
-            [
-                'true',
-                "--constraint='uc1*6|uc2*6'",
-                'ls',
-                '-la',
-            ],
+            self, slurm.command, ['true', "--constraint='uc1*6|uc2*6'", 'ls', '-la']
         )
         os.environ.pop('SRUN')
 
