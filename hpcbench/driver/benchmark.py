@@ -1,3 +1,5 @@
+import contextlib
+import copy
 import glob
 import json
 import logging
@@ -27,6 +29,7 @@ from hpcbench.toolbox.buildinfo import extract_build_info
 from hpcbench.toolbox.collections_ext import nameddict
 from hpcbench.toolbox.contextlib_ext import pushd
 from hpcbench.toolbox.edsl import kwargsql
+from hpcbench.toolbox.environment_modules import Module
 from hpcbench.toolbox.functools_ext import listify
 from hpcbench.toolbox.process import find_executable
 
@@ -207,11 +210,26 @@ class BenchmarkCategoryDriver(Enumerator):
                 else:
                     self.logger.info('%s is not pointing to an ELF executable', exepath)
 
+    @contextlib.contextmanager
+    def _module_env(self, execution):
+        """Set current process environment according
+        to execution `environment` and `modules`
+        """
+        env = copy.copy(os.environ)
+        try:
+            for mod in execution.get('modules') or []:
+                Module.load(mod)
+            os.environ.update(execution.get('environment') or {})
+            yield
+        finally:
+            os.environ = env
+
     def _execute(self, **kwargs):
         runs = dict()
         for command, run_dir in self.children:
             if _HAS_MAGIC and 'shell' not in command.execution:
-                self._add_build_info(command.execution)
+                with self._module_env(command.execution):
+                    self._add_build_info(command.execution)
             else:
                 self.logger.info(
                     "No build information recorded " "(libmagic available: %s)",

@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 from collections import Mapping, namedtuple
-import contextlib
 import copy
 import itertools
 import os
@@ -18,7 +17,6 @@ import six
 
 from hpcbench import jinja_environment
 from hpcbench.toolbox.contextlib_ext import pushd
-from hpcbench.toolbox.environment_modules import Module
 from hpcbench.toolbox.process import (
     build_slurm_arguments,
     find_executable,
@@ -141,20 +139,6 @@ class ExecutionDriver(Leaf):
         self.logger.info('Executing command: %s', self.command_str)
         return subprocess.Popen([self._executor_script], stdout=stdout, stderr=stderr)
 
-    @contextlib.contextmanager
-    def module_env(self):
-        """Set current process environment according
-        to execution `environment` and `modules`
-        """
-        env = copy.copy(os.environ)
-        try:
-            for mod in self.execution.get('modules') or []:
-                Module.load(mod)
-            os.environ.update(self.execution.get('environment') or {})
-            yield
-        finally:
-            os.environ = env
-
     def __execute(self, stdout, stderr):
         with self.module_env():
             self.benchmark.pre_execute(self.execution, self.exec_context)
@@ -162,6 +146,10 @@ class ExecutionDriver(Leaf):
         with self.module_env():
             self.benchmark.post_execute(self.execution, self.exec_context)
         return exit_status
+
+    def module_env(self):
+        category_driver = self.parent.parent
+        return category_driver._module_env(self.execution)
 
     @write_yaml_report
     @Enumerator.call_decorator
