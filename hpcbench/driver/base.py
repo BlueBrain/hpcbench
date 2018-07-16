@@ -1,4 +1,5 @@
 import datetime
+import errno
 import logging
 import types
 from abc import ABCMeta, abstractmethod, abstractproperty
@@ -101,8 +102,22 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
         for child in self._children:
             yield self.child_builder(child)
 
+    @classmethod
+    def _add_child_to_report(cls, child):
+        try:
+            with open(YAML_REPORT_FILE) as istr:
+                data = yaml.safe_load(istr)
+        except IOError as e:
+            if e.errno != errno.ENOENT:
+                raise
+            data = {}
+        data.setdefault('children', []).append(str(child))
+        with open(YAML_REPORT_FILE, 'w') as ostr:
+            yaml.dump(data, ostr, default_flow_style=False)
+
     def _call_without_report(self, **kwargs):
         for child in self._children:
+            self._add_child_to_report(child)
             child_obj = self.child_builder(child)
             with pushd(
                 str(child),
