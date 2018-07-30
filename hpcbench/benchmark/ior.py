@@ -7,6 +7,7 @@ import os
 import os.path as osp
 import re
 import shlex
+import shutil
 
 from cached_property import cached_property
 import six
@@ -143,11 +144,18 @@ class IOR(Benchmark):
 
     APIS = ['POSIX', 'MPIIO', 'HDF5']
     DEFAULT_BLOCK_SIZE = "1G"
-    DEFAULT_TRANSFER_SIZE = "32M"
+    DEFAULT_CLEAN_PATH = True
     DEFAULT_EXECUTABLE = 'ior'
-    DEFAULT_SRUN_NODES = 1
     DEFAULT_FILE_MODE = 'fpp'
     DEFAULT_OPTIONS = []
+    DEFAULT_REPETITIONS = 3
+    DEFAULT_SRUN_NODES = 1
+    DEFAULT_TRANSFER_SIZE = "32M"
+    DEFAULT_API_FILE_MODE_OPTIONS = dict(
+        MPIIO=dict(onefile=['-c'], fpp=['-F']),
+        POSIX=dict(fpp=['-F']),
+        HDF5=dict(fpp=['-F']),
+    )
 
     def __init__(self):
         super(IOR, self).__init__(
@@ -160,6 +168,9 @@ class IOR(Benchmark):
                 path=None,
                 srun_nodes=0,
                 transfer_size=IOR.DEFAULT_TRANSFER_SIZE,
+                clean_path=IOR.DEFAULT_CLEAN_PATH,
+                repetitions=IOR.DEFAULT_REPETITIONS,
+                api_file_mode_options=IOR.DEFAULT_API_FILE_MODE_OPTIONS,
             )
         )
 
@@ -170,25 +181,45 @@ class IOR(Benchmark):
         return self.attributes['executable']
 
     @cached_property
+    def clean_path(self):
+        """Remove test directory if present before executing IOR
+        """
+        return self.attributes['clean_path']
+
+    @cached_property
+    def repetitions(self):
+        return str(self.attributes['repetitions'])
+
+    @cached_property
     def path(self):
         """Overwrite execution path
         """
         return self.attributes['path']
 
+    @cached_property
+    def _fspath(self):
+        """Path on the filesystem, without prefix protocol if any"""
+        return self.path.split('://', 1)[-1]
+
     @property
     def apis(self):
         """List of API to test"""
-        return self.attributes['apis']
+        value = self.attributes['apis']
+        if isinstance(value, six.string_types):
+            value = shlex.split(value)
+        return value
 
     def pre_execute(self, execution, context):
         """Make sure the named directory is created if possible"""
         del execution  # not used
         del context  # not used
-        if self.path:
-            if not osp.exists(self.path):
-                os.makedirs(self.path)
+        if self._fspath:
+            if self.clean_path:
+                shutil.rmtree(self._fspath, ignore_errors=True)
+            if not osp.exists(self._fspath):
+                os.makedirs(self._fspath)
             else:
-                if not osp.isdir(osp.realpath(self.path)):
+                if not osp.isdir(osp.realpath(self._fspath)):
                     raise IOError
 
     @listify
@@ -203,13 +234,7 @@ class IOR(Benchmark):
                     yield command
 
     def _execution_matrix(self, api, file_mode, block_size, transfer_size):
-        if self.path:
-            if file_mode == '-F':
-                opath = ['-o', osp.join(self.path, 'data')]
-            else:
-                opath = ['-o', self.path]
-        else:
-            opath = []
+        options = self.options
         cmd = dict(
             category=api,
             command=[
@@ -221,9 +246,11 @@ class IOR(Benchmark):
                 block_size,
                 '-t',
                 transfer_size,
+                '-i',
+                self.repetitions,
             ]
-            + opath
-            + self.options,
+            + options
+            + self._context_options(api, file_mode),
             metas=dict(api=api, block_size=block_size, transfer_size=transfer_size),
             srun_nodes=self.srun_nodes,
         )
@@ -242,15 +269,19 @@ class IOR(Benchmark):
 
     @property
     def file_mode(self):
-        fm = self.attributes['file_mode']
-        if fm == 'fpp':
-            return ['-F']
-        elif fm == 'onefile':
-            return ['']
-        elif fm == 'both':
-            return ['-F', '']
-        else:
-            raise NameError('{} not a valid IOR file mode'.format(fm))
+        fms = self.attributes['file_mode']
+        eax = set()
+        if isinstance(fms, six.string_types):
+            fms = shlex.split(fms)
+        for fm in fms:
+            if fm == 'both':
+                eax.add('fpp')
+                eax.add('onefile')
+            elif fm in ['fpp', 'onefile']:
+                eax.add(fm)
+            else:
+                raise Exception('Invalid IOR file mode: ' + fm)
+        return eax
 
     @property
     def block_size(self):
@@ -278,3 +309,17 @@ class IOR(Benchmark):
     def metrics_extractors(self):
         # Use same extractor for all categories of commands
         return IORMetricsExtractor()
+
+    @cached_property
+    def api_file_mode_options(self):
+        """Additional options according to
+        API and file mode settings"""
+        return self.attributes['api_file_mode_options']
+
+    def _context_options(self, api, file_mode):
+        eax = []
+        if self.path:
+            eax += ['-o', osp.join(self.path, 'data')]
+        api_opts = self.api_file_mode_options.get(api, {})
+        eax += api_opts.get(file_mode, [])
+        return eax
