@@ -44,6 +44,7 @@ class ExecutionContext(
             "node",  # current node (string)
             "srun_options",  # given srun_options (string list)
             "tag",  # current tag processed (string)
+            "benchmark",  # current benchmark processed (string)
         ],
     )
 ):

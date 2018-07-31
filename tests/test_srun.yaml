@@ -8,7 +8,7 @@ process:
         ntasks: 42
 benchmarks:
     '*':
-        test-slurm:
+        bench-name:
             type: fake
             srun:
                 exclusive:

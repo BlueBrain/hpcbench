@@ -7,6 +7,7 @@ import unittest
 from hpcbench.api import ExecutionContext
 from hpcbench.benchmark.mdtest import MDTest
 from .benchmark import AbstractBenchmarkTest
+from .. import FakeBenchmark
 
 
 LOGGER = logging.getLogger('test_mdtest')
@@ -26,6 +27,7 @@ class TestMDTestPostExecution(unittest.TestCase):
         mdt.attributes.update(post_cleanup=True, options=['foo', '-d', path])
         exec_ctx = mdt.execution_matrix(
             ExecutionContext(
+                benchmark=FakeBenchmark.DEFAULT_BENCHMARK_NAME,
                 cluster=None,
                 logger=LOGGER,
                 node='node.local',

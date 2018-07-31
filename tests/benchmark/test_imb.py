@@ -3,7 +3,7 @@ import unittest
 from hpcbench.api import ExecutionContext
 from hpcbench.benchmark.imb import IMB
 from .benchmark import AbstractBenchmarkTest
-from .. import FakeCluster
+from .. import FakeBenchmark, FakeCluster
 
 
 class TestImb(AbstractBenchmarkTest, unittest.TestCase):
@@ -84,6 +84,7 @@ class TestImb(AbstractBenchmarkTest, unittest.TestCase):
         tag = '*'
         nodes = ['node01', 'node02', 'node03', 'node04', 'node05']
         return ExecutionContext(
+            benchmark=FakeBenchmark.DEFAULT_BENCHMARK_NAME,
             cluster=FakeCluster(tag, nodes, node),
             logger=self.logger,
             node=node,

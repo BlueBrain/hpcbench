@@ -21,7 +21,7 @@ from hpcbench.driver.benchmark import (
 )
 from hpcbench.toolbox.collections_ext import dict_merge
 from hpcbench.toolbox.contextlib_ext import mkdtemp, pushd
-from .. import FakeCluster
+from .. import FakeBenchmark, FakeCluster
 
 LOGGER = logging.getLogger(__name__)
 
@@ -140,6 +140,7 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
                                     logger=LOGGER, root=namedtuple('root', ['network'])
                                 ),
                                 benchmark,
+                                'bench',
                                 dict(),
                             ),
                             'test-category',
@@ -171,10 +172,11 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
         node = 'localhost'
         return ExecutionContext(
             cluster=FakeCluster(tag, [node], node),
-            node=node,
-            tag=tag,
             logger=self.logger,
+            benchmark=FakeBenchmark.DEFAULT_BENCHMARK_NAME,
+            node=node,
             srun_options=[],
+            tag=tag,
         )
 
     @property

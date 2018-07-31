@@ -1,4 +1,4 @@
 benchmarks:
   '*':
-    test:
+    bench-name:
       type: fake

@@ -6,6 +6,7 @@ benchmarks:
                 fixed: 2
             attributes:
                 input: [10]
+                expected_name: test01
         test02:
             type: fake
             attempts:
@@ -14,6 +15,7 @@ benchmarks:
                 maximum: 3
             attributes:
                 input: [10]
+                expected_name: test02
         test03:
             type: fake
             attempts:
@@ -22,3 +24,4 @@ benchmarks:
                 maximum: 3
             attributes:
                 input: [10]
+                expected_name: test03

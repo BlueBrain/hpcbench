@@ -138,6 +138,7 @@ class FakeBenchmark(Benchmark):
     '''
 
     INPUTS = [10, 20, 100]
+    DEFAULT_BENCHMARK_NAME = 'bench-name'
 
     @property
     def in_campaign_template(self):
@@ -146,7 +147,10 @@ class FakeBenchmark(Benchmark):
     def __init__(self):
         super(FakeBenchmark, self).__init__(
             attributes=dict(
-                input=FakeBenchmark.INPUTS, run_path=None, executable=sys.executable
+                input=FakeBenchmark.INPUTS,
+                run_path=None,
+                executable=sys.executable,
+                expected_name=FakeBenchmark.DEFAULT_BENCHMARK_NAME,
             )
         )
 
@@ -154,6 +158,10 @@ class FakeBenchmark(Benchmark):
     def executable(self):
         """Get path to python executable"""
         return self.attributes['executable']
+
+    @cached_property
+    def expected_name(self):
+        return self.attributes['expected_name']
 
     def pre_execute(self, execution, context):
         del execution  # unused
@@ -175,7 +183,8 @@ class FakeBenchmark(Benchmark):
             )
 
     def execution_matrix(self, context):
-        del context  # unused
+        msg = "%s != %s" % (repr(context.benchmark), repr(self.expected_name))
+        assert context.benchmark == self.expected_name, msg
         cmds = [
             dict(
                 category='main',
