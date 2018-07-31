@@ -51,4 +51,27 @@ class TestIORBenchmark(AbstractBenchmarkTest, unittest.TestCase):
 
     @property
     def attributes(self):
-        return dict(executable='/path/to/fake')
+        return dict(
+            executable='/path/to/fake',
+            path='/path/with/{api}/{file_mode}/{block_size}/{transfer_size}/test'
+        )
+
+    @property
+    def expected_execution_matrix(self):
+        return [
+            dict(
+                category=api,
+                command=[
+                    '/path/to/fake',
+                    '-a', api, '-F', '-b', '1G', '-t', '32M',
+                    '-o', '/path/with/{api}/{file_mode}/{block_size}/{transfer_size}/test/data',
+                ],
+                metas=dict(
+                    api=api,
+                    block_size='1G',
+                    transfer_size='32M',
+                ),
+                srun_nodes=0,
+            )
+            for api in IOR.APIS
+        ]
