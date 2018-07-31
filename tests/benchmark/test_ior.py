@@ -53,7 +53,7 @@ class TestIORBenchmark(AbstractBenchmarkTest, unittest.TestCase):
     def attributes(self):
         return dict(
             executable='/path/to/fake',
-            path='/path/with/{api}/{file_mode}/{block_size}/{transfer_size}/test'
+            path='/path/with/{benchmark}/{api}/{file_mode}/{block_size}/{transfer_size}/test'
         )
 
     @property
@@ -63,8 +63,9 @@ class TestIORBenchmark(AbstractBenchmarkTest, unittest.TestCase):
                 category=api,
                 command=[
                     '/path/to/fake',
-                    '-a', api, '-F', '-b', '1G', '-t', '32M',
-                    '-o', '/path/with/{api}/{file_mode}/{block_size}/{transfer_size}/test/data',
+                    '-a', api, '-b', '1G', '-t', '32M', '-i', '3',
+                    '-o', '/path/with/bench-name/{api}/fpp/1G/32M/test/data'.format(api=api),
+                    '-F',
                 ],
                 metas=dict(
                     api=api,

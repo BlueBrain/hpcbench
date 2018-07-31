@@ -192,7 +192,10 @@ class IOR(Benchmark):
 
     @cached_property
     def path(self):
-        """Overwrite execution path
+        """Overwrite execution path. Parameter expansion
+        with Python formatting supports:
+        api, file_mode, block_size, transfer_size, and
+        benchmark (name in YAML)
         """
         return self.attributes['path']
 
@@ -224,16 +227,19 @@ class IOR(Benchmark):
 
     @listify
     def execution_matrix(self, context):
-        del context  # unused
         # FIXME: Design the real set of commands to execute
         for api in set(self.attributes['apis']) & set(IOR.APIS):
             for fm, bs, ts in itertools.product(
                 self.file_mode, self.block_size, self.transfer_size
             ):
-                for command in self._execution_matrix(api, fm, bs, ts):
+                for command in self._execution_matrix(context, api, fm, bs, ts):
                     yield command
 
-    def _execution_matrix(self, api, file_mode, block_size, transfer_size):
+    def _expand_path(self, **kwargs):
+        return self.path.format(**kwargs)
+
+    def _execution_matrix(self, context, api, file_mode,
+                          block_size, transfer_size):
         options = self.options
         cmd = dict(
             category=api,
@@ -241,7 +247,6 @@ class IOR(Benchmark):
                 find_executable(self.executable, required=False),
                 '-a',
                 api,
-                file_mode,
                 '-b',
                 block_size,
                 '-t',
@@ -250,7 +255,8 @@ class IOR(Benchmark):
                 self.repetitions,
             ]
             + options
-            + self._context_options(api, file_mode),
+            + self._context_options(context, api, file_mode,
+                                    block_size, transfer_size),
             metas=dict(api=api, block_size=block_size, transfer_size=transfer_size),
             srun_nodes=self.srun_nodes,
         )
@@ -316,10 +322,17 @@ class IOR(Benchmark):
         API and file mode settings"""
         return self.attributes['api_file_mode_options']
 
-    def _context_options(self, api, file_mode):
+    def _context_options(self, context, api, file_mode,
+                         block_size, transfer_size):
         eax = []
         if self.path:
-            eax += ['-o', osp.join(self.path, 'data')]
+            path = self._expand_path(api=api, file_mode=file_mode,
+                                     block_size=block_size,
+                                     transfer_size=transfer_size,
+                                     benchmark=context.benchmark)
+            if file_mode == 'fpp':
+                path = osp.join(path, 'data')
+            eax += ['-o', path]
         api_opts = self.api_file_mode_options.get(api, {})
         eax += api_opts.get(file_mode, [])
         return eax
