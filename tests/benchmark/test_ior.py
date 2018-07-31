@@ -53,18 +53,20 @@ class TestIORBenchmark(AbstractBenchmarkTest, unittest.TestCase):
     def attributes(self):
         return dict(
             executable='/path/to/fake',
-            path='/path/with/{benchmark}/{api}/{file_mode}/{block_size}/{transfer_size}/test'
+            path='ime:///path/with/{benchmark}/{api}/{file_mode}/{block_size}/{transfer_size}/test'
         )
 
     @property
     def expected_execution_matrix(self):
+
         return [
             dict(
                 category=api,
                 command=[
                     '/path/to/fake',
                     '-a', api, '-b', '1G', '-t', '32M', '-i', '3',
-                    '-o', '/path/with/bench-name/{api}/fpp/1G/32M/test/data'.format(api=api),
+                    '-o', ('ime://' if api != 'POSIX' else '') +
+                    '/path/with/bench-name/{api}/fpp/1G/32M/test/data'.format(api=api),
                     '-F',
                 ],
                 metas=dict(
