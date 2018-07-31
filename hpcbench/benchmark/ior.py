@@ -236,7 +236,10 @@ class IOR(Benchmark):
                     yield command
 
     def _expand_path(self, **kwargs):
-        return self.path.format(**kwargs)
+        path = self.path.format(**kwargs)
+        if kwargs['api'] == 'POSIX':
+            path = path.split('://', 1)[-1]
+        return path
 
     def _execution_matrix(self, context, api, file_mode,
                           block_size, transfer_size):
