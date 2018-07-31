@@ -78,7 +78,7 @@ class TestIORBenchmark(AbstractBenchmarkTest, unittest.TestCase):
                     ),
                     '-F',
                 ],
-                metas=dict(api=api, block_size='1G', transfer_size='32M'),
+                metas=dict(block_size='1G', transfer_size='32M'),
                 srun_nodes=0,
             )
             for api in IOR.APIS
