@@ -160,17 +160,18 @@ class IOR(Benchmark):
     def __init__(self):
         super(IOR, self).__init__(
             attributes=dict(
+                api_file_mode_options=IOR.DEFAULT_API_FILE_MODE_OPTIONS,
                 apis=IOR.APIS,
                 block_size=IOR.DEFAULT_BLOCK_SIZE,
+                clean_path=IOR.DEFAULT_CLEAN_PATH,
                 executable=IOR.DEFAULT_EXECUTABLE,
                 file_mode=IOR.DEFAULT_FILE_MODE,
                 options=IOR.DEFAULT_OPTIONS,
                 path=None,
+                repetitions=IOR.DEFAULT_REPETITIONS,
+                sizes=None,
                 srun_nodes=0,
                 transfer_size=IOR.DEFAULT_TRANSFER_SIZE,
-                clean_path=IOR.DEFAULT_CLEAN_PATH,
-                repetitions=IOR.DEFAULT_REPETITIONS,
-                api_file_mode_options=IOR.DEFAULT_API_FILE_MODE_OPTIONS,
             )
         )
 
@@ -225,15 +226,29 @@ class IOR(Benchmark):
                 if not osp.isdir(osp.realpath(self._fspath)):
                     raise IOError
 
+    @property
+    def sizes(self):
+        """Provides block_size and transfer_size through a list
+        of dict, for instance: [{'transfer': '1M 4M', 'block': '8M'}]
+        """
+        if self.attributes.get('sizes'):
+            for settings in self.attributes.get('sizes'):
+                for pair in itertools.product(
+                    shlex.split(settings['block']), shlex.split(settings['transfer'])
+                ):
+                    yield pair
+        else:
+            for pair in itertools.product(self.block_size, self.transfer_size):
+                yield pair
+
     @listify
     def execution_matrix(self, context):
         # FIXME: Design the real set of commands to execute
         for api in set(self.attributes['apis']) & set(IOR.APIS):
-            for fm, bs, ts in itertools.product(
-                self.file_mode, self.block_size, self.transfer_size
-            ):
-                for command in self._execution_matrix(context, api, fm, bs, ts):
-                    yield command
+            for fm in self.file_mode:
+                for bs, ts in self.sizes:
+                    for cmd in self._execution_matrix(context, api, fm, bs, ts):
+                        yield cmd
 
     def _expand_path(self, **kwargs):
         path = self.path.format(**kwargs)
@@ -241,8 +256,7 @@ class IOR(Benchmark):
             path = path.split('://', 1)[-1]
         return path
 
-    def _execution_matrix(self, context, api, file_mode,
-                          block_size, transfer_size):
+    def _execution_matrix(self, context, api, file_mode, block_size, transfer_size):
         options = self.options
         cmd = dict(
             category=api,
@@ -258,8 +272,7 @@ class IOR(Benchmark):
                 self.repetitions,
             ]
             + options
-            + self._context_options(context, api, file_mode,
-                                    block_size, transfer_size),
+            + self._context_options(context, api, file_mode, block_size, transfer_size),
             metas=dict(api=api, block_size=block_size, transfer_size=transfer_size),
             srun_nodes=self.srun_nodes,
         )
@@ -325,14 +338,16 @@ class IOR(Benchmark):
         API and file mode settings"""
         return self.attributes['api_file_mode_options']
 
-    def _context_options(self, context, api, file_mode,
-                         block_size, transfer_size):
+    def _context_options(self, context, api, file_mode, block_size, transfer_size):
         eax = []
         if self.path:
-            path = self._expand_path(api=api, file_mode=file_mode,
-                                     block_size=block_size,
-                                     transfer_size=transfer_size,
-                                     benchmark=context.benchmark)
+            path = self._expand_path(
+                api=api,
+                file_mode=file_mode,
+                block_size=block_size,
+                transfer_size=transfer_size,
+                benchmark=context.benchmark,
+            )
             if file_mode == 'fpp':
                 path = osp.join(path, 'data')
             eax += ['-o', path]
