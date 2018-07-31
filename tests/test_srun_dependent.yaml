@@ -21,14 +21,14 @@ process:
 
 benchmarks:
   uc1:
-    test-slurm:
+    bench-name:
       type: fake
   uc2:
-    test-slurm2:
+    bench-name:
       type: fake
       attributes:
           input:
           - "{process_count}"
   uc3:
-    test-slurm3:
+    bench-name:
       type: fake

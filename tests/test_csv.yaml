@@ -1,4 +1,4 @@
 benchmarks:
     '*':
-        test_default_metrics:
+        bench-name:
             type: fake

@@ -38,12 +38,13 @@ class BenchmarkDriver(Enumerator):
     """Abstract representation of a benchmark, part of a campaign tag
     """
 
-    def __init__(self, parent, benchmark, config):
+    def __init__(self, parent, benchmark, name, config):
         super(BenchmarkDriver, self).__init__(
             parent, benchmark.name, catch_child_exception=True
         )
         self.benchmark = benchmark
         self.config = BenchmarkDriver._prepare_config(config)
+        self.name = name
 
     @classmethod
     def _prepare_config(cls, config):
@@ -74,6 +75,7 @@ class BenchmarkDriver(Enumerator):
             node=self.node,
             srun_options=self.config['srun_options'],
             tag=tag,
+            benchmark=self.name,
         )
 
     @property

@@ -95,6 +95,7 @@ class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
         tag = '*'
         nodes = ['node01', 'node03', 'node05']
         return ExecutionContext(
+            benchmark='bench-name',
             cluster=FakeCluster(tag, nodes, node),
             logger=self.logger,
             node=node,

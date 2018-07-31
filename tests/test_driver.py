@@ -46,7 +46,7 @@ class TestDriver(DriverTestCase, unittest.TestCase):
             TestDriver.CAMPAIGN_PATH,
             TestDriver.driver.node,
             '*',
-            'test01',
+            'test_fake',
             'main',
             'metrics.json',
         )
@@ -170,6 +170,7 @@ class TestHostDriver(unittest.TestCase):
                         HostDriver(CampaignDriver(campaign_file, node=node), node), tag
                     ),
                     bench,
+                    FakeBenchmark.DEFAULT_BENCHMARK_NAME,
                     dict(),
                 ),
                 'main',
@@ -197,6 +198,7 @@ class TestHostDriver(unittest.TestCase):
                             tag,
                         ),
                         namedtuple('benchmark', ['name'])(name='benchmark'),
+                        FakeBenchmark.DEFAULT_BENCHMARK_NAME,
                         benchmark_config or dict(),
                     ),
                     'category',

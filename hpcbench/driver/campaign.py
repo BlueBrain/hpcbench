@@ -215,4 +215,4 @@ class BenchmarkTagDriver(Enumerator):
         benchmark = Benchmark.get_subclass(conf['type'])()
         if 'attributes' in conf:
             dict_merge(benchmark.attributes, conf['attributes'] or {})
-        return BenchmarkDriver(self, benchmark, conf)
+        return BenchmarkDriver(self, benchmark, child, conf)

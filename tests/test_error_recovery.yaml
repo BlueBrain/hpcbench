@@ -1,6 +1,6 @@
 benchmarks:
     '*':
-        working:
+        bench-name:
             type: fake
         error:
             # This benchmark will fail because executable
@@ -8,3 +8,4 @@ benchmarks:
             type: fake
             attributes:
                 executable: /unknown
+                expected_name: error

@@ -11,5 +11,5 @@ network:
 
 benchmarks:
     uc1:
-        test:
+        bench-name:
             type: fake

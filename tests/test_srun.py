@@ -58,7 +58,7 @@ class TestSrun(DriverTestCase, unittest.TestCase):
             TestSrun.CAMPAIGN_PATH,
             TestSrun.driver.node,
             '*',
-            'test-slurm',
+            'bench-name',
             'main',
             'metrics.json',
         )
@@ -80,7 +80,7 @@ class TestSrun(DriverTestCase, unittest.TestCase):
         )
         driver()
         aggregated_metrics_f = osp.join(
-            output_dir, node, 'uc2', 'test-slurm2', 'main', 'metrics.json'
+            output_dir, node, 'uc2', 'bench-name', 'main', 'metrics.json'
         )
         self.assertTrue(
             osp.isfile(aggregated_metrics_f), "Not file: " + aggregated_metrics_f

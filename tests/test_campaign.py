@@ -21,6 +21,8 @@ from hpcbench.driver.benchmark import (
 from hpcbench.driver.base import ConstraintTag
 from hpcbench.toolbox.contextlib_ext import modified_environ
 
+from . import FakeBenchmark
+
 
 LOGGER = logging.getLogger()
 
@@ -168,6 +170,7 @@ class TestBenchmark(unittest.TestCase):
                             HostDriver(CampaignDriver(default_campaign()), 'n1')
                         ),
                         namedtuple('benchmark', ['name'])(name='benchmark'),
+                        FakeBenchmark.DEFAULT_BENCHMARK_NAME,
                         dict(exec_prefix=exec_prefix),
                     ),
                     'category',

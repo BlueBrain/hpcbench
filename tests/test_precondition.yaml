@@ -6,12 +6,20 @@ benchmarks:
   '*':
     test01:
       type: fake
+      attributes:
+        expected_name: test01
     test02:
       type: fake
+      attributes:
+        expected_name: test02
     test03:
       type: fake
+      attributes:
+        expected_name: test03
     test04:
       type: fake
+      attributes:
+        expected_name: test04
 
 precondition:
   test01: ENABLE_TEST01

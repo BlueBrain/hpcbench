@@ -6,5 +6,7 @@ benchmarks:
   '*':
     sbatch:
       nodes: 2
-    test01:
+    test_fake:
       type: fake
+      attributes:
+        expected_name: test_fake
