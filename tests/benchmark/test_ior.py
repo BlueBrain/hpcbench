@@ -53,28 +53,44 @@ class TestIORBenchmark(AbstractBenchmarkTest, unittest.TestCase):
     def attributes(self):
         return dict(
             executable='/path/to/fake',
-            path='ime:///path/with/{benchmark}/{api}/{file_mode}/{block_size}/{transfer_size}/test'
+            path='ime:///path/with/{benchmark}/{api}/{file_mode}/{block_size}/{transfer_size}/test',
         )
 
     @property
     def expected_execution_matrix(self):
-
         return [
             dict(
                 category=api,
                 command=[
                     '/path/to/fake',
-                    '-a', api, '-b', '1G', '-t', '32M', '-i', '3',
-                    '-o', ('ime://' if api != 'POSIX' else '') +
-                    '/path/with/bench-name/{api}/fpp/1G/32M/test/data'.format(api=api),
+                    '-a',
+                    api,
+                    '-b',
+                    '1G',
+                    '-t',
+                    '32M',
+                    '-i',
+                    '3',
+                    '-o',
+                    ('ime://' if api != 'POSIX' else '')
+                    + '/path/with/bench-name/{api}/fpp/1G/32M/test/data'.format(
+                        api=api
+                    ),
                     '-F',
                 ],
-                metas=dict(
-                    api=api,
-                    block_size='1G',
-                    transfer_size='32M',
-                ),
+                metas=dict(api=api, block_size='1G', transfer_size='32M'),
                 srun_nodes=0,
             )
             for api in IOR.APIS
         ]
+
+    def test_sizes(self):
+        ior = IOR()
+        ior.attributes['sizes'] = [
+            dict(transfer="1K 4K", block="8M"),
+            dict(transfer="1M 4M", block="1G"),
+        ]
+        sizes = sorted(list(ior.sizes))
+        self.assertEqual(
+            sizes, [('1G', '1M'), ('1G', '4M'), ('8M', '1K'), ('8M', '4K')]
+        )
