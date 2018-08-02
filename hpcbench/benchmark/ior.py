@@ -203,7 +203,8 @@ class IOR(Benchmark):
     @cached_property
     def _fspath(self):
         """Path on the filesystem, without prefix protocol if any"""
-        return self.path.split('://', 1)[-1]
+        if self.path:
+            return self.path.split('://', 1)[-1]
 
     @property
     def apis(self):
@@ -217,14 +218,21 @@ class IOR(Benchmark):
         """Make sure the named directory is created if possible"""
         del execution  # not used
         del context  # not used
-        if self._fspath:
-            if self.clean_path:
-                shutil.rmtree(self._fspath, ignore_errors=True)
-            if not osp.exists(self._fspath):
-                os.makedirs(self._fspath)
+        path = self._fspath
+        if path:
+            try:
+                path = path.format(benchmark=context.benchmark)
+            except KeyError:
+                context.logger.warn('Path depends on runtime parameters.'
+                                    'Can not prepare it')
             else:
-                if not osp.isdir(osp.realpath(self._fspath)):
-                    raise IOError
+                if self.clean_path:
+                    shutil.rmtree(path, ignore_errors=True)
+                if not osp.exists(path):
+                    os.makedirs(path)
+                else:
+                    if not osp.isdir(osp.realpath(self._fspath)):
+                        raise IOError
 
     @property
     def sizes(self):
