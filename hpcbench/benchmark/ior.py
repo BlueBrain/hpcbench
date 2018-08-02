@@ -230,7 +230,9 @@ class IOR(Benchmark):
         path = self._fspath
         if path:
             path = path.format(
-                benchmark=context.benchmark, **execution.get('metas', {})
+                benchmark=context.benchmark,
+                api=execution['category'],
+                **execution.get('metas', {})
             )
             if self.clean_path:
                 shutil.rmtree(path, ignore_errors=True)
