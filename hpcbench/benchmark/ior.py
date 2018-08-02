@@ -227,23 +227,20 @@ class IOR(Benchmark):
 
     def pre_execute(self, execution, context):
         """Make sure the named directory is created if possible"""
-        del execution  # not used
         path = self._fspath
         if path:
-            try:
-                path = path.format(benchmark=context.benchmark)
-            except KeyError:
-                context.logger.warn(
-                    'Path depends on runtime parameters.' 'Can not prepare it'
-                )
+            path = path.format(
+                benchmark=context.benchmark, **execution.get('metas', {})
+            )
+            if self.clean_path:
+                shutil.rmtree(path, ignore_errors=True)
+            if execution['metas']['file_mode'] == 'onefile':
+                path = osp.dirname(path)
+            if not osp.exists(path):
+                os.makedirs(path)
             else:
-                if self.clean_path:
-                    shutil.rmtree(path, ignore_errors=True)
-                if not osp.exists(path):
-                    os.makedirs(path)
-                else:
-                    if not osp.isdir(osp.realpath(self._fspath)):
-                        raise IOError
+                if not osp.isdir(osp.realpath(path)):
+                    raise IOError
 
     @property
     def sizes(self):
