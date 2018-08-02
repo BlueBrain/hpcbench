@@ -273,7 +273,9 @@ class IOR(Benchmark):
             ]
             + options
             + self._context_options(context, api, file_mode, block_size, transfer_size),
-            metas=dict(block_size=block_size, transfer_size=transfer_size),
+            metas=dict(
+                block_size=block_size, file_mode=file_mode, transfer_size=transfer_size
+            ),
             srun_nodes=self.srun_nodes,
         )
         yield cmd
