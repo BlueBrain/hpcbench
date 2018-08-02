@@ -272,7 +272,8 @@ class IOR(Benchmark):
     def _expand_path(self, **kwargs):
         path = self.path.format(**kwargs)
         if kwargs['api'] == 'POSIX':
-            path = path.split('://', 1)[-1]
+            if path and path.startswith('ime') and '/ime/' in path:
+                path = path[path.find('/ime/') :]
         return path
 
     def _execution_matrix(self, context, api, file_mode, block_size, transfer_size):
