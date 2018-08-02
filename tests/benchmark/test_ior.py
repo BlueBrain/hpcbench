@@ -53,11 +53,16 @@ class TestIORBenchmark(AbstractBenchmarkTest, unittest.TestCase):
     def attributes(self):
         return dict(
             executable='/path/to/fake',
-            path='ime:///path/with/{benchmark}/{api}/{file_mode}/{block_size}/{transfer_size}/test',
+            path='ime:///path/with/ime/{benchmark}/{api}/{file_mode}/{block_size}/{transfer_size}/test',
         )
 
     @property
     def expected_execution_matrix(self):
+        paths = dict(
+            POSIX='/ime/bench-name/POSIX/fpp/1G/32M/test/data',
+            MPIIO='ime:///path/with/ime/bench-name/MPIIO/fpp/1G/32M/test/data',
+            HDF5='ime:///path/with/ime/bench-name/HDF5/fpp/1G/32M/test/data',
+        )
         return [
             dict(
                 category=api,
@@ -72,10 +77,7 @@ class TestIORBenchmark(AbstractBenchmarkTest, unittest.TestCase):
                     '-i',
                     '3',
                     '-o',
-                    ('ime://' if api != 'POSIX' else '')
-                    + '/path/with/bench-name/{api}/fpp/1G/32M/test/data'.format(
-                        api=api
-                    ),
+                    paths[api],
                     '-F',
                 ],
                 metas=dict(file_mode='fpp', block_size='1G', transfer_size='32M'),
