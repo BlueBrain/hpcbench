@@ -3,6 +3,7 @@
     https://github.com/LLNL/ior
 """
 import itertools
+import logging
 import os
 import os.path as osp
 import re
@@ -15,6 +16,9 @@ import six
 from hpcbench.api import Benchmark, Metric, MetricsExtractor
 from hpcbench.toolbox.functools_ext import listify
 from hpcbench.toolbox.process import find_executable
+
+
+LOGGER = logging.getLogger('ior')
 
 
 class IORMetricsExtractor(MetricsExtractor):
@@ -56,6 +60,10 @@ class IORMetricsExtractor(MetricsExtractor):
 
     SUMMARY_HEADER = 'Summary of all tests:'
     RESULTS_HEADER_START = 'Operation'
+
+    @property
+    def check_metrics(self):
+        return False
 
     @cached_property
     def metrics(self):
@@ -129,7 +137,7 @@ class IORMetricsExtractor(MetricsExtractor):
                 continue
             desc = cls.METAS.get(col)
             if desc is None:
-                raise Exception('Unrecognized column: %s' % col)
+                LOGGER.warn('Unrecognized column: %s', col)
             meta = cls.get_meta_name(operation, desc.get('name') or col)
             value = desc['metric'].type(line[i])
             metrics[meta] = value
