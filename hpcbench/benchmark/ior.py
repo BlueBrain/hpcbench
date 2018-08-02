@@ -217,14 +217,14 @@ class IOR(Benchmark):
     def pre_execute(self, execution, context):
         """Make sure the named directory is created if possible"""
         del execution  # not used
-        del context  # not used
         path = self._fspath
         if path:
             try:
                 path = path.format(benchmark=context.benchmark)
             except KeyError:
-                context.logger.warn('Path depends on runtime parameters.'
-                                    'Can not prepare it')
+                context.logger.warn(
+                    'Path depends on runtime parameters.' 'Can not prepare it'
+                )
             else:
                 if self.clean_path:
                     shutil.rmtree(path, ignore_errors=True)
