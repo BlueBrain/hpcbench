@@ -120,6 +120,13 @@ class TestEnvironment(DriverTestCase, unittest.TestCase):
         print('    module purge', file=ostr)
         for module in modules:
             print('    module load ' + module, file=ostr)
+        if modules:
+            print('else', file=ostr)
+            for module in modules:
+                print(
+                    '    echo "Error: could not load module {}" >&2'.format(module),
+                    file=ostr,
+                )
         print('fi', file=ostr)
         for name, value in environment.items():
             value = six.moves.shlex_quote(value)

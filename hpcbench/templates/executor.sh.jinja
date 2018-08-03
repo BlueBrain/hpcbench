@@ -5,6 +5,12 @@ if type module >/dev/null; then
     {%- for module in modules %}
     module load {{ module }}
     {%- endfor %}
+{%- if modules %}
+else
+    {%- for module in modules %}
+    echo "Error: could not load module {{ module }}" >&2
+    {%- endfor %}
+{%- endif %}
 fi
 {%- for var, value in environment.items() %}
 export {{ var }}={{ value }}
