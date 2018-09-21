@@ -120,7 +120,8 @@ class SbatchDriver(Enumerator):
         return sbatch_options
 
     def _filter_nodes(self, nodes, count):
-        assert count <= len(nodes)
+        assert count <= len(nodes), \
+            "Expected # of nodes <= {} but got {}".format(count, len(nodes))
         if count < len(nodes):
             self.logger.warning(
                 "Asking to run SBATCH job with " "%d of %d declared nodes in tag",
