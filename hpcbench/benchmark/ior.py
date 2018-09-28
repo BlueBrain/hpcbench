@@ -262,7 +262,10 @@ class IOR(Benchmark):
     @listify
     def execution_matrix(self, context):
         # FIXME: Design the real set of commands to execute
-        for api in set(self.attributes['apis']) & set(IOR.APIS):
+        apis = self.attributes['apis']
+        if not isinstance(apis, list):
+            apis = apis.split()
+        for api in set(apis) & set(IOR.APIS):
             for fm in self.file_mode:
                 for bs, ts in self.sizes:
                     for cmd in self._execution_matrix(context, api, fm, bs, ts):
