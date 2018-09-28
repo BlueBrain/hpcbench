@@ -71,8 +71,6 @@ DEFAULT_CAMPAIGN = dict(
             'fail',
             'failing',
             'future',
-            'maint',
-            'reserved',
         ],
     ),
     process=dict(
