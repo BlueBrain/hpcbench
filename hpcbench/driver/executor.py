@@ -140,16 +140,20 @@ class ExecutionDriver(Leaf):
         return subprocess.Popen([self._executor_script], stdout=stdout, stderr=stderr)
 
     def __execute(self, stdout, stderr):
-        with self.module_env():
+        with self.module_env(), self.spack_env():
             self.benchmark.pre_execute(self.execution, self.exec_context)
         exit_status = self.popen(stdout, stderr).wait()
-        with self.module_env():
+        with self.module_env(), self.spack_env():
             self.benchmark.post_execute(self.execution, self.exec_context)
         return exit_status
 
     def module_env(self):
         category_driver = self.parent.parent
         return category_driver._module_env(self.execution)
+
+    def spack_env(self):
+        category_driver = self.parent.parent
+        return category_driver._spack_env(self.execution)
 
     @write_yaml_report
     @Enumerator.call_decorator
@@ -216,7 +220,10 @@ class SrunExecutionDriver(ExecutionDriver):
         :rtype: string
         """
         commands = self.campaign.process.get('commands', {})
-        return find_executable(commands.get('srun', 'srun'))
+        srun = find_executable(commands.get('srun', 'srun'))
+        if six.PY2:
+            srun = srun.encode('utf-8')
+        return srun
 
     @classmethod
     def common_srun_options(cls, campaign):

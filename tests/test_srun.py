@@ -3,7 +3,6 @@ import os
 import os.path as osp
 import shutil
 import stat
-import tempfile
 import textwrap
 import unittest
 
@@ -15,7 +14,7 @@ class TestSrun(DriverTestCase, unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.SLURM_ALLOC_NODE = 'n3'
-        cls.SLURM_UT_DIR = tempfile.mkdtemp(prefix='hpcbench-ut')
+        cls.SLURM_UT_DIR = cls.mkdtemp()
         srun_ut = osp.join(cls.SLURM_UT_DIR, 'srun-ut')
         with open(srun_ut, 'w') as ostr:
             ostr.write(

@@ -110,7 +110,7 @@ All methods are being used:
 * **tags** expects a list of tag names
 
 * **constraint** expects a string. This tag does not references node
-  names explicitely but instead delegates it to SLURM. The value of the
+  names explicitly but instead delegates it to SLURM. The value of the
   constraint tag is given to the sbatch options through the
   *--constraint* option.
 
@@ -275,7 +275,7 @@ options, which are passed to the `srun` command. Note that only the long form
 option names should be used (i.e. `--nodes` instead of `-N`). These options overwrite
 the global options provided in the :ref:`process <campaign-process>` section. To disable
 a global srun option simply declare the option without providing a value. if an option without
-value (e.g. `--exclusvie`) is to be used in `srun`, the key should be assigned to `true`.
+value (e.g. `--exclusive`) is to be used in `srun`, the key should be assigned to `true`.
 
 .. code-block:: yaml
   :emphasize-lines: 4,7,8
@@ -289,6 +289,27 @@ value (e.g. `--exclusvie`) is to be used in `srun`, the key should be assigned t
           hint:
           exclusive: true
         type: osu
+
+spack (optional)
+~~~~~~~~~~~~~~~~
+Dictionary to specify spack related configuration. Supported attributes are:
+
+* **specs**: list of spack specs to install before executing benchmarks.
+  `bin` directory of install directories are be prepended to `PATH`.
+
+For instance:
+
+.. code-block:: yaml
+  :emphasize-lines: 5-7
+
+  benchmarks:
+      '*':
+          test01:
+              type: stream
+              spack:
+                  specs:
+                  - stream@intel+openmp
+
 
 attempts (optional)
 ~~~~~~~~~~~~~~~~~~~
@@ -310,7 +331,7 @@ the ``fixed`` option.
                   fixed: 2
 
 All executions are present in the report but only metrics of the last run are reported. The
-``sorted`` key allows to change this behavior to reorder the runs according to criterias.
+``sorted`` key allows to change this behavior to reorder the runs according to criteria.
 
 .. code-block:: yaml
   :emphasize-lines: 6-8
@@ -462,7 +483,7 @@ the binaries.
     type: slurm
     commands:
       sbatch: /opt/slurm/bin/sbatch
-      srun: /opt/slrum/bin/sbatch
+      srun: /opt/slurm/bin/sbatch
 
 srun and sbatch (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

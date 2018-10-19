@@ -26,12 +26,16 @@ class DriverTestCase(object):
 
     @classmethod
     def setUpClass(cls):
-        cls.TEST_DIR = tempfile.mkdtemp(prefix='hpcbench-ut')
+        cls.TEST_DIR = cls.mkdtemp()
         with pushd(cls.TEST_DIR):
             cls.driver = bensh.main(cls.get_campaign_file())
         cls.CAMPAIGN_PATH = osp.join(cls.TEST_DIR, cls.driver.campaign_path)
         if cls.check_campaign_consistency:
             cls._check_campaign_consistency()
+
+    @classmethod
+    def mkdtemp(cls):
+        return tempfile.mkdtemp(prefix='hpcbench-ut')
 
     @classmethod
     def _check_campaign_consistency(cls):

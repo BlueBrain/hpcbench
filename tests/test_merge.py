@@ -1,17 +1,17 @@
 import inspect
 import os.path as osp
 import shutil
-import tempfile
 import unittest
 
 from hpcbench.campaign import merge_campaigns
 from hpcbench.cli import benmerge, bensh
 from hpcbench.toolbox.contextlib_ext import pushd
+from . import DriverTestCase
 
 
 class TestMerge(unittest.TestCase):
     def setUp(self):
-        self.temp_dir = tempfile.mkdtemp(prefix='hpcbench-ut')
+        self.temp_dir = DriverTestCase.mkdtemp()
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir)
