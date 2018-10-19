@@ -2,13 +2,12 @@ import csv
 import inspect
 import os.path as osp
 import shutil
-import tempfile
 import unittest
 
 from hpcbench.cli import bencsv, bensh
 from hpcbench.export.csvexport import CSVExporter
 from hpcbench.toolbox.contextlib_ext import pushd
-from . import FakeBenchmark
+from . import DriverTestCase, FakeBenchmark
 
 
 class TestCSV(unittest.TestCase):
@@ -17,7 +16,7 @@ class TestCSV(unittest.TestCase):
     PERFORMANCE_METRIC = 'metrics.0.measurement.performance'
 
     def setUp(self):
-        self.temp_dir = tempfile.mkdtemp(prefix='hpcbench-ut')
+        self.temp_dir = DriverTestCase.mkdtemp()
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir)

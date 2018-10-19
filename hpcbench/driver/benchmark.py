@@ -32,6 +32,7 @@ from hpcbench.toolbox.edsl import kwargsql
 from hpcbench.toolbox.environment_modules import Module
 from hpcbench.toolbox.functools_ext import listify
 from hpcbench.toolbox.process import find_executable
+from hpcbench.toolbox.spack import SpackCmd
 
 
 class BenchmarkDriver(Enumerator):
@@ -138,6 +139,14 @@ class BenchmarkCategoryDriver(Enumerator):
             if 'modules' in self.config:
                 yaml_modules = self.config['modules'] or []
                 cmd.execution['modules'] = list(yaml_modules)
+            # Update spack config according to YAML
+            # if None, then reset spack config
+            if 'spack' in self.config:
+                spack_c = self.config['spack']
+                if spack_c is None:
+                    cmd.execution['spack'] = {}
+                else:
+                    cmd.execution.setdefault('spack', {}).update(spack_c)
             # Enrich `metas` if specified in YAML
             if 'metas' in self.campaign:
                 metas = dict(self.campaign.metas)
@@ -226,12 +235,30 @@ class BenchmarkCategoryDriver(Enumerator):
         finally:
             os.environ = env
 
+    @contextlib.contextmanager
+    def _spack_env(self, execution):
+        env = copy.copy(os.environ)
+        try:
+            spack = SpackCmd()
+            for spec in execution.get('spack', {}).get('specs', []):
+                spack.install(spec)
+                install_dir = spack.install_dir(spec)
+                bin_dir = osp.join(install_dir, 'bin')
+                if osp.exists(bin_dir):
+                    path = os.environ.get('PATH', '')
+                    path = bin_dir + os.pathsep + path
+                    os.environ['PATH'] = path
+            yield
+        finally:
+            os.environ = env
+
     def _execute(self, **kwargs):
         runs = dict()
         for command, run_dir in self.children:
             if _HAS_MAGIC and 'shell' not in command.execution:
-                with self._module_env(command.execution):
-                    self._add_build_info(command.execution)
+                exc = command.execution
+                with self._spack_env(exc), self._module_env(exc):
+                    self._add_build_info(exc)
             else:
                 self.logger.info(
                     "No build information recorded " "(libmagic available: %s)",

@@ -2,7 +2,6 @@ import datetime
 import os
 import os.path as osp
 import shutil
-import tempfile
 import unittest
 
 import mock
@@ -11,6 +10,7 @@ import yaml
 
 from hpcbench.campaign import ReportNode, YAML_REPORT_FILE
 from hpcbench.cli.benwait import main as benwait, wait_for_completion
+from . import DriverTestCase
 
 
 class sacct:
@@ -64,7 +64,7 @@ class TestBenWait(unittest.TestCase):
 
     @classmethod
     def _create_fake_campaign(cls):
-        campaign = tempfile.mkdtemp()
+        campaign = DriverTestCase.mkdtemp()
         with open(osp.join(campaign, YAML_REPORT_FILE), 'w') as ostr:
             yaml.dump(dict(children=['sbatch1', 'sbatch2']), ostr)
         for jobid in range(1, 3):
