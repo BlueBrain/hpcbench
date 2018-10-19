@@ -1,4 +1,5 @@
 import socket
+import os
 import unittest
 
 from hpcbench.campaign import ReportNode
@@ -8,7 +9,8 @@ from . import DriverTestCase
 class CwdTest(DriverTestCase, unittest.TestCase):
     def test(self):
         host = socket.gethostname()
-        path = '/tmp/hpcbench-ut/test_cwd/' + host + '/*'
+        tempdir = os.path.realpath('/tmp')
+        path = tempdir + '/hpcbench-ut/test_cwd/' + host + '/*'
         report = ReportNode(CwdTest.CAMPAIGN_PATH)
         count = 0
         for metrics in report.collect('metrics'):
