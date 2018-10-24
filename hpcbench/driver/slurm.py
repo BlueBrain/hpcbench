@@ -213,7 +213,7 @@ class SbatchDriver(Enumerator):
                 self.tag,
             )
             sbatch_out = cpe.output
-        jobidre = re.compile('^([\d]+)(?:;\S*)?$')
+        jobidre = re.compile(r'^([\d]+)(?:;\S*)?$')
         jobid = None
         for line in sbatch_out.splitlines():
             res = jobidre.match(line)
