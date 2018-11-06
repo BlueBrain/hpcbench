@@ -11,6 +11,7 @@ Options:
   -n HOST                 Specify node name. Default is localhost
   -o --output-dir=OUTDIR  Specify output directory, overwriting campaign file
                           output_dir directive
+  -e --exclude-nodes      node set to exclude from allocations
   -l --log=LOGFILE        Specify an option logfile to write to
   -r --srun=TAG           Go into srun mode and run on one tag, which is used
                           when ben-sh is called as a dependent process inside
@@ -43,9 +44,11 @@ def main(argv=None):
     else:
         node = arguments.get('-n')
         output_dir = arguments.get('--output-dir')
+        exclude_nodes = arguments.get('-e')
         srun_tag = arguments.get('--srun')
         driver = CampaignDriver(
-            campaign_file, node=node, output_dir=output_dir, srun=srun_tag
+            campaign_file, node=node, output_dir=output_dir, srun=srun_tag,
+            exclude_nodes=exclude_nodes
         )
         driver()
         if argv is not None:
