@@ -155,11 +155,9 @@ class Generator(object):
         return desc.replace('\n        ', '\n      # ').strip()
 
 
-def from_file(campaign_file, expandcampvars=True):
+def from_file(campaign_file, **kwargs):
     """Load campaign from YAML file
 
-    :param campaign_file: path to YAML file
-    :param expandcampvars: should env variables be expanded? default: yes
     :return: memory representation of the YAML file
     :rtype: dictionary
     """
@@ -167,15 +165,18 @@ def from_file(campaign_file, expandcampvars=True):
     if osp.isdir(realpath):
         campaign_file = osp.join(campaign_file, YAML_CAMPAIGN_FILE)
     campaign = Configuration.from_file(campaign_file)
-    return default_campaign(campaign, expandcampvars)
+    return default_campaign(campaign, **kwargs)
 
 
-def default_campaign(campaign=None, expandcampvars=True, frozen=True):
+def default_campaign(campaign=None, expandcampvars=True, exclude_nodes=None,
+                     frozen=True):
     """Fill an existing campaign with default
     values for optional keys
 
     :param campaign: dictionary
     :type campaign: str
+    :param exclude_nodes: node set to exclude from allocations
+    :type exclude_nodes: str
     :param expandcampvars: should env variables be expanded? True by default
     :type expandcampvars: bool
     :param frozen: whether the returned data-structure is immutable or not
@@ -222,8 +223,13 @@ class NetworkConfig(object):
     """Wrapper around network configuration
     """
 
-    def __init__(self, campaign):
+    def __init__(self, campaign, exclude_nodes=None):
         self.campaign = campaign
+        self._exclude_nodes = NodeSet(exclude_nodes)
+
+    @property
+    def exclude_nodes(self):
+        return self._exclude_nodes
 
     @property
     def network(self):
@@ -236,11 +242,11 @@ class NetworkConfig(object):
         return self.campaign.network.get('cluster') == 'slurm'
 
     def expand(self):
-        """Perforn node expansion of network section.
+        """Perform node expansion of network section.
         """
         if self.slurm:
             self._introspect_slurm_cluster()
-        self.network.nodes = NetworkConfig._expand_nodes(self.network.nodes)
+        self.network.nodes = self._expand_nodes(self.network.nodes)
         self._expand_tags()
 
     @cached_property
@@ -293,8 +299,7 @@ class NetworkConfig(object):
         self.network.tags = tags
         self.network.tags.update(prev_tags)
 
-    @classmethod
-    def _expand_nodes(cls, nodes):
+    def _expand_nodes(self, nodes):
         if isinstance(nodes, six.string_types):
             nodes = [nodes]
         if not isinstance(nodes, list):
@@ -302,10 +307,10 @@ class NetworkConfig(object):
         eax = NodeSet()
         for node in nodes:
             eax.update(node)
+        eax -= self.exclude_nodes
         return list(eax)
 
-    @classmethod
-    def _expand_tag_pattern(cls, tag, pattern):
+    def _expand_tag_pattern(self, tag, pattern):
         if len(pattern) > 1:
             msg = "Tag '{tag}' is based on more than one criterion: {types}"
             raise Exception(msg.format(tag=tag, types=', '.join(pattern)))
@@ -313,7 +318,7 @@ class NetworkConfig(object):
             if mode == 'match':
                 pattern[mode] = re.compile(pattern[mode])
             elif mode == 'nodes':
-                pattern[mode] = cls._expand_nodes(pattern[mode])
+                pattern[mode] = self._expand_nodes(pattern[mode])
             elif mode == 'constraint':
                 value = pattern[mode]
                 if not isinstance(value, six.string_types):
@@ -331,12 +336,11 @@ class NetworkConfig(object):
         # returns True if in none of the modes and patterns is 'tags'
         return all(['tags' not in pat.keys() for pat in config])
 
-    @classmethod
-    def _resolve(cls, tag, config, expanded, recursive, visited):
+    def _resolve(self, tag, config, expanded, recursive, visited):
         for pattern in config[:]:
             # we work with a copy so we can modify the original
             # first expand all the other modes
-            cls._expand_tag_pattern(tag, pattern)
+            self._expand_tag_pattern(tag, pattern)
             # now let's go through that tags if they exist in this pattern
             if 'tags' in list(pattern):
                 tags = pattern['tags']
@@ -354,7 +358,7 @@ class NetworkConfig(object):
                     elif rectag in recursive:
                         recconfig = recursive.pop(rectag)
                         visited.add(rectag)
-                        cls._resolve(rectag, recconfig, expanded, recursive, visited)
+                        self._resolve(rectag, recconfig, expanded, recursive, visited)
                     else:  # rectag is nowhere to be found
                         message = '"%s" refers to "%s", which is not defined.'
                         message = message % (tag, rectag)
@@ -378,7 +382,7 @@ class NetworkConfig(object):
                 config = [config]
             if NetworkConfig._is_leaf(config):
                 for pattern in config:
-                    NetworkConfig._expand_tag_pattern(tag, pattern)
+                    self._expand_tag_pattern(tag, pattern)
                 expanded[tag] = config
             else:
                 recursive[tag] = config
@@ -387,7 +391,7 @@ class NetworkConfig(object):
         while recursive:
             tag, config = recursive.popitem()
             visited.add(tag)
-            NetworkConfig._resolve(tag, config, expanded, recursive, visited)
+            self._resolve(tag, config, expanded, recursive, visited)
         self.network.tags = expanded
 
 

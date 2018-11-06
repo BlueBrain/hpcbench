@@ -72,6 +72,13 @@ class TestCampaign(unittest.TestCase):
             config['network']['tags']['by_nodeset'][0]['nodes'], ['node1', 'node2']
         )
 
+    def test_excluded_nodes(self):
+        config = self.new_config
+        config.network.nodes.extend(['node1'])
+        config = default_campaign(config, exclude_nodes="node[2-3]")
+        self.assertIn('node1', config.network.nodes)
+        self.assertNotIn('node2', config.network.nodes)
+
     def test_constraint_tag(self):
         config = default_campaign(frozen=False)
         constraint = dict(constraint="skylake")

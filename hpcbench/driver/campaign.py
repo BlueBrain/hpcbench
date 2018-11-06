@@ -86,6 +86,7 @@ class CampaignDriver(Enumerator):
         srun=None,
         logger=None,
         expandcampvars=True,
+        exclude_nodes=None,
     ):
         node = node or socket.gethostname()
         if isinstance(campaign, six.string_types):
@@ -97,7 +98,8 @@ class CampaignDriver(Enumerator):
             else:
                 # YAML file
                 self.existing_campaign = False
-            campaign = from_file(campaign, expandcampvars)
+            campaign = from_file(campaign, expandcampvars=expandcampvars,
+                                 exclude_nodes=exclude_nodes)
             self.campaign_file = campaign_path
         else:
             self.existing_campaign = True
