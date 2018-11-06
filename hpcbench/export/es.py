@@ -101,10 +101,10 @@ class ESExporter(object):
 
     @property
     def _documents(self):
-        for run in self._runs:
-            yield dict(index=dict(_type=self.ES_DOC_TYPE, _id=self.document_id(run)))
-            run['campaign_id'] = self.campaign.campaign_id
-            yield run
+        for metric in self._metrics:
+            yield dict(index=dict(_type=self.ES_DOC_TYPE, _id=self.document_id(metric)))
+            metric['campaign_id'] = self.campaign.campaign_id
+            yield metric
 
     def document_id(self, doc):
         return doc['id'] + '/' + str(hash(frozenset(doc['context'].items())))
@@ -112,8 +112,8 @@ class ESExporter(object):
     @property
     def _get_document_mapping(self):
         fields = {}
-        for run in self._runs:
-            dict_merge(fields, ESExporter._get_dict_mapping(self.ES_DOC_TYPE, run))
+        for metric in self._metrics:
+            dict_merge(fields, ESExporter._get_dict_mapping(self.ES_DOC_TYPE, metric))
         return fields
 
     @classmethod
@@ -160,6 +160,12 @@ class ESExporter(object):
     def _runs(self):
         for attrs, runs in get_metrics(self.campaign, self.report):
             for run in runs:
+                yield attrs, run
+
+    @property
+    def _metrics(self):
+        for attrs, run in self._runs:
+            if run.get('command_succeeded', False):
                 metrics = run.pop('metrics')
                 for metric in metrics:
                     eax = dict(metric)
