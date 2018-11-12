@@ -31,7 +31,7 @@
       \subsubsection{Use case {{bench_name | texscape}}}
         \begin{itemize}
           \item benchmark type: {{ bench.benchmark.name | texscape }}
-          \item benchmark description: {{ bench.benchmark.description | texscape }}
+          \item benchmark description: {{ bench.benchmark.__class__.__doc__ | texscape }}
         \end{itemize}
         {%- for cat, category in bench.traverse() %}
         \myparagraph{Category {{ cat | texscape }}}

@@ -45,10 +45,10 @@ POPEN_MOCK = mock.Mock(side_effect=popen_module_load)
 
 
 class EnvBenchmark(Benchmark):
+    """only for testing purpose"""
     MODULE_TO_VAR_RE = re.compile('[^0-9a-zA-Z]+')
 
     name = "environment"
-    description = "only for testing purpose"
 
     def __init__(self):
         super(EnvBenchmark, self).__init__(attributes=dict(environment={}, modules=[]))

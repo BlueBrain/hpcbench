@@ -43,7 +43,7 @@ class BasicExtractor(MetricsExtractor):
 
 
 class Basic(Benchmark):
-    """Basic shell script
+    """Basic linux functionalities of BB5.
 
     Environment variable:
         - LOCAL_PATH: perform tests on local disk
@@ -60,8 +60,6 @@ class Basic(Benchmark):
         super(Basic, self).__init__(attributes=dict(ping_ips=Basic.PING_IPS))
 
     name = 'basic'
-
-    description = "Basic linux functionalities of BB5."
 
     def execution_matrix(self, context):
         del context  # unused

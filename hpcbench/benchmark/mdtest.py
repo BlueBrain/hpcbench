@@ -90,11 +90,10 @@ class MDTestExtractor(MetricsExtractor):
 
 
 class MDTest(Benchmark):
-    """Wrapper for mdtest utility
+    """Benchmark metadata performance of a file system
     """
 
     name = 'mdtest'
-    description = 'Used for testing the metadata performance of a file system'
 
     DEFAULT_ATTRIBUTES = dict(
         executable='mdtest',

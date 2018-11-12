@@ -193,14 +193,6 @@ class Benchmark(with_metaclass(ABCMeta, object)):
         """
         raise NotImplementedError  # pragma: no cover
 
-    @abstractproperty
-    def description(self):
-        """Get benchmark long description
-
-        :rtype: string
-        """
-        raise NotImplementedError  # pragma: no cover
-
     @property
     def metric_required(self):
         """Whether a benchmark execution must emit metrics or not

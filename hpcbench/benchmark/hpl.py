@@ -103,7 +103,7 @@ class HPLExtractor(MetricsExtractor):
 
 
 class HPL(Benchmark):
-    """Benchmark wrapper for the HPLbench utility
+    """Provides Intensive FLOPS benchmark.
     """
 
     DEFAULT_THREADS = 1
@@ -124,8 +124,6 @@ class HPL(Benchmark):
         )
 
     name = 'hpl'
-
-    description = "Provides Intensive FLOPS benchmark."
 
     @cached_property
     def executable(self):

@@ -147,11 +147,9 @@ class IORMetricsExtractor(MetricsExtractor):
 
 
 class IOR(Benchmark):
-    """Driver for IOR benchmark"""
+    """Parallel filesystem I/O benchmark"""
 
     name = "ior"
-
-    description = "Parallel filesystem I/O benchmark"
 
     APIS = ['POSIX', 'MPIIO', 'HDF5']
     DEFAULT_BLOCK_SIZE = "1G"

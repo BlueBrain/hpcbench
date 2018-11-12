@@ -195,12 +195,13 @@ clean:
 
 
 class MiniGEMM(Benchmark):
-    """A mini benchmark performing MKL based generalized matrix multiplies
+    """DGEMM mini benchmark
+
+    A mini benchmark performing MKL based generalized matrix multiplies
     to determine the node's peak floating point performance.
     """
 
     name = 'minigemm'
-    description = "DGEMM mini benchmark"
     COMPILE_PARAMS = []
     DEFAULT_OPENMP_THREADS = 1
     DEFAULT_NESTED_MKL_THREADS = 4

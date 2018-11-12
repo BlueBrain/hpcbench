@@ -89,12 +89,10 @@ class IONVMEReadExtractor(IONVMEExtractor):
 
 
 class IONVME(Benchmark):
-    """Benchmark wrapper for the SSDIObench utility
+    """Provides NVME bandwidth benchmark
     """
 
     name = 'ionvme'
-
-    description = "Provides NVME bandwidth"
 
     NVME_READ = 'Read'
     NVME_WRITE = 'Write'

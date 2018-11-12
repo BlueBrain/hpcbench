@@ -135,11 +135,8 @@ class BuildInfoBench(Benchmark):
 
 
 class FakeBenchmark(Benchmark):
+    """Fake benchmark for HPCBench testing purpose"""
     name = 'fake'
-
-    description = '''
-        fake benchmark for HPCBench testing purpose
-    '''
 
     INPUTS = [10, 20, 100]
     DEFAULT_BENCHMARK_NAME = 'bench-name'

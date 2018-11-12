@@ -53,12 +53,11 @@ class BabelStreamExtractor(MetricsExtractor):
 
 
 class BabelStream(Benchmark):
+    """STREAM, for lots of different devices"""
     DEFAULT_EXECUTABLE = 'cuda-stream'
     CATEGORY = 'stream'
 
     name = 'babelstream'
-
-    description = 'STREAM, for lots of different devices'
 
     def __init__(self):
         super(BabelStream, self).__init__(

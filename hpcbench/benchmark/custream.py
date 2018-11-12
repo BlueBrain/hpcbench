@@ -85,12 +85,10 @@ class CUDAStreamExtractor(MetricsExtractor):
 
 
 class CUDAStream(Benchmark):
-    """Benchmark wrapper for the cuda-stream utility
+    """Provides memory bandwidth benchmarking for NVIDIA GPUs.
     """
 
     name = 'custream'
-
-    description = "Provides memory bandwidth benchmarking for NVIDIA GPUs."
 
     DEFAULT_EXECUTABLE = 'stream'
     DEFAULT_THREADS_PER_BLOCK = [64, 128, 192, 256, 512, 1024]

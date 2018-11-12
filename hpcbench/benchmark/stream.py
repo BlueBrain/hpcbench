@@ -88,12 +88,10 @@ class StreamExtractor(MetricsExtractor):
 
 
 class Stream(Benchmark):
-    """Benchmark wrapper for the streambench utility
+    """memory bandwidth benchmark
     """
 
     name = 'stream'
-
-    description = "Provides memory bandwidth benchmarking capabilities."
 
     DEFAULT_EXECUTABLE = 'stream_c'
     DEFAULT_THREADS = [1, 4, 16, 26, 52, 104]

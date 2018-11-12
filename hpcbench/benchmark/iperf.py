@@ -44,12 +44,10 @@ class IPERFExtractor(MetricsExtractor):
 
 
 class Iperf(Benchmark):
-    """Benchmark wrapper for the HPLbench utility
+    """Provides TCP benchmark.
     """
 
     name = 'iperf'
-
-    description = "Provides TCP benchmark."
 
     DEFAULT_DEVICE = 'network'
     DEFAULT_EXECUTABLE = 'iperf3'

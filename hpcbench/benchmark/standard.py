@@ -389,8 +389,9 @@ class StdExtractor(MetricsExtractor):
 
 
 class StdBenchmark(Benchmark):
+    """Generic benchmark"""
+
     name = "standard"
-    description = "benchmark class for generic usage"
 
     DEFAULT_FROM = 'stdout'
     DEFAULT_CATEGORY = "standard"
