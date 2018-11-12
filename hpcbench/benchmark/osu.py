@@ -225,6 +225,7 @@ class OSUCollectiveLatExtractor(OSUExtractor):
 class OSU(Benchmark):
     """Benchmark wrapper for the OSU micro benchmarks
 
+    Provides MPI-based interconnect benchmarking.
     the `srun_nodes` does not apply to the PingPong benchmark.
     """
 
@@ -263,8 +264,6 @@ class OSU(Benchmark):
         )
 
     name = 'osu'
-
-    description = "Provides MPI-based interconnect benchmarking."
 
     def executable(self, category=None):
         """Get path to OSU micro benchmark executable

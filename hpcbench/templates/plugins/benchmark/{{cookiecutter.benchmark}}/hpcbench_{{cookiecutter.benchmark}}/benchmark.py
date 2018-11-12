@@ -29,8 +29,11 @@ class {{ cookiecutter.benchmark | capitalize }}Extractor(MetricsExtractor):
 
 
 class {{ cookiecutter.benchmark | capitalize }}(Benchmark):
+    """{{ cookiecutter.benchmark }} benchmark
+
+    More detailed description of the benchmark class
+    """
     name = "{{ cookiecutter.benchmark }}"
-    description = "long description"
 
     DEFAULT_EXECUTABLE = "{{ cookiecutter.benchmark }}"
     CATEGORY = 'main'

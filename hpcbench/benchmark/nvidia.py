@@ -120,14 +120,14 @@ class NvidiaBandwidthTestExtractor(MetricsExtractor):
 
 
 class NvidiaP2pBandwidthLatencyTest(Benchmark):
+    """Compute latency and bandwidth of devices with and without Peer-To-Peer
+    """
+
     DEFAULT_EXECUTABLE = 'p2pBandwidthLatencyTest'
     DEFAULT_DEVICEQUERY_EXECUTABLE = 'deviceQuery'
     CATEGORY = 'gpu'
 
     name = 'p2pBandwidthLatencyTest'
-    description = (
-        'compute latency and bandwidth of devices ' + 'with and without Peer-To-Peer'
-    )
 
     @cached_property
     def executable(self):
@@ -179,16 +179,14 @@ class NvidiaP2pBandwidthLatencyTest(Benchmark):
 
 
 class NvidiaBandwidthTest(Benchmark):
+    """measure the memcopy bandwidth of the GPU and memcpy bandwidth across PCI-e
+    """
     DEFAULT_EXECUTABLE = 'bandwidthTest'
     DEFAULT_DEVICE = 0
     DEFAULT_MODE = 'shmoo'
     CATEGORY = 'gpu'
 
     name = 'nvidia-bandwidthtest'
-    description = (
-        'measure the memcopy bandwidth of the GPU'
-        + ' and memcpy bandwidth across PCI-e'
-    )
 
     def __init__(self):
         super(NvidiaBandwidthTest, self).__init__(

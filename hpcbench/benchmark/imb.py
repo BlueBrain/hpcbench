@@ -195,7 +195,7 @@ class IMBAllGatherExtractor(IMBAllToAllExtractor):
 
 
 class IMB(Benchmark):
-    """Benchmark wrapper for the IMBbench utility
+    """Provides latency/bandwidth of the network.
 
     the `srun_nodes` does not apply to the PingPong benchmark.
     """
@@ -224,8 +224,6 @@ class IMB(Benchmark):
         )
 
     name = 'imb'
-
-    description = "Provides latency/bandwidth of the network."
 
     @cached_property
     def executable(self):

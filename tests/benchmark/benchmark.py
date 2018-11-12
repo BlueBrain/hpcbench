@@ -153,7 +153,10 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
 
     def test_has_description(self):
         clazz = self.get_benchmark_clazz()
-        assert isinstance(clazz.description, str)
+        doc = clazz.__doc__
+        assert doc is not None, "Missing class docstring"
+        with self.assertRaises(AttributeError):
+            getattr(clazz, 'description')
 
     def execution_metrics_set(self, category):
         del category  # unused

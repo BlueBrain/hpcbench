@@ -68,7 +68,7 @@ class SHOCExtractor(MetricsExtractor):
 
 
 class SHOC(Benchmark):
-    """Benchmark wrapper for the SHOCbench utility
+    """Benchmark GPUs
     """
 
     DEFAULT_DEVICE = 0
@@ -88,8 +88,6 @@ class SHOC(Benchmark):
         )
 
     name = 'shoc'
-
-    description = "Multiple benchmark of the GPU."
 
     @cached_property
     def executable(self):

@@ -121,7 +121,7 @@ class Generator(object):
         return [
             dict(
                 name=b.name,
-                description=Generator._description(b.description),
+                description=Generator._description(b),
                 attributes={
                     attr: dict(
                         doc=Generator._format_attrdoc(b.__class__, attr),
@@ -149,8 +149,12 @@ class Generator(object):
         return value
 
     @classmethod
-    def _description(cls, desc):
-        desc = desc.strip()
+    def _description(cls, benchmark):
+        desc = benchmark.__class__.__doc__
+        if desc is None:
+            msg = 'Missing %s benchmark class docstring' % benchmark.__class__
+            raise Exception(msg)
+        desc = desc.split('\n', 1)[0].strip()
         desc = '# ' + desc
         return desc.replace('\n        ', '\n      # ').strip()
 
