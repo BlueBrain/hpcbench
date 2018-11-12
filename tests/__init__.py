@@ -166,7 +166,18 @@ class FakeBenchmark(Benchmark):
         return self.attributes['executable']
 
     @cached_property
+    def run_path(self):
+        """benchmark working directory"""
+        return self.attributes['run_path']
+
+    @cached_property
+    def input(self):
+        """Input values"""
+        return self.attributes['input']
+
+    @cached_property
     def expected_name(self):
+        """benchmark name expected in YAML"""
         return self.attributes['expected_name']
 
     def pre_execute(self, execution, context):
@@ -199,18 +210,18 @@ class FakeBenchmark(Benchmark):
                 if not isinstance(value, six.string_types)
                 else None,
             )
-            for value in self.attributes['input']
+            for value in self.input
         ]
-        if self.attributes['run_path']:
+        if self.run_path:
             for cmd in cmds:
                 cmd.update(
-                    environment=dict(SHOW_CWD='1'), cwd=self.attributes['run_path']
+                    environment=dict(SHOW_CWD='1'), cwd=self.run_path
                 )
         return cmds
 
     @property
     def metrics_extractors(self):
-        return dict(main=FakeExtractor(self.attributes['run_path']))
+        return dict(main=FakeExtractor(self.run_path))
 
 
 class FakeNetwork:

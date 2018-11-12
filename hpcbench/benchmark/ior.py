@@ -198,6 +198,7 @@ class IOR(Benchmark):
 
     @cached_property
     def repetitions(self):
+        """number of repetitions of test (-i)"""
         return str(self.attributes['repetitions'])
 
     @cached_property
@@ -313,6 +314,7 @@ class IOR(Benchmark):
 
     @property
     def file_mode(self):
+        """onefile, fpp, or both"""
         fms = self.attributes['file_mode']
         eax = set()
         if isinstance(fms, six.string_types):
@@ -329,6 +331,8 @@ class IOR(Benchmark):
 
     @property
     def block_size(self):
+        """Contiguous bytes to write per task (e.g.: 8, 4k, 2m, 1g)
+        """
         bs = self.attributes['block_size']
         if isinstance(bs, six.string_types):
             bs = shlex.split(bs)
@@ -337,6 +341,7 @@ class IOR(Benchmark):
 
     @property
     def transfer_size(self):
+        """Size of transfer in bytes (e.g.: 8, 4k, 2m, 1g)"""
         ts = self.attributes['transfer_size']
         if isinstance(ts, six.string_types):
             ts = shlex.split(ts)
