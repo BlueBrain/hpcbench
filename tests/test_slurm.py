@@ -58,12 +58,12 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
         st = os.stat(srun_ut)
         os.chmod(srun_ut, st.st_mode | stat.S_IEXEC)
         os.environ['PATH'] = cls.SLURM_UT_DIR + os.pathsep + os.environ['PATH']
-        super(cls, cls).setUpClass()
+        super(TestSlurm, cls).setUpClass()
 
     def test_sbatch_command(self):
-        self.assertTrue(osp.isdir(TestSlurm.CAMPAIGN_PATH))
+        self.assertTrue(osp.isdir(self.CAMPAIGN_PATH))
         for tag in ['uc2']:
-            root = ReportNode(TestSlurm.CAMPAIGN_PATH)
+            root = ReportNode(self.CAMPAIGN_PATH)
             for path, jobid in root.collect('jobid', with_path=True):
                 if path.endswith(tag):
                     break
@@ -74,7 +74,10 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
             with open(sbatch_f) as f:
                 sbatch_content = f.readlines()
             self.assertFalse(sbatch_content[-1].find(tag) == -1)
-            self.assertIn(TestSlurm.CONSTRAINT, sbatch_content)
+            self.assertIn(self.CONSTRAINT, sbatch_content)
+            if self.EXCLUDE_NODES:
+                self.assertIn('--exclude-nodes=' + self.EXCLUDE_NODES + ' ',
+                              sbatch_content[-1])
             data = slurm_report.collect_one('metrics')
             dummy = kwargsql.get(data, '0__measurement__dummy')
             self.assertEqual(dummy, 42.0)
@@ -84,7 +87,11 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
         length = len(cls.SLURM_UT_DIR + os.pathsep)
         os.environ['PATH'] = os.environ['PATH'][length:]
         shutil.rmtree(cls.SLURM_UT_DIR)
-        super(cls, cls).tearDownClass()
+        super(TestSlurm, cls).tearDownClass()
+
+
+class TestExcludeNodeInSbatch(TestSlurm):
+    EXCLUDE_NODES = "node01,node02"
 
 
 class TestSbatchFail(DriverTestCase, unittest.TestCase):

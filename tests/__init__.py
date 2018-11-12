@@ -19,6 +19,7 @@ from .toolbox.test_buildinfo import TestExtractBuildinfo
 
 class DriverTestCase(object):
     check_campaign_consistency = False
+    EXCLUDE_NODES = None
 
     @classmethod
     def get_campaign_file(cls):
@@ -28,7 +29,11 @@ class DriverTestCase(object):
     def setUpClass(cls):
         cls.TEST_DIR = cls.mkdtemp()
         with pushd(cls.TEST_DIR):
-            cls.driver = bensh.main(cls.get_campaign_file())
+            argv = []
+            if cls.EXCLUDE_NODES:
+                argv.extend(['--exclude-nodes', cls.EXCLUDE_NODES])
+            argv.append(cls.get_campaign_file())
+            cls.driver = bensh.main(argv=argv)
         cls.CAMPAIGN_PATH = osp.join(cls.TEST_DIR, cls.driver.campaign_path)
         if cls.check_campaign_consistency:
             cls._check_campaign_consistency()
