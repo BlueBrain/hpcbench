@@ -1,26 +1,26 @@
 """ben-sh - Execute a campaign
 
 Usage:
-  ben-sh [-v | -vv] [-r TAG] [-n HOST] [-o OUTDIR] [-l LOGFILE]
+  ben-sh [-v | -vv] [-r TAG] [-e NODES] [-n HOST] [-o OUTDIR] [-l LOGFILE]
          [--campaign-path-fd FD]
          [-g] CAMPAIGN_FILE
   ben-sh (-h | --help)
   ben-sh --version
 
 Options:
-  -n HOST                 Specify node name. Default is localhost
-  -o --output-dir=OUTDIR  Specify output directory, overwriting campaign file
-                          output_dir directive
-  -e --exclude-nodes      node set to exclude from allocations
-  -l --log=LOGFILE        Specify an option logfile to write to
-  -r --srun=TAG           Go into srun mode and run on one tag, which is used
-                          when ben-sh is called as a dependent process inside
-                          a SLURM job.
-  -h --help               Show this screen
-  -g                      Generate a default YAML campaign file
-  --campaign-path-fd=FD   Write campaign path to file descriptor
-  --version               Show version
-  -v -vv                  Increase program verbosity
+  -n HOST                   Specify node name. Default is localhost
+  -o --output-dir=OUTDIR    Specify output directory, overwriting campaign file
+                            output_dir directive
+  -e --exclude-nodes=NODES  node set to exclude from allocations
+  -l --log=LOGFILE          Specify an option logfile to write to
+  -r --srun=TAG             Go into srun mode and run on one tag, which is used
+                            when ben-sh is called as a dependent process inside
+                            a SLURM job.
+  -h --help                 Show this screen
+  -g                        Generate a default YAML campaign file
+  --campaign-path-fd=FD     Write campaign path to file descriptor
+  --version                 Show version
+  -v -vv                    Increase program verbosity
 """
 from __future__ import print_function
 
@@ -44,7 +44,7 @@ def main(argv=None):
     else:
         node = arguments.get('-n')
         output_dir = arguments.get('--output-dir')
-        exclude_nodes = arguments.get('-e')
+        exclude_nodes = arguments.get('--exclude-nodes')
         srun_tag = arguments.get('--srun')
         driver = CampaignDriver(
             campaign_file, node=node, output_dir=output_dir, srun=srun_tag,

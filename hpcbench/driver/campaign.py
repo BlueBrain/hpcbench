@@ -89,6 +89,7 @@ class CampaignDriver(Enumerator):
         exclude_nodes=None,
     ):
         node = node or socket.gethostname()
+        self.exclude_nodes = exclude_nodes
         if isinstance(campaign, six.string_types):
             campaign_path = osp.normpath(osp.abspath(campaign))
             if osp.isdir(campaign_path):

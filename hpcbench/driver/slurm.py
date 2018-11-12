@@ -60,11 +60,16 @@ class SbatchDriver(Enumerator):
             verb = '-v '
         elif level == logging.DEBUG:
             verb = '-vv '
+        exclude_nodes = ''
+        if self.root.exclude_nodes:
+            exclude_nodes = '--exclude-nodes=' + self.root.exclude_nodes + ' '
+
         cmd = (
             '{bensh} --srun={tag} '
             + verb
             + '-n $SLURMD_NODENAME '
             + '--output-dir={tag}-%Y%m%d-%H%M%S '
+            + exclude_nodes
             + self.parent.parent.campaign_file
         )
 
