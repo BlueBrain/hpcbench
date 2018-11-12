@@ -158,6 +158,15 @@ class AbstractBenchmarkTest(with_metaclass(ABCMeta, object)):
         with self.assertRaises(AttributeError):
             getattr(clazz, 'description')
 
+    def test_attr_doc(self):
+        clazz = self.get_benchmark_clazz()
+        benchmark = clazz()
+        for attr in benchmark.attributes:
+            doc = getattr(clazz, attr).__doc__
+            msg = "%s: missing docstring for attribute: %s"
+            msg = msg % (benchmark.name, attr)
+            assert doc is not None, msg
+
     def execution_metrics_set(self, category):
         del category  # unused
         return [{}]

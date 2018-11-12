@@ -250,6 +250,9 @@ class IMB(Benchmark):
 
     @property
     def node_pairing(self):
+        """if "node" then test current node and next one
+        if "tag", then create tests for every pair of the current tag.
+        """
         value = self.attributes['node_pairing']
         if value not in IMB.NODE_PAIRING:
             msg = 'Unexpected {0} value: got "{1}" but valid values are {2}'
