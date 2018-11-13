@@ -88,6 +88,8 @@ class BenchmarkCategoryDriver(Enumerator):
     """Abstract representation of one benchmark to execute
     (one of "benchmarks" YAML tag values")"""
 
+    ENVIRONMENT_VAR_TYPES = (int, float) + six.string_types
+
     def __init__(self, parent, category):
         super(BenchmarkCategoryDriver, self).__init__(parent, category)
         self.category = category
@@ -117,6 +119,7 @@ class BenchmarkCategoryDriver(Enumerator):
     @listify
     def children(self):
         for cmd in self._commands:
+            valid = True
             category = cmd.execution.get('category')
             if category != self.category:
                 continue
@@ -132,7 +135,23 @@ class BenchmarkCategoryDriver(Enumerator):
                         if value is None:
                             env.pop(name, None)
                         else:
-                            env[name] = value
+                            # Have to exclude boolean manually because
+                            # >>> isinstance(True, int)
+                            # True
+                            if not isinstance(value, bool) and isinstance(
+                                value, self.ENVIRONMENT_VAR_TYPES
+                            ):
+                                env[name] = str(value)
+                            else:
+                                msg = 'Invalid type for environment variable "'
+                                msg += name + '": "'
+                                msg += value.__class__.__name__
+                                msg += '". Valid types: '
+                                msg += ', '.join(
+                                    [t.__name__ for t in self.ENVIRONMENT_VAR_TYPES]
+                                )
+                                self.logger.error(msg)
+                                valid = False
                     if not env:
                         self.config.pop('environment')
             # Override `modules` if specified in YAML
@@ -152,8 +171,9 @@ class BenchmarkCategoryDriver(Enumerator):
                 metas = dict(self.campaign.metas)
                 metas.update(cmd.execution.setdefault('metas', {}))
                 cmd.execution['metas'] = metas
-            name = cmd.execution.get('name') or ''
-            yield cmd, osp.join(name, self.child_id())
+            if valid:
+                name = cmd.execution.get('name') or ''
+                yield cmd, osp.join(name, self.child_id())
 
     def child_id(self):
         while True:

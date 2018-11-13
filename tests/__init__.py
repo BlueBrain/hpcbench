@@ -215,9 +215,7 @@ class FakeBenchmark(Benchmark):
         ]
         if self.run_path:
             for cmd in cmds:
-                cmd.update(
-                    environment=dict(SHOW_CWD='1'), cwd=self.run_path
-                )
+                cmd.update(environment=dict(SHOW_CWD='1'), cwd=self.run_path)
         return cmds
 
     @property
