@@ -181,6 +181,7 @@ class NvidiaP2pBandwidthLatencyTest(Benchmark):
 class NvidiaBandwidthTest(Benchmark):
     """measure the memcopy bandwidth of the GPU and memcpy bandwidth across PCI-e
     """
+
     DEFAULT_EXECUTABLE = 'bandwidthTest'
     DEFAULT_DEVICE = 0
     DEFAULT_MODE = 'shmoo'
