@@ -219,6 +219,8 @@ def default_campaign(campaign=None, expandcampvars=True, exclude_nodes=None,
     else:
         campaign = nameddict(campaign)
     if expandcampvars:
+        if campaign.network.get('tags') is None:
+            campaign.network['tags'] = {}
         NetworkConfig(campaign).expand()
     return freeze(campaign) if frozen else campaign
 
