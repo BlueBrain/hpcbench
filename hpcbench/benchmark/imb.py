@@ -283,7 +283,7 @@ class IMB(Benchmark):
                 yield dict(
                     category=category,
                     command=[find_executable(self.executable, required=False), category]
-                    + arguments,
+                    + list(arguments),
                     srun_nodes=self.srun_nodes,
                 )
 
