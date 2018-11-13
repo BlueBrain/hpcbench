@@ -1,8 +1,10 @@
 from collections import Mapping
 import datetime
+import inspect
 import logging
 import re
 import subprocess
+import os
 from os import path as osp
 import sys
 
@@ -83,10 +85,16 @@ class SbatchDriver(Enumerator):
 
     @cached_property
     def bensh_executable(self):
-        bensh = osp.realpath(osp.join(osp.dirname(sys.executable), 'ben-sh'))
-        if osp.exists(bensh):
-            return bensh
-        return 'ben-sh'
+        candidates = []
+        main_script = inspect.stack()[-1][1]
+        if main_script.endswith('ben-sh'):
+            candidates.append(osp.realpath(osp.join(os.getcwd(), main_script)))
+        candidates.append(osp.realpath(osp.join(osp.dirname(sys.executable), 'ben-sh')))
+        candidates.append('ben-sh')
+        for candidate in candidates:
+            if osp.exists(candidate):
+                break
+        return candidate
 
     @property
     def default_job_name(self):
