@@ -54,6 +54,7 @@ class BabelStreamExtractor(MetricsExtractor):
 
 class BabelStream(Benchmark):
     """STREAM, for lots of different devices"""
+
     DEFAULT_EXECUTABLE = 'cuda-stream'
     CATEGORY = 'stream'
 

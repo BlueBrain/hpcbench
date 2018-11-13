@@ -99,8 +99,9 @@ class CampaignDriver(Enumerator):
             else:
                 # YAML file
                 self.existing_campaign = False
-            campaign = from_file(campaign, expandcampvars=expandcampvars,
-                                 exclude_nodes=exclude_nodes)
+            campaign = from_file(
+                campaign, expandcampvars=expandcampvars, exclude_nodes=exclude_nodes
+            )
             self.campaign_file = campaign_path
         else:
             self.existing_campaign = True

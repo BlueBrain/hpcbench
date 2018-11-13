@@ -47,8 +47,11 @@ def main(argv=None):
         exclude_nodes = arguments.get('--exclude-nodes')
         srun_tag = arguments.get('--srun')
         driver = CampaignDriver(
-            campaign_file, node=node, output_dir=output_dir, srun=srun_tag,
-            exclude_nodes=exclude_nodes
+            campaign_file,
+            node=node,
+            output_dir=output_dir,
+            srun=srun_tag,
+            exclude_nodes=exclude_nodes,
         )
         driver()
         if argv is not None:

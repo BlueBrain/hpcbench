@@ -76,8 +76,9 @@ class TestSlurm(DriverTestCase, unittest.TestCase):
             self.assertFalse(sbatch_content[-1].find(tag) == -1)
             self.assertIn(self.CONSTRAINT, sbatch_content)
             if self.EXCLUDE_NODES:
-                self.assertIn('--exclude-nodes=' + self.EXCLUDE_NODES + ' ',
-                              sbatch_content[-1])
+                self.assertIn(
+                    '--exclude-nodes=' + self.EXCLUDE_NODES + ' ', sbatch_content[-1]
+                )
             data = slurm_report.collect_one('metrics')
             dummy = kwargsql.get(data, '0__measurement__dummy')
             self.assertEqual(dummy, 42.0)

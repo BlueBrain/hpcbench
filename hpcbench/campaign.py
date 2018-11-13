@@ -172,8 +172,9 @@ def from_file(campaign_file, **kwargs):
     return default_campaign(campaign, **kwargs)
 
 
-def default_campaign(campaign=None, expandcampvars=True, exclude_nodes=None,
-                     frozen=True):
+def default_campaign(
+    campaign=None, expandcampvars=True, exclude_nodes=None, frozen=True
+):
     """Fill an existing campaign with default
     values for optional keys
 

@@ -1,6 +1,6 @@
 from subprocess import check_call, check_output
 
-from . process import find_executable
+from .process import find_executable
 
 
 class SpackCmd:
