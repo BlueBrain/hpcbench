@@ -1,6 +1,7 @@
 import collections
 import datetime
 import csv
+import logging
 import re
 import subprocess
 
@@ -67,7 +68,11 @@ class SlurmCluster:
     @classmethod
     def discover_partitions(cls):
         command = [SINFO, '--Node', '--format', '%all']
-        output = subprocess.check_output(command, env=SINFO_ENV)
+        try:
+            output = subprocess.check_output(command, env=SINFO_ENV)
+        except OSError:
+            logging.exception('Could not extract cluster information')
+            return dict()
         reader = csv.DictReader(output.decode().splitlines(), delimiter='|')
         sanitizer_re = re.compile('[^0-9a-zA-Z]+')
 
