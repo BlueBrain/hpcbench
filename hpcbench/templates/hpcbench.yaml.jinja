@@ -30,17 +30,15 @@ network:
 benchmarks:
   # * is an implicit tag, including all nodes
   '*':
-    # arbitrary name
-    default:
 {%- for b in benchmarks %}
-
+    test-{{ b.name }}: # name is arbitrary
       {{ b.description }}
-      {{ b.name }}:
+      type: {{ b.name }}
 {%- if b.attributes %}
-        attributes:
+      attributes:
 {%- for attr, rec in b.attributes.items() %}
-          {{ rec['doc'] }}
-          {{ attr }}: {{ rec['value'] | safe }}
+        {{ rec['doc'] }}
+        {{ attr }}: {{ rec['value'] | safe }}
 
 {%- endfor %}
 {%- endif %}
