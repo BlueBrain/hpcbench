@@ -51,6 +51,7 @@ LOGGER = logging.getLogger('hpcbench')
 JSON_METRICS_FILE = 'metrics.json'
 SBATCH_JINJA_TEMPLATE = 'sbatch.jinja'
 YAML_CAMPAIGN_FILE = 'campaign.yaml'
+YAML_EXPANDED_CAMPAIGN_FILE = 'campaign.expanded.yaml'
 YAML_REPORT_FILE = 'hpcbench.yaml'
 DEFAULT_CAMPAIGN = dict(
     output_dir="hpcbench-%Y%m%d-%H%M%S",

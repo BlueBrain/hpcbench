@@ -10,7 +10,7 @@ from ClusterShell.NodeSet import NodeSet
 from cached_property import cached_property
 
 from hpcbench.api import Benchmark
-from hpcbench.campaign import YAML_CAMPAIGN_FILE, from_file
+from hpcbench.campaign import YAML_CAMPAIGN_FILE, YAML_EXPANDED_CAMPAIGN_FILE, from_file
 from .benchmark import BenchmarkDriver
 from .base import Enumerator, Top, LOGGER, LOCALHOST, ConstraintTag
 from .executor import ExecutionDriver, SrunExecutionDriver
@@ -138,6 +138,8 @@ class CampaignDriver(Enumerator):
                 else:
                     with open(YAML_CAMPAIGN_FILE, 'w') as ostr:
                         yaml.dump(self.campaign, ostr, default_flow_style=False)
+                with open(YAML_EXPANDED_CAMPAIGN_FILE, 'w') as ostr:
+                    yaml.dump(self.campaign, ostr, default_flow_style=False)
             super(CampaignDriver, self).__call__(**kwargs)
 
     @cached_property
