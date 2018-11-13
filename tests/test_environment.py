@@ -145,18 +145,22 @@ class TestEnvironment(DriverTestCase, unittest.TestCase):
     def expected_env(self):
         return from_file(self.get_campaign_file())['expected_env']
 
+    @cached_property
+    def errors(self):
+        return set(from_file(self.get_campaign_file())['errors'])
+
     def test(self):
         report = ReportNode(self.CAMPAIGN_PATH)
         keys = ('modules', 'environment', 'metas')
-        expected_tests = 13
+        expected_tests = 14
         tests = 0
         for path, env in report.collect(*keys, with_path=True):
-            self.driver.logger.error('path: %s', path)
             context = report.path_context(path)
             self._check_campaign_report(context, env)
             self._check_shell_script(context)
             self._check_benchmark_hooks_environment(context)
             self._check_metas(env)
+            self.assertNotIn(context.benchmark, self.errors)
             tests += 1
         self.assertEqual(tests, expected_tests)
 

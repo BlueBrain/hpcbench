@@ -84,7 +84,7 @@ class Enumerator(six.with_metaclass(ABCMeta, object)):
 
     @abstractproperty
     def children(self):
-        """Property to be overriden be subclass to provide child objects"""
+        """Property to be overriden by subclass to provide child objects"""
         raise NotImplementedError  # pragma: no cover
 
     @cached_property

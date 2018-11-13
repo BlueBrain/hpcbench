@@ -89,13 +89,39 @@ benchmarks:
             attributes:
                 environment:
                     FOO: bar
-
+        integral_types:
+            type: environment
+            environment:
+                FOO: 42
+                BAR: 42.0
+        bool_is_forbiden:
+            type: environment
+            environment:
+                FOO: true
+        array_is_forbidden:
+            type: environment
+            environment:
+                FOO: [42]
+        dict_is_forbidden:
+            type: environment
+            environment:
+                FOO: {42: 42}
 
 metas:
     foo: bar
     bar: pika
 
+errors:
+    - bool_is_forbiden
+    - array_is_forbidden
+    - dict_is_forbidden
+
 expected_env:
+    integral_types:
+        modules: []
+        environment:
+            FOO: "42"
+            BAR: "42.0"
     as_is:
         modules: []
         environment: {}
