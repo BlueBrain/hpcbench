@@ -239,9 +239,6 @@ class IOR(Benchmark):
                 path = osp.dirname(path)
             if not osp.exists(path):
                 os.makedirs(path)
-            else:
-                if not osp.isdir(osp.realpath(path)):
-                    raise IOError
 
     @property
     def sizes(self):
