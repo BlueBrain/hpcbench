@@ -5,7 +5,7 @@ from .benchmark import AbstractBenchmarkTest
 
 
 class TestMiniGEMM(AbstractBenchmarkTest, unittest.TestCase):
-    EXPECTED_METRICS = dict(time=135.999, gflops=198.926, checksum=1.48311e+20)
+    EXPECTED_METRICS = dict(time=135.999, gflops=198.926, checksum=1.48311e20)
 
     def get_benchmark_clazz(self):
         return MiniGEMM
