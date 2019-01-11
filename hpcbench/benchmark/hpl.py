@@ -1,6 +1,7 @@
 """the High-Performance Linpack Benchmark for Distributed-Memory Computers
     http://www.netlib.org/benchmark/hpl/
 """
+import math
 import re
 import shlex
 
@@ -8,6 +9,7 @@ from cached_property import cached_property
 import six
 
 from hpcbench.api import Benchmark, Metric, Metrics, MetricsExtractor
+from hpcbench import jinja_environment
 from hpcbench.toolbox.process import find_executable
 
 
@@ -109,6 +111,10 @@ class HPL(Benchmark):
     DEFAULT_THREADS = 1
     DEFAULT_DEVICE = 'cpu'
     DEFAULT_EXECUTABLE = 'xhpl'
+    DEFAULT_NODES = 1
+    DEFAULT_CORE_PER_NODE = 36
+    DEFAULT_MEMORY_PER_NODE = 128
+    DEFAULT_BLOCK_SIZE = 192
 
     def __init__(self):
         # locate `stream_c` executable
@@ -120,6 +126,10 @@ class HPL(Benchmark):
                 mpirun=[],
                 srun_nodes=0,
                 options=[],
+                nodes=HPL.DEFAULT_NODES,
+                cores_per_node=HPL.DEFAULT_CORE_PER_NODE,
+                memory_per_node=HPL.DEFAULT_MEMORY_PER_NODE,
+                block_size=HPL.DEFAULT_BLOCK_SIZE,
             )
         )
 
@@ -134,7 +144,7 @@ class HPL(Benchmark):
     @property
     def options(self):
         """
-        additional options passed to the shoc executable
+        additional options passed to the hpl executable
         """
         options = self.attributes['options'] or []
         if isinstance(options, six.string_types):
@@ -174,7 +184,75 @@ class HPL(Benchmark):
             1            # of problems sizes (N)
             ...
         """
-        return self.attributes['data']
+        if self.attributes['data']:
+            return self.attributes['data']
+        else:
+            return self._build_data()
+
+    @property
+    def nodes(self):
+        """used to build HPL.dat"""
+        return self.attributes['nodes']
+
+    @property
+    def cores_per_node(self):
+        """used to build HPL.dat"""
+        return self.attributes['cores_per_node']
+
+    @property
+    def memory_per_node(self):
+        """used to build HPL.dat"""
+        return self.attributes['memory_per_node']
+
+    @property
+    def block_size(self):
+        """used to build HPL.dat"""
+        return self.attributes['block_size']
+
+    def _build_data(self):
+        """Build HPL data from basic parameters"""
+
+        def baseN(nodes, mpn):
+            return int(math.sqrt(mpn * 0.80 * nodes * 1024 * 1024 / 8))
+
+        def nFromNb(baseN, nb):
+            factor = int(baseN / nb)
+            if factor % 2 != 0:
+                factor -= 1
+            return nb * factor
+
+        def get_grid(nodes, ppn):
+            cores = nodes * ppn
+            sqrt = math.sqrt(cores)
+            factors = [
+                num for num in range(2, int(math.floor(sqrt) + 1)) if cores % num == 0
+            ]
+            if len(factors) == 0:
+                factors = [1]
+
+            diff = 0
+            keep = 0
+            for factor in factors:
+                if diff == 0:
+                    diff = cores - factor
+                if keep == 0:
+                    keep = factor
+                tmp_diff = cores - factor
+                if tmp_diff < diff:
+                    diff = tmp_diff
+                    keep = factor
+            return [keep, int(cores / keep)]
+
+        properties = dict(
+            realN=nFromNb(baseN(self.nodes, self.memory_per_node), self.block_size),
+            nb=self.block_size,
+            pQ=get_grid(self.nodes, self.cores_per_node),
+        )
+        return self._data_from_jinja(**properties)
+
+    def _data_from_jinja(self, **properties):
+        template = jinja_environment.get_template('HPL.dat.jinja')
+        return template.render(**properties)
 
     @property
     def threads(self):
