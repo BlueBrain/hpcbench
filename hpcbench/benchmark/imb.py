@@ -161,7 +161,7 @@ class IMBAllToAllExtractor(IMBExtractor):
             byte = int(search.group(1))
             if byte != 0:
                 usec = float(search.group(2))
-                bw = round((byte / 1024. ** 2) / (usec / 1.e6), 2)
+                bw = round((byte / 1024.0 ** 2) / (usec / 1.0e6), 2)
                 self.s_bytes.append(byte)
                 self.s_latency.append(usec)
                 self.s_bandwidth.append(bw)
