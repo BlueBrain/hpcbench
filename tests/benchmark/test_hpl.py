@@ -4,6 +4,22 @@ from hpcbench.benchmark.hpl import HPL
 from .benchmark import AbstractBenchmarkTest
 
 
+class TestHplData(unittest.TestCase):
+    def test_default(self):
+        self.maxDiff = None
+        hpl = HPL()
+        expected = dict(realN=3456, nb=192, pQ=[6, 6])
+        self.assertEqual(hpl.data, hpl._data_from_jinja(**expected))
+
+    def test_multi_node(self):
+        hpl = HPL()
+        hpl.attributes.update(
+            nodes=24, cores_per_node=36, memory_per_node=378632, block_size=384
+        )
+        expected = dict(realN=976128, nb=384, pQ=[27, 32])
+        self.assertEqual(hpl.data, hpl._data_from_jinja(**expected))
+
+
 class TestHpl(AbstractBenchmarkTest, unittest.TestCase):
     EXPECTED_METRICS = dict(
         size_n=2096,
