@@ -46,10 +46,10 @@ setup(
         'elasticsearch>=6.0.0',
         'jinja2==2.10',
         'mock==2.0.0',
-        'numpy==1.13.3',
+        'numpy>=1.13.3',
         'PyYAML>=3.12',
         'python-magic==0.4.15',
-        'six==1.11',
+        'six>=1.11',
     ],
     include_package_data=True,
     package_data={
