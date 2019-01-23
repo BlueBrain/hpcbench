@@ -4,11 +4,15 @@
 from abc import abstractmethod, abstractproperty
 from operator import itemgetter
 import re
+import logging
 
 from cached_property import cached_property
 
 from hpcbench.api import Benchmark, Metric, Metrics, MetricsExtractor
 from hpcbench.toolbox.process import find_executable
+
+
+LOGGER = logging.getLogger('OSU')
 
 
 class OSUExtractor(MetricsExtractor):
@@ -241,7 +245,7 @@ class OSU(Benchmark):
     NODE_PAIRING = {'node', 'tag'}
     DEFAULT_NODE_PAIRING = 'node'
     DEFAULT_CATEGORIES = [OSU_BW, OSU_LAT, OSU_ALLGATHERV, OSU_ALLTOALLV]
-    DEFAULT_ARGUMENTS = {
+    DEFAULT_OPTIONS = {
         OSU_BW: ["-x", "200", "-i", "100"],
         OSU_MBW_MR: [],
         OSU_LAT: ["-x", "200", "-i", "100"],
@@ -257,7 +261,7 @@ class OSU(Benchmark):
         super(OSU, self).__init__(
             attributes=dict(
                 categories=OSU.DEFAULT_CATEGORIES,
-                arguments=OSU.DEFAULT_ARGUMENTS,
+                options=OSU.DEFAULT_OPTIONS,
                 srun_nodes=0,
                 node_pairing=OSU.DEFAULT_NODE_PAIRING,
             )
@@ -285,7 +289,27 @@ class OSU(Benchmark):
     def arguments(self):
         """Dictionary providing the list of arguments for every
         benchmark"""
-        return self.attributes['arguments']
+        if 'arguments' in self.attributes:
+            LOGGER.warning(
+                "WARNING: 'arguments' use in OSU yaml configuration file is deprecated. Please use 'options'!"
+            )
+            arguments = self.attributes['arguments']
+            if isinstance(arguments, dict):
+                return arguments
+            else:
+                return {k: arguments for k in self.categories}
+        elif 'options' in self.attributes:
+            options = self.attributes['options']
+            if isinstance(options, dict):
+                return options
+            else:
+                return {k: options for k in self.categories}
+
+    @property
+    def options(self):
+        """Dictionary providing the list of arguments for every
+        benchmark"""
+        return self.attributes['options']
 
     @property
     def node_pairing(self):

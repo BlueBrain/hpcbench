@@ -6,6 +6,55 @@ from .benchmark import AbstractBenchmarkTest
 from .. import FakeCluster
 
 
+class TestOSUOptionsAttributes(unittest.TestCase):
+    def test_categories_assignment(self):
+        """Tests complete option assignment to categories"""
+        benchmark = OSU()
+        argument_bw = ['-x', 600, '-i', 400]
+        argument_lat = ['-x', 500, '-i', 200]
+        benchmark.attributes = dict(
+            categories=['osu_bw', 'osu_latency'],
+            options={
+                'osu_bw': argument_bw,
+                'osu_latency': argument_lat,
+            },
+        )
+
+        self.assertEqual(
+            benchmark.arguments,
+            {'osu_bw': argument_bw, 'osu_latency': argument_lat},
+        )
+
+    def test_partial_override(self):
+        """Tests partial option assignment to categories"""
+        benchmark = OSU()
+        argument_bw = ['-x', 600, '-i', 400]
+        benchmark.attributes = dict(
+            categories=['osu_bw', 'osu_latency'],
+            options={'osu_bw': argument_bw},
+        )
+
+        for cat in benchmark.arguments:
+            if cat == 'osu_bw':
+                self.assertEqual(benchmark.arguments[cat], argument_bw)
+            else:
+                self.assertEqual(benchmark.arguments[cat], OSU.DEFAULT_OPTIONS[cat])
+
+    def test_all_categories_assign(self):
+        """Tests single option assignment to all categories"""
+        benchmark = OSU()
+        argument_all = ['-x', 600, '-i', 400]
+        benchmark.attributes = dict(
+            categories=['osu_bw', 'osu_latency'],
+            options=argument_all,
+        )
+
+        self.assertEqual(
+            benchmark.arguments,
+            {'osu_bw': argument_all, 'osu_latency': argument_all},
+        )
+
+
 class TestOSU(AbstractBenchmarkTest, unittest.TestCase):
     EXPECTED_METRICS = {
         OSU.OSU_BW: dict(
