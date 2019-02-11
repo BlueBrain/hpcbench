@@ -66,6 +66,8 @@ DEFAULT_CAMPAIGN = dict(
         pip_installer_url=pip_installer_url(),
         slurm_blacklist_states=[
             'down',
+            'down*',
+            'drain',
             'drained',
             'draining',
             'error',
