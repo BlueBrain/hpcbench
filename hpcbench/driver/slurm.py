@@ -15,11 +15,13 @@ import six
 from hpcbench import jinja_environment
 from hpcbench.campaign import SBATCH_JINJA_TEMPLATE
 from .base import Enumerator, LOGGER, ConstraintTag, write_yaml_report
+from hpcbench.toolbox.functools_ext import listify
 from hpcbench.toolbox.process import (
     build_slurm_arguments,
     parse_constraint_in_args,
     find_executable,
 )
+from hpcbench.toolbox.spack import SpackCmd
 
 
 class SlurmDriver(Enumerator):
@@ -178,6 +180,7 @@ class SbatchDriver(Enumerator):
     @write_yaml_report
     @Enumerator.call_decorator
     def __call__(self, **kwargs):
+        self._install_spack_specs()
         with open(self.sbatch_filename, 'w') as sbatch:
             self._create_sbatch(sbatch)
         sbatch_jobid = self._execute_sbatch()
@@ -204,6 +207,21 @@ class SbatchDriver(Enumerator):
             self.logger.error('%%<--------' * 5)
             self.logger.error('Template properties: %s', properties)
             raise
+
+    def _install_spack_specs(self):
+        spack = SpackCmd()
+        for spec in self.spack_specs:
+            spack.install(spec)
+
+
+    @property
+    @listify
+    def spack_specs(self):
+        benchmarks = self.campaign.benchmarks[self.tag] or {}
+        for config in benchmarks.values():
+            spack = config.get('spack') or {}
+            for spec in spack.get('specs') or []:
+                yield spec
 
     def _execute_sbatch(self):
         """Schedule the sbatch file using the sbatch command
