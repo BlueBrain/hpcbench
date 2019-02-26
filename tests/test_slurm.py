@@ -15,12 +15,14 @@ from hpcbench.driver import CampaignDriver
 from hpcbench.driver.slurm import SlurmDriver, SbatchDriver
 from hpcbench.toolbox.edsl import kwargsql
 from . import DriverTestCase
-
+from . test_spack import CO_MOCK, CC_MOCK
 
 class TestSlurm(DriverTestCase, unittest.TestCase):
     CONSTRAINT = '#SBATCH --constraint=skylake\n'
 
     @classmethod
+    @mock.patch('hpcbench.toolbox.spack.check_output', new=CO_MOCK)
+    @mock.patch('hpcbench.toolbox.spack.check_call', new=CC_MOCK)
     def setUpClass(cls):
         cls.SLURM_ALLOC_NODE = 'n3'
         cls.SLURM_UT_DIR = cls.mkdtemp()
