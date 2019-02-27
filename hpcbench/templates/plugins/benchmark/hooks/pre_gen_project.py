@@ -6,9 +6,9 @@ import sys
 
 def check_benchmark_name():
     name = '''{{ cookiecutter.benchmark }}'''
-    if not re.match('^[a-z]+$', name):
+    if not re.match('^[-a-z]+$', name):
         error = 'ERROR: invalid benchmark: "{}"'
-        error += ' Expecting regular expression [a-z]+'
+        error += ' Expecting regular expression [-a-z]+'
         print(error.format(name), file=sys.stderr)
         sys.exit(1)
 
