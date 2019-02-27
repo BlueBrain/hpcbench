@@ -14,15 +14,11 @@ class TestOSUOptionsAttributes(unittest.TestCase):
         argument_lat = ['-x', 500, '-i', 200]
         benchmark.attributes = dict(
             categories=['osu_bw', 'osu_latency'],
-            options={
-                'osu_bw': argument_bw,
-                'osu_latency': argument_lat,
-            },
+            options={'osu_bw': argument_bw, 'osu_latency': argument_lat},
         )
 
         self.assertEqual(
-            benchmark.arguments,
-            {'osu_bw': argument_bw, 'osu_latency': argument_lat},
+            benchmark.arguments, {'osu_bw': argument_bw, 'osu_latency': argument_lat}
         )
 
     def test_partial_override(self):
@@ -30,8 +26,7 @@ class TestOSUOptionsAttributes(unittest.TestCase):
         benchmark = OSU()
         argument_bw = ['-x', 600, '-i', 400]
         benchmark.attributes = dict(
-            categories=['osu_bw', 'osu_latency'],
-            options={'osu_bw': argument_bw},
+            categories=['osu_bw', 'osu_latency'], options={'osu_bw': argument_bw}
         )
 
         for cat in benchmark.arguments:
@@ -45,13 +40,11 @@ class TestOSUOptionsAttributes(unittest.TestCase):
         benchmark = OSU()
         argument_all = ['-x', 600, '-i', 400]
         benchmark.attributes = dict(
-            categories=['osu_bw', 'osu_latency'],
-            options=argument_all,
+            categories=['osu_bw', 'osu_latency'], options=argument_all
         )
 
         self.assertEqual(
-            benchmark.arguments,
-            {'osu_bw': argument_all, 'osu_latency': argument_all},
+            benchmark.arguments, {'osu_bw': argument_all, 'osu_latency': argument_all}
         )
 
 

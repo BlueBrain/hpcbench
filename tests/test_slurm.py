@@ -17,6 +17,7 @@ from hpcbench.toolbox.edsl import kwargsql
 from . import DriverTestCase
 from . test_spack import CO_MOCK, CC_MOCK
 
+
 class TestSlurm(DriverTestCase, unittest.TestCase):
     CONSTRAINT = '#SBATCH --constraint=skylake\n'
 

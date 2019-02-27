@@ -213,7 +213,6 @@ class SbatchDriver(Enumerator):
         for spec in self.spack_specs:
             spack.install(spec)
 
-
     @property
     @listify
     def spack_specs(self):
