@@ -36,6 +36,6 @@ This project provides a Python package that helps defining benchmarks and execut
 License
 =======
 
-This project is licensed under the BSD License. See the LICENSE_ file for more details.
+This project is licensed under the GPLv3 License. See the LICENSE_ file for more details.
 
 .. _LICENSE: ./LICENSE
