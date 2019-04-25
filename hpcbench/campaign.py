@@ -148,7 +148,7 @@ class Generator(object):
         if isinstance(value, set):
             value = list(value)
         if isinstance(value, list):
-            return yaml.dump(value).rstrip()
+            return yaml.dump(value, default_flow_style=True).rstrip()
         return value
 
     @classmethod
