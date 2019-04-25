@@ -84,7 +84,7 @@ class TestDriver(DriverTestCase, unittest.TestCase):
         # Ensure they are searchable
         exporter.index_client.refresh(exporter.index_name)
         # Expect 3 documents in the index dedicated to the campaign
-        resp = exporter.es_client.count(exporter.index_name)
+        resp = exporter.es_client.count(index=exporter.index_name)
         self.assertEqual(resp['count'], 3)
         if 'UT_KEEP_ELASTICSEARCH_INDEX' not in os.environ:
             # Cleanup
