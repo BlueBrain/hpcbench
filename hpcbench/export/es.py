@@ -9,7 +9,7 @@ from elasticsearch import Elasticsearch
 import six
 
 from hpcbench.campaign import from_file, get_metrics, ReportNode
-from hpcbench.toolbox.collections_ext import dict_merge
+from hpcbench.toolbox.collections_ext import dict_merge, defrost
 from hpcbench.toolbox.functools_ext import chunks
 
 
@@ -43,7 +43,8 @@ class ESExporter(object):
         """Get Elasticsearch client
         """
         es_conf = self.campaign.export.elasticsearch
-        return Elasticsearch(self.hosts, **es_conf.connection_params)
+        connection_params = defrost(es_conf.connection_params)
+        return Elasticsearch(self.hosts, **connection_params)
 
     @cached_property
     def index_client(self):

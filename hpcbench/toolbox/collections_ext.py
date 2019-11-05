@@ -207,6 +207,9 @@ class FrozenList(collections.Sequence):
     def __init__(self, *args, **kwargs):
         self._l = list(*args, **kwargs)
 
+    def __iter__(self):
+        return iter(self._l)
+
     def __getitem__(self, i):
         return self._l[i]
 
@@ -239,5 +242,16 @@ def freeze(obj):
         return FrozenDict({freeze(k): freeze(v) for k, v in six.iteritems(obj)})
     elif isinstance(obj, list):
         return FrozenList([freeze(e) for e in obj])
+    else:
+        return obj
+
+
+def defrost(obj):
+    """Transform tree of frozen dict and list to regular, mutable ones
+    """
+    if isinstance(obj, FrozenDict):
+        return {defrost(k): defrost(v) for k, v in six.iteritems(obj)}
+    elif isinstance(obj, FrozenList):
+        return [defrost(e) for e in obj]
     else:
         return obj
