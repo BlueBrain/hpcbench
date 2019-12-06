@@ -471,10 +471,12 @@ class FixedAttempts(Enumerator):
             attempt += 1
         attempt_path = self.last_attempt()
         for file_ in os.listdir(attempt_path):
-            if file_ == YAML_REPORT_FILE:
-                if osp.isfile(file_):
-                    os.remove(file_)
-            os.symlink(osp.join(attempt_path, file_), file_)
+            source = osp.join(attempt_path, file_)
+            if osp.getsize(source) != 0:
+                if file_ == YAML_REPORT_FILE:
+                    if osp.isfile(file_):
+                        os.remove(file_)
+                os.symlink(source, file_)
 
     def child_builder(self, child):
         def _wrap(**kwargs):

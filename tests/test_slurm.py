@@ -15,7 +15,7 @@ from hpcbench.driver import CampaignDriver
 from hpcbench.driver.slurm import SlurmDriver, SbatchDriver
 from hpcbench.toolbox.edsl import kwargsql
 from . import DriverTestCase
-from . test_spack import CO_MOCK, CC_MOCK
+from .test_spack import CO_MOCK, CC_MOCK
 
 
 class TestSlurm(DriverTestCase, unittest.TestCase):
