@@ -13,13 +13,9 @@ HPC Benchmarks
    :target: https://coveralls.io/github/BlueBrain/hpcbench?branch=master
    :alt: Code coverage
 
-.. image:: https://scan.coverity.com/projects/13264/badge.svg
-   :target: https://scan.coverity.com/projects/BlueBrain-hpcbench
+.. image:: https://scan.coverity.com/projects/20362/badge.svg
+   :target: https://scan.coverity.com/projects/bluebrain-hpcbench
    :alt: Coverity
-
-.. image:: https://landscape.io/github/BlueBrain/hpcbench/master/landscape.svg?style=flat
-   :target: https://landscape.io/github/BlueBrain/hpcbench/master
-   :alt: Lanscape.io Code Health
 
 .. image:: https://codeclimate.com/github/BlueBrain/hpcbench/badges/gpa.svg
    :target: https://codeclimate.com/github/BlueBrain/hpcbench
