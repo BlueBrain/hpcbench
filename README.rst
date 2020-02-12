@@ -1,32 +1,32 @@
 HPC Benchmarks
 ==============
 
-.. image:: https://travis-ci.org/tristan0x/hpcbench.svg?branch=master
-    :target: https://travis-ci.org/tristan0x/hpcbench
+.. image:: https://travis-ci.org/BlueBrain/hpcbench.svg?branch=master
+    :target: https://travis-ci.org/BlueBrain/hpcbench
     :alt: Travis CI
 
 .. image:: https://readthedocs.org/projects/hpcbench/badge/?version=latest
    :target: http://hpcbench.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
-.. image:: https://coveralls.io/repos/github/tristan0x/hpcbench/badge.svg?branch=master
-   :target: https://coveralls.io/github/tristan0x/hpcbench?branch=master
+.. image:: https://coveralls.io/repos/github/BlueBrain/hpcbench/badge.svg?branch=master
+   :target: https://coveralls.io/github/BlueBrain/hpcbench?branch=master
    :alt: Code coverage
 
 .. image:: https://scan.coverity.com/projects/13264/badge.svg
-   :target: https://scan.coverity.com/projects/tristan0x-hpcbench
+   :target: https://scan.coverity.com/projects/BlueBrain-hpcbench
    :alt: Coverity
 
-.. image:: https://landscape.io/github/tristan0x/hpcbench/master/landscape.svg?style=flat
-   :target: https://landscape.io/github/tristan0x/hpcbench/master
+.. image:: https://landscape.io/github/BlueBrain/hpcbench/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/BlueBrain/hpcbench/master
    :alt: Lanscape.io Code Health
 
-.. image:: https://codeclimate.com/github/tristan0x/hpcbench/badges/gpa.svg
-   :target: https://codeclimate.com/github/tristan0x/hpcbench
+.. image:: https://codeclimate.com/github/BlueBrain/hpcbench/badges/gpa.svg
+   :target: https://codeclimate.com/github/BlueBrain/hpcbench
    :alt: Code Climate
 
-.. image:: https://codeclimate.com/github/tristan0x/hpcbench/badges/issue_count.svg
-   :target: https://codeclimate.com/github/tristan0x/hpcbench
+.. image:: https://codeclimate.com/github/BlueBrain/hpcbench/badges/issue_count.svg
+   :target: https://codeclimate.com/github/BlueBrain/hpcbench
    :alt: Issue Count
 
 
