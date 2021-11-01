@@ -2,7 +2,7 @@ Tristan Carel (maintainer)
 Omar Awile
 Tim Ewart
 Fernando Pereira
-Matthais Wolf
+Matthias Wolf
 Jeremy Fouriaux
 Antonio Bellotta
 Pramod Kumbhar (contributor)
